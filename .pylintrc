@@ -1,0 +1,27 @@
+[MASTER]
+# Add the current directory to the Python path
+init-hook='import sys; sys.path.append(".")'
+
+[MESSAGES CONTROL]
+# Disable specific warnings for PyScript
+disable=C0114,C0115,C0116,E0401,E0602,E0603,E0611
+
+[REPORTS]
+# Set the output format
+output-format=text
+
+[BASIC]
+# Good variable names
+good-names=i,j,k,ex,Run,_,id
+
+[FORMAT]
+# Maximum number of characters on a single line
+max-line-length=100
+
+[SIMILARITIES]
+# Minimum lines number of a similarity
+min-similarity-lines=4
+
+[MISCELLANEOUS]
+# List of note tags to take into consideration
+notes= 

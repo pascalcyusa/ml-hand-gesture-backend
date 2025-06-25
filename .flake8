@@ -1,0 +1,13 @@
+[flake8]
+max-line-length = 100
+exclude = .git,__pycache__,venv,*.pyc
+ignore = 
+    E203,  # whitespace before ':'
+    E501,  # line too long (handled by max-line-length)
+    F401,  # imported but unused
+    F403,  # wildcard import
+    F405,  # name may be undefined, or defined from star imports
+    E0401, # import errors (for PyScript js imports)
+    E0602, # undefined variable
+    E0603, # undefined name
+    E0611, # no name in module 

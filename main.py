@@ -1,5 +1,6 @@
+# type: ignore
 import asyncio
-from js import document,AudioContext,PredictionManagerModule,PianoPlayerModule,console
+from js import document, AudioContext, PredictionManagerModule, PianoPlayerModule, console
 
 # 1) Hook startup to DOMContentLoaded
 def init(_):

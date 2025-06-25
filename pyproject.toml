@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ml-hand-gesture-backend"
+version = "0.1.0"
+description = "Hand gesture recognition with piano and motor control"
+authors = [{name = "Your Name"}]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+check_untyped_defs = false
+disallow_untyped_decorators = false
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+strict_equality = true
+
+# Ignore PyScript-specific imports
+[[tool.mypy.overrides]]
+module = "js"
+ignore_missing_imports = true
+
+[tool.pylsp-mypy]
+enabled = true
+live_mode = true
+strict = false 
