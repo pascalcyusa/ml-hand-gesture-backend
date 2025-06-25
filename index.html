@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hand Pose Piano Motor Machine</title>
+    <link rel="stylesheet" href="css/styles.css">
+
+    <!-- Set-up Pyscript -->
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.11.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.11.1/core.js"></script>
+
+    <!-- PyREPL Connection -->
+    <script defer src="https://cdn.jsdelivr.net/gh/gabrielsessions/pyrepl-js/build/main.js"></script>
+
+    <!-- Ethan's MotorGroupController-->
+    <script type="module">
+        import { MotorGroupController } from './js/motorGroupController.js';
+        const controller = new MotorGroupController();
+        window.mgc = controller;  // expose globally for button calls
+    </script>
+
+    <!-- NotesController -->
+    <script type="module">
+        import { NotesController } from './js/notesController.js';
+        const noteController = new NotesController();
+        window.noteController = noteController;  // expose globally
+    </script>
+
+    <!-- Import TensorFlow.js for model training -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.20.0/dist/tf.min.js"></script>
+
+    <!-- Import MediaPipe libraries for hand detection -->
+    <script type="module">
+        // Declare a global initialization function to make MediaPipe available to non-module scripts
+        window.initMediaPipe = async function () {
+            try {
+                const { FilesetResolver, HandLandmarker, DrawingUtils, HandLandmarker: HandLandmarkerOptions } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.js");
+
+                // Make MediaPipe globally available
+                window.mp = {
+                    FilesetResolver,
+                    HandLandmarker,
+                    DrawingUtils,
+                    HAND_CONNECTIONS: HandLandmarkerOptions.HAND_CONNECTIONS
+                };
+
+                console.log("MediaPipe libraries loaded successfully!");
+
+                // Dispatch a custom event to notify that MediaPipe is ready
+                window.dispatchEvent(new CustomEvent('mediapipe-loaded'));
+            } catch (error) {
+                console.error("Error loading MediaPipe:", error);
+                alert("Failed to load MediaPipe libraries. Please check your internet connection and try again.");
+            }
+        };
+
+        // Initialize MediaPipe
+        window.initMediaPipe();
+    </script>
+</head>
+
+<body>
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div>Loading models...</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Hand Pose Piano Machine</h1>
+            <p>Create music and motor motion with your hand gestures using machine learning!</p>
+        </header>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="train">Train Hand Poses</div>
+            <div class="tab" data-tab="piano">Piano Player</div>
+            <div class="tab" data-tab="connect_devices">Connect Devices</div>
+            <div class="tab" data-tab="about">About</div>
+        </div>
+
+        <!-- Connect Devices Tab -->
+        <div class="tab-content" id="connect_devices-tab">
+            <div class="intro-message">
+                <p>
+                <h2>Connect your SPIKE Prime Hub</h2>
+                </p>
+                <p>Reminder -- For this activity, plug in up to three motors into ports A,B, and C</p>
+            </div>
+
+            <div id="root"></div>
+        </div>
+
+        <!-- Train Hand Poses (default) Tab -->
+        <div class="tab-content active" id="train-tab">
+            <div class="intro-message">
+                <p>Train the machine learning model to recognize your hand poses!</p>
+                <p>Create classes for different hand gestures, collect samples, and then train the model.</p>
+            </div>
+
+            <div class="main-panel">
+                <div class="webcam-panel">
+                    <!-- new toggle: -->
+                    <div class="video-toggle" style="text-align:right; margin-bottom:6px;">
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggle-video">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Show Video</span>
+                    </div>
+                    <div class="webcam-container">
+                        <video id="webcam" autoplay playsinline></video>
+                        <canvas id="pose-canvas"></canvas>
+                    </div>
+                    <div id="prediction-container" class="prediction-bars">
+                        <!-- Prediction bars will be added here dynamically -->
+                        <div class="status">Train a model to see predictions</div>
+                    </div>
+                    <div class="status-message" id="model-status">
+                        Status Messages
+                    </div>
+                </div>
+
+                <div class="piano-panel">
+                    <h2>Train Your Hand Poses</h2>
+                    <p>Create classes for the hand gestures you want to use for your piano.</p>
+
+                    <button id="add-class-btn" class="btn btn-green btn-lg" disabled>Add New Class</button>
+
+                    <div id="classes-container" class="classes-container">
+                        <!-- Classes will be added here dynamically -->
+                    </div>
+
+                    <div class="training-controls">
+                        <button id="train-btn" class="btn btn-green btn-lg" disabled>Train Model</button>
+                        <button id="reset-btn" class="btn btn-red btn-lg">Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Piano Player Tab -->
+        <div class="tab-content" id="piano-tab">
+            <div class="intro-message">
+                <p>Welcome to the Hand Pose Piano Machine! Use your hand gestures to create music and control motors.
+                </p>
+                <div class="callout">
+                    <strong>Getting Started:</strong> First time here? Click the <strong>"Train Hand Poses"</strong> tab
+                    to create and train your hand gesture classes.
+                    Then return here to configure your musical sequences and motor controls!
+                </div>
+            </div>
+
+            <div class="main-panel">
+                <div class="piano-panel">
+                    <h2>Piano Note & Motor Player</h2>
+                    <p>Configure notes and motor actions to trigger when hand poses are detected!</p>
+
+                    <div class="piano-controls">
+                        <div class="control-toggles">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="piano-enabled-toggle">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Enable Note Player</span>
+                            </label>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="motor-enabled-toggle">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-label">Enable Motor Control</span>
+                            </label>
+                        </div>
+                        <div class="sequence-controls">
+                            <button id="test-all-btn" class="btn btn-green" disabled>Test All Sequences</button>
+                            <button id="stop-all-btn" class="btn btn-red" disabled>Stop All</button>
+                        </div>
+                    </div>
+
+                    <div id="sequence-container" class="sequence-container">
+                        <!-- Sequences will be added here dynamically -->
+                        <div class="no-classes-message">
+                            Train a model with classes to configure note sequences and motor controls
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Tab -->
+        <div class="tab-content" id="about-tab">
+            <h2>About Hand Pose Piano Machine</h2>
+
+        </div>
+    </div>
+
+    <!-- Load application modules -->
+    <script src="js/handDetection.js"></script>
+    <script src="js/classManager.js"></script>
+    <script src="js/modelTrainer.js"></script>
+    <script src="js/predictionManager.js"></script>
+    <script src="js/outputManager.js"></script>
+    <script src="js/piano-player.js"></script>
+    <script src="js/storageManager.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+
+    <!-- <script type="mpy-editor" src="./main.py" config="./pyscript.toml" env="me35" setup></script> -->
+    <py-script src="./main.py" config="./pyscript.toml"></py-script>
+
+</body>
+
+</html>
