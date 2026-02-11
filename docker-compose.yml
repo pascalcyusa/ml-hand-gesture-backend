@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  db:
+    image: public.ecr.aws/docker/library/postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ml_hand_gesture_db
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ml_hand_gesture_db
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
