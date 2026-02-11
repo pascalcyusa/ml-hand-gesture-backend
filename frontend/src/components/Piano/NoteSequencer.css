@@ -1,0 +1,199 @@
+.note-sequencer {
+    background: var(--bg-soft);
+    border: 1px solid var(--bg1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: border-color var(--transition-normal);
+}
+
+.note-sequencer:hover {
+    border-color: var(--bg3);
+}
+
+/* ── Header ── */
+.note-seq-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.note-seq-header:hover {
+    background: var(--bg1);
+}
+
+.note-seq-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.note-seq-icon {
+    font-size: 1.1rem;
+}
+
+.note-seq-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.note-seq-slot-count {
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    background: var(--bg2);
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+}
+
+.note-seq-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.note-seq-chevron {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+    width: 20px;
+    text-align: center;
+}
+
+/* ── Body ── */
+.note-seq-body {
+    padding: 0 var(--space-md) var(--space-md);
+}
+
+/* ── Slots Container ── */
+.note-seq-slots {
+    display: flex;
+    gap: var(--space-sm);
+    overflow-x: auto;
+    padding-bottom: var(--space-sm);
+    scrollbar-width: thin;
+}
+
+/* ── Individual Slot ── */
+.note-slot {
+    min-width: 120px;
+    background: var(--bg1);
+    border: 1px solid var(--bg2);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    flex-shrink: 0;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.note-slot.note {
+    border-left: 3px solid var(--blue-dim);
+}
+
+.note-slot.delay {
+    border-left: 3px solid var(--yellow-dim);
+}
+
+.note-slot.active {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(184, 187, 38, 0.3);
+}
+
+.note-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-slot-index {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--fg-muted);
+    background: var(--bg2);
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.note-slot-type-toggle {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    user-select: none;
+}
+
+.note-slot-type-toggle input {
+    width: 0;
+    height: 0;
+    opacity: 0;
+    position: absolute;
+}
+
+.note-slot-type-label {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--fg-dim);
+    transition: color var(--transition-fast);
+}
+
+.note-slot-type-toggle:hover .note-slot-type-label {
+    color: var(--fg);
+}
+
+/* ── Slot Config ── */
+.note-slot-config {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.note-select,
+.duration-select {
+    width: 100%;
+    padding: 4px 6px;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--bg3);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+}
+
+.note-select:hover,
+.duration-select:hover {
+    border-color: var(--blue);
+}
+
+.note-select:focus,
+.duration-select:focus {
+    outline: none;
+    border-color: var(--green);
+}
+
+.note-test-btn {
+    font-size: 0.7rem !important;
+    padding: 2px 8px !important;
+}
+
+.delay-config {
+    justify-content: center;
+}
+
+/* ── Footer ── */
+.note-seq-footer {
+    display: flex;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--bg2);
+}

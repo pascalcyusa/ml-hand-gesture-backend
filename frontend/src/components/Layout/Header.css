@@ -1,0 +1,59 @@
+.app-header {
+    background: var(--bg);
+    border-bottom: 1px solid var(--bg1);
+    padding: var(--space-md) var(--space-xl);
+}
+
+.header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.header-icon {
+    font-size: 2rem;
+    filter: drop-shadow(0 0 8px rgba(184, 187, 38, 0.4));
+}
+
+.header-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -0.02em;
+}
+
+.header-subtitle {
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+}
+
+.header-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-md);
+    background: rgba(184, 187, 38, 0.1);
+    border: 1px solid var(--green-dim);
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--green);
+    font-family: var(--font-mono);
+}
+
+.header-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
