@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
 import { Card, CardTitle } from '../ui/card.jsx';
+import { Input } from '../ui/input.jsx';
 import './TrainingControls.css';
 
 export default function TrainingControls({
@@ -31,10 +32,26 @@ export default function TrainingControls({
 }) {
     const [showLoadDialog, setShowLoadDialog] = useState(false);
 
-    const handleAddClass = () => {
-        const name = prompt('Enter class name:');
-        if (name?.trim()) {
-            onAddClass(name);
+    // Add Class Dialog State
+    const [showAddClassDialog, setShowAddClassDialog] = useState(false);
+    const [newClassName, setNewClassName] = useState('');
+
+    // Save Model Dialog State
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [saveModelName, setSaveModelName] = useState('my-model');
+
+    const handleConfirmAddClass = () => {
+        if (newClassName?.trim()) {
+            onAddClass(newClassName);
+            setNewClassName('');
+            setShowAddClassDialog(false);
+        }
+    };
+
+    const handleConfirmSave = () => {
+        if (saveModelName?.trim()) {
+            onSave(saveModelName);
+            setShowSaveDialog(false);
         }
     };
 
@@ -52,6 +69,46 @@ export default function TrainingControls({
     return (
         <Card className="training-controls relative">
             <CardTitle>Controls</CardTitle>
+
+            {/* Add Class Dialog */}
+            {showAddClassDialog && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                    <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
+                        <h3 className="font-bold text-sm">Add New Class</h3>
+                        <Input
+                            placeholder="Class Name (e.g. Fist)"
+                            value={newClassName}
+                            onChange={(e) => setNewClassName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleConfirmAddClass()}
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setShowAddClassDialog(false)}>Cancel</Button>
+                            <Button size="sm" onClick={handleConfirmAddClass}>Add</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* Save Model Dialog */}
+            {showSaveDialog && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                    <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
+                        <h3 className="font-bold text-sm">Save Model</h3>
+                        <Input
+                            placeholder="Model Name"
+                            value={saveModelName}
+                            onChange={(e) => setSaveModelName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
+                            autoFocus
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                            <Button size="sm" onClick={handleConfirmSave}>Save</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* Load Dialog Overlay */}
             {showLoadDialog && (
@@ -90,7 +147,7 @@ export default function TrainingControls({
 
             {/* Primary Actions */}
             <div className="controls-group mt-4">
-                <Button variant="accent" className="w-full" onClick={handleAddClass}>
+                <Button variant="accent" className="w-full" onClick={() => setShowAddClassDialog(true)}>
                     <PlusIcon className="h-4 w-4" />
                     Add Class
                 </Button>
@@ -160,10 +217,7 @@ export default function TrainingControls({
                 <div className="flex gap-2 flex-wrap">
                     {isTrained && (
                         <>
-                            <Button size="sm" className="flex-1" onClick={() => {
-                                const name = prompt('Model name:', 'my-model');
-                                if (name?.trim()) onSave(name);
-                            }}>
+                            <Button size="sm" className="flex-1" onClick={() => setShowSaveDialog(true)}>
                                 <ArrowDownTrayIcon className="h-3.5 w-3.5" />
                                 Save
                             </Button>
