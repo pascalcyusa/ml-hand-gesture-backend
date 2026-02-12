@@ -39,12 +39,9 @@ export default function AboutTab() {
                             <CodeBracketIcon className="h-5 w-5 text-[var(--blue)]" />
                             Open Source
                         </h3>
-                        <div className="about-privacy">
-                            <LockClosedIcon className="h-4 w-4 text-[var(--aqua)] shrink-0" />
-                            <span className="text-xs font-medium text-[var(--aqua)]">
-                                100% client-side processing. No data ever leaves your device.
-                            </span>
-                        </div>
+                        <ul className="about-tech-list">
+                            <li>100% client-side processing. No data ever leaves your device.</li>
+                        </ul>
                     </CardContent>
                 </Card>
             </div>

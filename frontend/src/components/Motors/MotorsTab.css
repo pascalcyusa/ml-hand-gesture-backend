@@ -2,6 +2,9 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-xl);
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-lg);
 }
 
 .motors-header {

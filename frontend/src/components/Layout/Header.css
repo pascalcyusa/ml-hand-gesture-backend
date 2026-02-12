@@ -1,5 +1,6 @@
 .app-header {
-    background: rgba(29, 32, 33, 0.95); /* More opaque for sticky */
+    background: rgba(29, 32, 33, 0.95);
+    /* More opaque for sticky */
     backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     position: sticky;
@@ -9,7 +10,8 @@
 }
 
 .header-inner {
-    max-width: 1400px; /* Slightly wider to fit nav */
+    max-width: 1400px;
+    /* Slightly wider to fit nav */
     margin: 0 auto;
     height: 64px;
     display: flex;
@@ -28,13 +30,14 @@
 }
 
 .logo-img {
-    height: 36px;
+    height: 48px;
     width: auto;
     border-radius: var(--radius-sm);
 }
 
 .app-title {
-    font-size: 1.1rem;
+    font-size: 1.5rem;
+    /* Increased from 1.1rem */
     font-weight: 700;
     color: var(--fg);
     letter-spacing: -0.01em;
@@ -68,7 +71,7 @@
 .nav-link.active {
     background: var(--bg-card);
     color: var(--blue);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .nav-icon {
@@ -122,19 +125,31 @@
     right: 0;
     width: 200px;
     background: var(--bg-card);
+    /* Ensure this is opaque in your theme or use a fallback */
+    background-color: #1d2021;
+    /* Fallback for opacity if var is transparent */
     border: 1px solid var(--border-dim);
     border-radius: var(--radius-md);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    /* Stronger shadow for floating effect */
     padding: 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 2px;
     animation: dropdown-fade 0.2s ease-out;
+    z-index: 100;
 }
 
 @keyframes dropdown-fade {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .dropdown-header {
