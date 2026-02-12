@@ -10,9 +10,6 @@ export default function ClassCard({
     onCollect,
     onDeleteSample,
     onDelete,
-    isCollecting,
-    currentLandmarks,
-    isCollecting,
     currentLandmarks,
 }) {
     const { id, name, samples } = classData;
