@@ -1,3 +1,14 @@
+import {
+    PlusIcon,
+    CpuChipIcon,
+    ArrowDownTrayIcon,
+    ArrowUpTrayIcon,
+    FolderOpenIcon,
+    TrashIcon,
+    CheckIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '../ui/button.jsx';
+import { Card, CardTitle } from '../ui/card.jsx';
 import './TrainingControls.css';
 
 export default function TrainingControls({
@@ -35,22 +46,26 @@ export default function TrainingControls({
     };
 
     return (
-        <div className="training-controls card">
-            <h3 className="training-controls-title">Controls</h3>
+        <Card className="training-controls">
+            <CardTitle>Controls</CardTitle>
 
             {/* Primary Actions */}
-            <div className="controls-group">
-                <button className="btn btn-accent btn-lg controls-full-width" onClick={handleAddClass}>
-                    ＋ Add Class
-                </button>
+            <div className="controls-group mt-4">
+                <Button variant="accent" size="lg" className="w-full" onClick={handleAddClass}>
+                    <PlusIcon className="h-5 w-5" />
+                    Add Class
+                </Button>
 
-                <button
-                    className="btn btn-primary btn-lg controls-full-width"
+                <Button
+                    variant="primary"
+                    size="lg"
+                    className="w-full"
                     onClick={onTrain}
                     disabled={!hasEnoughData || isTraining}
                 >
-                    {isTraining ? '⏳ Training...' : '🧠 Train Model'}
-                </button>
+                    <CpuChipIcon className="h-5 w-5" />
+                    {isTraining ? 'Training...' : 'Train Model'}
+                </Button>
 
                 {!hasEnoughData && numClasses > 0 && (
                     <p className="controls-hint">
@@ -94,7 +109,7 @@ export default function TrainingControls({
                 </div>
                 <div className="controls-stat">
                     <span className={`controls-stat-value ${isTrained ? 'trained' : ''}`}>
-                        {isTrained ? '✓' : '—'}
+                        {isTrained ? <CheckIcon className="h-4 w-4 inline" /> : '—'}
                     </span>
                     <span className="controls-stat-label">Trained</span>
                 </div>
@@ -104,42 +119,48 @@ export default function TrainingControls({
             <div className="controls-group controls-secondary">
                 {isTrained && (
                     <>
-                        <button className="btn btn-sm" onClick={() => {
+                        <Button size="sm" onClick={() => {
                             const name = prompt('Model name:', 'my-model');
                             if (name?.trim()) onSave(name);
                         }}>
-                            💾 Save
-                        </button>
-                        <button className="btn btn-sm" onClick={onExport}>
-                            📤 Export
-                        </button>
+                            <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                            Save
+                        </Button>
+                        <Button size="sm" onClick={onExport}>
+                            <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                            Export
+                        </Button>
                     </>
                 )}
 
                 {savedModels.length > 0 && (
-                    <button className="btn btn-sm" onClick={() => {
+                    <Button size="sm" onClick={() => {
                         const name = prompt(
                             `Load model:\n${savedModels.map((m) => `• ${m.name}`).join('\n')}`
                         );
                         if (name?.trim()) onLoad(name);
                     }}>
-                        📂 Load
-                    </button>
+                        <FolderOpenIcon className="h-3.5 w-3.5" />
+                        Load
+                    </Button>
                 )}
 
-                <button className="btn btn-sm" onClick={handleImport}>
-                    📥 Import
-                </button>
+                <Button size="sm" onClick={handleImport}>
+                    <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                    Import
+                </Button>
 
-                <button
-                    className="btn btn-danger btn-sm"
+                <Button
+                    variant="danger"
+                    size="sm"
                     onClick={() => {
                         if (window.confirm('Reset all classes and model?')) onReset();
                     }}
                 >
-                    🗑 Reset
-                </button>
+                    <TrashIcon className="h-3.5 w-3.5" />
+                    Reset
+                </Button>
             </div>
-        </div>
+        </Card>
     );
 }

@@ -8,7 +8,15 @@
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import {
+    MusicalNoteIcon,
+    CogIcon,
+    StopIcon,
+} from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
+import { Button } from '../ui/button.jsx';
+import { Card } from '../ui/card.jsx';
+import { Switch } from '../ui/switch.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
 import MotorSequencer from './MotorSequencer.jsx';
 import './PianoTab.css';
@@ -81,14 +89,16 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
     if (!classNames || classNames.length === 0) {
         return (
             <div className="piano-tab">
-                <div className="piano-empty">
-                    <span className="piano-empty-icon">🎹</span>
-                    <h2>Piano Player</h2>
-                    <p>Train at least one class in the Train tab to configure note sequences.</p>
-                    <p className="piano-empty-hint">
+                <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+                    <MusicalNoteIcon className="h-12 w-12 text-[var(--fg-muted)] opacity-40" />
+                    <h2 className="text-lg font-bold">Piano Player</h2>
+                    <p className="text-sm text-[var(--fg-dim)] max-w-[400px]">
+                        Train at least one class in the Train tab to configure note sequences.
+                    </p>
+                    <p className="text-xs text-[var(--fg-muted)]">
                         Each trained class can trigger a unique musical sequence when detected.
                     </p>
-                </div>
+                </Card>
             </div>
         );
     }
@@ -96,27 +106,29 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
     return (
         <div className="piano-tab animate-fade-in">
             {/* Controls Bar */}
-            <div className="piano-controls card">
+            <Card className="piano-controls">
                 <div className="piano-controls-row">
                     <div className="piano-toggles">
-                        <label className="toggle-switch">
-                            <input
-                                type="checkbox"
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch
                                 checked={pianoEnabled}
-                                onChange={(e) => setPianoEnabled(e.target.checked)}
+                                onCheckedChange={setPianoEnabled}
                             />
-                            <span className="toggle-slider" />
-                            <span className="toggle-label">🎵 Notes</span>
+                            <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
+                                <MusicalNoteIcon className="h-4 w-4" />
+                                Notes
+                            </span>
                         </label>
 
-                        <label className="toggle-switch">
-                            <input
-                                type="checkbox"
+                        <label className="flex items-center gap-2 cursor-pointer">
+                            <Switch
                                 checked={motorEnabled}
-                                onChange={(e) => setMotorEnabled(e.target.checked)}
+                                onCheckedChange={setMotorEnabled}
                             />
-                            <span className="toggle-slider" />
-                            <span className="toggle-label">⚙️ Motors</span>
+                            <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
+                                <CogIcon className="h-4 w-4" />
+                                Motors
+                            </span>
                         </label>
                     </div>
 
@@ -136,12 +148,14 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                     </div>
 
                     <div className="piano-actions">
-                        <button
-                            className="btn btn-danger btn-sm"
+                        <Button
+                            variant="danger"
+                            size="sm"
                             onClick={handleStopAll}
                         >
-                            ⏹ Stop All
-                        </button>
+                            <StopIcon className="h-3.5 w-3.5" />
+                            Stop All
+                        </Button>
                     </div>
                 </div>
 
@@ -154,11 +168,14 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                         </span>
                     </div>
                 )}
-            </div>
+            </Card>
 
             {/* Note Sequences Section */}
             <div className="piano-section">
-                <h3 className="piano-section-title">🎵 Note Sequences</h3>
+                <h3 className="piano-section-title flex items-center gap-2">
+                    <MusicalNoteIcon className="h-5 w-5 text-[var(--purple)]" />
+                    Note Sequences
+                </h3>
                 <div className="piano-section-list">
                     {classNames.map((name, i) => (
                         <NoteSequencerWithRef
@@ -179,7 +196,10 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
             {/* Motor Sequences Section */}
             {motorEnabled && (
                 <div className="piano-section animate-fade-in">
-                    <h3 className="piano-section-title">⚙️ Motor Controls</h3>
+                    <h3 className="piano-section-title flex items-center gap-2">
+                        <CogIcon className="h-5 w-5 text-[var(--orange)]" />
+                        Motor Controls
+                    </h3>
                     <div className="piano-section-list">
                         {classNames.map((name, i) => (
                             <MotorSequencer

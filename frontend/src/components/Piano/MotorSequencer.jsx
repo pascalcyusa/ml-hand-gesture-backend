@@ -13,14 +13,23 @@
  */
 
 import { useState, useCallback } from 'react';
+import {
+    CogIcon,
+    StopIcon,
+    ArrowPathIcon,
+    ChevronRightIcon,
+    ChevronDownIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '../ui/button.jsx';
+import { Badge } from '../ui/badge.jsx';
 import './MotorSequencer.css';
 
 const PORTS = ['A', 'B', 'C'];
 const ACTIONS = ['stop', 'run_forever', 'run_degrees'];
 const ACTION_LABELS = {
-    stop: '⏹ Stop',
-    run_forever: '🔄 Run Forever',
-    run_degrees: '📐 Run Degrees',
+    stop: 'Stop',
+    run_forever: 'Run Forever',
+    run_degrees: 'Run Degrees',
 };
 const DIRECTIONS = ['clockwise', 'counterclockwise'];
 
@@ -56,13 +65,17 @@ export default function MotorSequencer({
         <div className={`motor-sequencer ${collapsed ? 'collapsed' : ''}`}>
             <div className="motor-seq-header" onClick={() => setCollapsed(!collapsed)}>
                 <div className="motor-seq-title">
-                    <span className="motor-seq-icon">⚙️</span>
+                    <CogIcon className="h-4 w-4 text-[var(--orange)]" />
                     <span className="motor-seq-name">{className}</span>
                     {!isConnected && (
-                        <span className="motor-seq-badge">No Device</span>
+                        <Badge variant="secondary">No Device</Badge>
                     )}
                 </div>
-                <span className="motor-seq-chevron">{collapsed ? '▸' : '▾'}</span>
+                {collapsed ? (
+                    <ChevronRightIcon className="h-4 w-4 text-[var(--fg-muted)]" />
+                ) : (
+                    <ChevronDownIcon className="h-4 w-4 text-[var(--fg-muted)]" />
+                )}
             </div>
 
             {!collapsed && (
@@ -95,7 +108,9 @@ export default function MotorSequencer({
                                                 onChange={(e) => updateMotor(motor.port, 'direction', e.target.value)}
                                             >
                                                 {DIRECTIONS.map((d) => (
-                                                    <option key={d} value={d}>{d === 'clockwise' ? '↻ CW' : '↺ CCW'}</option>
+                                                    <option key={d} value={d}>
+                                                        {d === 'clockwise' ? 'CW' : 'CCW'}
+                                                    </option>
                                                 ))}
                                             </select>
                                         </div>
@@ -135,7 +150,10 @@ export default function MotorSequencer({
                     </div>
 
                     <div className="motor-seq-footer">
-                        <button className="btn btn-sm" onClick={resetMotors}>↻ Reset</button>
+                        <Button size="sm" onClick={resetMotors}>
+                            <ArrowPathIcon className="h-3.5 w-3.5" />
+                            Reset
+                        </Button>
                         {!isConnected && (
                             <span className="motor-hint">
                                 Connect a device in the Devices tab to test motors

@@ -11,6 +11,18 @@
  */
 
 import { useState, useCallback } from 'react';
+import {
+    MusicalNoteIcon,
+    ChevronRightIcon,
+    ChevronDownIcon,
+    PlayIcon,
+    PlusIcon,
+    MinusIcon,
+    ArrowPathIcon,
+    SpeakerWaveIcon,
+    PauseIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '../ui/button.jsx';
 import './NoteSequencer.css';
 
 const DEFAULT_SLOT_COUNT = 4;
@@ -94,19 +106,25 @@ export default function NoteSequencer({
         <div className={`note-sequencer ${collapsed ? 'collapsed' : ''}`}>
             <div className="note-seq-header" onClick={() => setCollapsed(!collapsed)}>
                 <div className="note-seq-title">
-                    <span className="note-seq-icon">🎵</span>
+                    <MusicalNoteIcon className="h-4 w-4 text-[var(--purple)]" />
                     <span className="note-seq-name">{className}</span>
                     <span className="note-seq-slot-count">{slots.length} slots</span>
                 </div>
                 <div className="note-seq-header-actions">
-                    <button
-                        className="btn btn-sm btn-primary"
+                    <Button
+                        variant="primary"
+                        size="sm"
                         onClick={(e) => { e.stopPropagation(); handlePlaySequence(); }}
                         disabled={isPlaying}
                     >
-                        ▶ Test
-                    </button>
-                    <span className="note-seq-chevron">{collapsed ? '▸' : '▾'}</span>
+                        <PlayIcon className="h-3.5 w-3.5" />
+                        Test
+                    </Button>
+                    {collapsed ? (
+                        <ChevronRightIcon className="h-4 w-4 text-[var(--fg-muted)]" />
+                    ) : (
+                        <ChevronDownIcon className="h-4 w-4 text-[var(--fg-muted)]" />
+                    )}
                 </div>
             </div>
 
@@ -126,8 +144,12 @@ export default function NoteSequencer({
                                             checked={slot.isDelay}
                                             onChange={() => toggleSlotType(slot.id)}
                                         />
-                                        <span className="note-slot-type-label">
-                                            {slot.isDelay ? '⏸ Delay' : '♪ Note'}
+                                        <span className="note-slot-type-label flex items-center gap-1">
+                                            {slot.isDelay ? (
+                                                <><PauseIcon className="h-3 w-3" /> Delay</>
+                                            ) : (
+                                                <><MusicalNoteIcon className="h-3 w-3" /> Note</>
+                                            )}
                                         </span>
                                     </label>
                                 </div>
@@ -152,13 +174,13 @@ export default function NoteSequencer({
                                                 <option key={d} value={d}>{d}</option>
                                             ))}
                                         </select>
-                                        <button
-                                            className="btn btn-sm note-test-btn"
+                                        <Button
+                                            size="sm"
                                             onClick={() => handleTestNote(slot)}
                                             title="Test this note"
                                         >
-                                            🔊
-                                        </button>
+                                            <SpeakerWaveIcon className="h-3.5 w-3.5" />
+                                        </Button>
                                     </div>
                                 ) : (
                                     <div className="note-slot-config delay-config">
@@ -178,11 +200,18 @@ export default function NoteSequencer({
                     </div>
 
                     <div className="note-seq-footer">
-                        <button className="btn btn-sm" onClick={addSlot}>＋ Add Slot</button>
-                        <button className="btn btn-sm" onClick={removeSlot} disabled={slots.length <= 1}>
-                            − Remove
-                        </button>
-                        <button className="btn btn-sm" onClick={resetSlots}>↻ Reset</button>
+                        <Button size="sm" onClick={addSlot}>
+                            <PlusIcon className="h-3.5 w-3.5" />
+                            Add Slot
+                        </Button>
+                        <Button size="sm" onClick={removeSlot} disabled={slots.length <= 1}>
+                            <MinusIcon className="h-3.5 w-3.5" />
+                            Remove
+                        </Button>
+                        <Button size="sm" onClick={resetSlots}>
+                            <ArrowPathIcon className="h-3.5 w-3.5" />
+                            Reset
+                        </Button>
                     </div>
                 </div>
             )}

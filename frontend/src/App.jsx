@@ -1,4 +1,13 @@
 import { useState, useCallback } from 'react';
+import {
+  HandRaisedIcon,
+  MusicalNoteIcon,
+  SignalIcon,
+  GlobeAltIcon,
+  InformationCircleIcon,
+} from '@heroicons/react/24/outline';
+import { CpuChipIcon } from '@heroicons/react/24/solid';
+
 import './components/Layout/Header.css';
 import './components/Layout/TabNav.css';
 import './components/common/Toast.css';
@@ -21,11 +30,11 @@ import { usePredictionManager } from './hooks/usePredictionManager.js';
 import { useStorageManager } from './hooks/useStorageManager.js';
 
 const TABS = [
-  { id: 'train', label: '🤚 Train', icon: '🧠' },
-  { id: 'piano', label: '🎹 Piano', icon: '🎵' },
-  { id: 'devices', label: '📡 Devices', icon: '🔌' },
-  { id: 'community', label: '🌍 Community', icon: '👥' },
-  { id: 'about', label: '📖 About', icon: 'ℹ️' },
+  { id: 'train', label: 'Train', icon: HandRaisedIcon },
+  { id: 'piano', label: 'Piano', icon: MusicalNoteIcon },
+  { id: 'devices', label: 'Devices', icon: SignalIcon },
+  { id: 'community', label: 'Community', icon: GlobeAltIcon },
+  { id: 'about', label: 'About', icon: InformationCircleIcon },
 ];
 
 export default function App() {

@@ -1,12 +1,12 @@
-/**
- * AuthModal — Login/Signup overlay modal
- */
-
 import { useState } from 'react';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { Button } from '../ui/button.jsx';
+import { Input } from '../ui/input.jsx';
+import { Card } from '../ui/card.jsx';
 import './AuthModal.css';
 
 export default function AuthModal({ onClose, onLogin, onSignup }) {
-    const [mode, setMode] = useState('login'); // 'login' | 'signup'
+    const [mode, setMode] = useState('login');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [username, setUsername] = useState('');
@@ -35,10 +35,14 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
 
     return (
         <div className="auth-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <div className="auth-modal card animate-fade-in">
-                <div className="auth-header">
-                    <h2>{mode === 'login' ? '👋 Welcome Back' : '🚀 Create Account'}</h2>
-                    <button className="auth-close" onClick={onClose}>✕</button>
+            <Card className="auth-modal animate-fade-in max-w-[420px] w-full mx-4 p-8">
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl font-bold text-[var(--fg)]">
+                        {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                    </h2>
+                    <Button variant="ghost" size="icon" onClick={onClose}>
+                        <XMarkIcon className="h-5 w-5" />
+                    </Button>
                 </div>
 
                 <div className="auth-tabs">
@@ -56,13 +60,14 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                     </button>
                 </div>
 
-                <form className="auth-form" onSubmit={handleSubmit}>
+                <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
                     {mode === 'signup' && (
-                        <div className="auth-field">
-                            <label className="auth-label">Username</label>
-                            <input
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
+                                Username
+                            </label>
+                            <Input
                                 type="text"
-                                className="auth-input"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 placeholder="your_username"
@@ -72,11 +77,12 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                         </div>
                     )}
 
-                    <div className="auth-field">
-                        <label className="auth-label">Email</label>
-                        <input
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
+                            Email
+                        </label>
+                        <Input
                             type="email"
-                            className="auth-input"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="you@example.com"
@@ -85,11 +91,12 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                         />
                     </div>
 
-                    <div className="auth-field">
-                        <label className="auth-label">Password</label>
-                        <input
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
+                            Password
+                        </label>
+                        <Input
                             type="password"
-                            className="auth-input"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"
@@ -99,21 +106,27 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                         />
                     </div>
 
-                    {error && <p className="auth-error">{error}</p>}
+                    {error && (
+                        <p className="text-xs font-[var(--font-mono)] text-[var(--red)] bg-[rgba(251,73,52,0.08)] px-3 py-1.5 rounded-[var(--radius-sm)]">
+                            {error}
+                        </p>
+                    )}
 
-                    <button
+                    <Button
                         type="submit"
-                        className="btn btn-primary btn-lg auth-submit"
+                        variant="primary"
+                        size="lg"
+                        className="w-full mt-2"
                         disabled={loading}
                     >
-                        {loading ? '⏳ Please wait...' : mode === 'login' ? 'Log In' : 'Create Account'}
-                    </button>
+                        {loading ? 'Please wait...' : mode === 'login' ? 'Log In' : 'Create Account'}
+                    </Button>
                 </form>
 
                 <button className="auth-guest" onClick={onClose}>
                     Continue as Guest →
                 </button>
-            </div>
+            </Card>
         </div>
     );
 }

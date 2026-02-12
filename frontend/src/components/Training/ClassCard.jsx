@@ -1,5 +1,8 @@
 import { useRef, useEffect, useCallback } from 'react';
+import { HandRaisedIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { drawLandmarks } from '../../utils/mediapipe.js';
+import { Button } from '../ui/button.jsx';
+import { Card } from '../ui/card.jsx';
 import './ClassCard.css';
 
 export default function ClassCard({
@@ -13,7 +16,7 @@ export default function ClassCard({
     const { id, name, samples } = classData;
 
     return (
-        <div className="class-card card animate-fade-in">
+        <Card className="class-card animate-fade-in">
             <div className="class-card-header">
                 <div className="class-card-info">
                     <h4 className="class-card-name">{name}</h4>
@@ -22,21 +25,24 @@ export default function ClassCard({
                     </span>
                 </div>
                 <div className="class-card-actions">
-                    <button
-                        className="btn btn-primary btn-sm"
+                    <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => onCollect(id)}
                         disabled={!currentLandmarks}
                         title={!currentLandmarks ? 'Show your hand to collect' : `Collect sample for ${name}`}
                     >
-                        ✋ Collect
-                    </button>
-                    <button
-                        className="btn btn-danger btn-sm"
+                        <HandRaisedIcon className="h-3.5 w-3.5" />
+                        Collect
+                    </Button>
+                    <Button
+                        variant="danger"
+                        size="icon"
                         onClick={() => onDelete(id)}
                         title={`Delete class "${name}"`}
                     >
-                        ✕
-                    </button>
+                        <XMarkIcon className="h-4 w-4" />
+                    </Button>
                 </div>
             </div>
 
@@ -57,7 +63,7 @@ export default function ClassCard({
                     <p>No samples yet — hold a pose and click Collect</p>
                 </div>
             )}
-        </div>
+        </Card>
     );
 }
 
@@ -72,11 +78,9 @@ function SampleThumb({ sample, onDelete }) {
         canvas.width = 72;
         canvas.height = 72;
 
-        // Draw dark bg
         ctx.fillStyle = '#1d2021';
         ctx.fillRect(0, 0, 72, 72);
 
-        // Draw landmarks scaled to thumbnail
         drawLandmarks(ctx, sample.landmarks, 72, 72);
     }, [sample]);
 

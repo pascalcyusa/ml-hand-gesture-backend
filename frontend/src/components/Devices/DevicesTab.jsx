@@ -8,7 +8,16 @@
  */
 
 import { useCallback } from 'react';
+import {
+    SignalIcon,
+    ExclamationTriangleIcon,
+    LinkIcon,
+    SignalSlashIcon,
+} from '@heroicons/react/24/outline';
 import { useBLE } from '../../hooks/useBLE.js';
+import { Button } from '../ui/button.jsx';
+import { Card } from '../ui/card.jsx';
+import { Badge } from '../ui/badge.jsx';
 import './DevicesTab.css';
 
 // Default SPIKE Prime / LEGO Hub UUIDs (from original ble.js usage)
@@ -40,7 +49,10 @@ export default function DevicesTab({ showToast }) {
         <div className="devices-tab animate-fade-in">
             <div className="devices-header">
                 <div className="devices-header-text">
-                    <h2>📡 Connect Devices</h2>
+                    <h2 className="flex items-center gap-2 text-xl font-bold">
+                        <SignalIcon className="h-6 w-6 text-[var(--blue)]" />
+                        Connect Devices
+                    </h2>
                     <p className="devices-subtitle">
                         Pair BLE devices (LEGO SPIKE Prime, micro:bit, etc.) to control motors with hand gestures.
                     </p>
@@ -50,31 +62,31 @@ export default function DevicesTab({ showToast }) {
                         {ble.connectedCount}/{ble.devices.length} Connected
                     </span>
                     {ble.connectedCount > 0 && (
-                        <button className="btn btn-danger btn-sm" onClick={ble.disconnectAll}>
+                        <Button variant="danger" size="sm" onClick={ble.disconnectAll}>
                             Disconnect All
-                        </button>
+                        </Button>
                     )}
                 </div>
             </div>
 
             {!ble.isSupported && (
-                <div className="devices-warning card">
-                    <span className="devices-warning-icon">⚠️</span>
+                <Card className="flex items-start gap-4 border-[var(--yellow-dim)]">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-[var(--yellow)] shrink-0 mt-0.5" />
                     <div>
                         <strong>Web Bluetooth Not Available</strong>
-                        <p>
+                        <p className="text-sm text-[var(--fg-dim)] mt-1">
                             Your browser doesn't support Web Bluetooth. Try Chrome, Edge, or Opera
                             on desktop, or Chrome on Android.
                         </p>
                     </div>
-                </div>
+                </Card>
             )}
 
             <div className="devices-grid">
                 {ble.devices.map((device, i) => (
-                    <div
+                    <Card
                         key={device.id}
-                        className={`device-card card ${device.connected ? 'connected' : ''} ${device.connecting ? 'connecting' : ''}`}
+                        className={`device-card ${device.connected ? 'connected' : ''} ${device.connecting ? 'connecting' : ''}`}
                     >
                         <div className="device-card-header">
                             <span className="device-slot-label">Slot {i + 1}</span>
@@ -85,17 +97,17 @@ export default function DevicesTab({ showToast }) {
                             {device.connected ? (
                                 <>
                                     <span className="device-name">{device.name}</span>
-                                    <span className="device-state">Connected</span>
+                                    <Badge variant="success">Connected</Badge>
                                 </>
                             ) : device.connecting ? (
                                 <>
                                     <span className="device-name">Searching...</span>
-                                    <span className="device-state connecting">Pairing</span>
+                                    <Badge variant="warning">Pairing</Badge>
                                 </>
                             ) : (
                                 <>
                                     <span className="device-name idle">No Device</span>
-                                    <span className="device-state">Idle</span>
+                                    <Badge variant="secondary">Idle</Badge>
                                 </>
                             )}
                         </div>
@@ -106,28 +118,34 @@ export default function DevicesTab({ showToast }) {
 
                         <div className="device-card-footer">
                             {device.connected ? (
-                                <button
-                                    className="btn btn-danger btn-sm device-btn"
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    className="w-full"
                                     onClick={() => handleDisconnect(i)}
                                 >
+                                    <SignalSlashIcon className="h-3.5 w-3.5" />
                                     Disconnect
-                                </button>
+                                </Button>
                             ) : (
-                                <button
-                                    className="btn btn-primary btn-sm device-btn"
+                                <Button
+                                    variant="primary"
+                                    size="sm"
+                                    className="w-full"
                                     onClick={() => handleConnect(i)}
                                     disabled={!ble.isSupported || device.connecting}
                                 >
-                                    {device.connecting ? '⏳ Pairing...' : '🔗 Connect'}
-                                </button>
+                                    <LinkIcon className="h-3.5 w-3.5" />
+                                    {device.connecting ? 'Pairing...' : 'Connect'}
+                                </Button>
                             )}
                         </div>
-                    </div>
+                    </Card>
                 ))}
             </div>
 
-            <div className="devices-info card">
-                <h4>How It Works</h4>
+            <Card>
+                <h4 className="font-bold mb-3">How It Works</h4>
                 <ol className="devices-steps">
                     <li>Connect your BLE device using one of the slots above</li>
                     <li>Go to the <strong>Piano</strong> tab and enable <strong>Motors</strong></li>
@@ -135,7 +153,7 @@ export default function DevicesTab({ showToast }) {
                     <li>Train your model in the <strong>Train</strong> tab</li>
                     <li>When a gesture is detected, the assigned motor actions execute automatically</li>
                 </ol>
-            </div>
+            </Card>
         </div>
     );
 }

@@ -1,8 +1,14 @@
-/**
- * CommunityTab — Browse and import public models from other users
- */
-
 import { useState, useEffect, useCallback } from 'react';
+import {
+    GlobeAltIcon,
+    MagnifyingGlassIcon,
+    ArrowDownTrayIcon,
+    InboxIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '../ui/button.jsx';
+import { Card } from '../ui/card.jsx';
+import { Input } from '../ui/input.jsx';
+import { Badge } from '../ui/badge.jsx';
 import './CommunityTab.css';
 
 export default function CommunityTab({ auth, onImportModel, showToast }) {
@@ -54,69 +60,80 @@ export default function CommunityTab({ auth, onImportModel, showToast }) {
         <div className="community-tab animate-fade-in">
             <div className="community-header">
                 <div className="community-header-text">
-                    <h2>🌍 Community Models</h2>
+                    <h2 className="flex items-center gap-2 text-xl font-bold">
+                        <GlobeAltIcon className="h-6 w-6 text-[var(--blue)]" />
+                        Community Models
+                    </h2>
                     <p className="community-subtitle">
                         Browse and import gesture models shared by other users
                     </p>
                 </div>
             </div>
 
-            <div className="community-search card">
-                <input
-                    type="text"
-                    className="community-search-input"
-                    placeholder="🔍 Search models by name..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                />
-                <span className="community-count">
+            <Card className="flex items-center gap-4 py-3 px-4">
+                <div className="relative flex-1">
+                    <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--fg-muted)]" />
+                    <Input
+                        className="pl-9"
+                        placeholder="Search models by name..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
+                </div>
+                <span className="text-xs font-mono text-[var(--fg-muted)] whitespace-nowrap">
                     {models.length} model{models.length !== 1 ? 's' : ''} found
                 </span>
-            </div>
+            </Card>
 
             {loading ? (
                 <div className="community-loading">
-                    <span className="community-spinner">⏳</span>
+                    <div className="spinner" />
                     <span>Loading models...</span>
                 </div>
             ) : models.length === 0 ? (
-                <div className="community-empty card">
-                    <span className="community-empty-icon">📭</span>
-                    <h3>No Public Models Yet</h3>
-                    <p>Be the first to share! Save a model and toggle "Public" to share it with the community.</p>
-                </div>
+                <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+                    <InboxIcon className="h-12 w-12 text-[var(--fg-muted)] opacity-40" />
+                    <h3 className="text-lg font-bold text-[var(--fg-dim)]">No Public Models Yet</h3>
+                    <p className="text-sm text-[var(--fg-muted)] max-w-[400px]">
+                        Be the first to share! Save a model and toggle "Public" to share it with the community.
+                    </p>
+                </Card>
             ) : (
                 <div className="community-grid">
                     {models.map((model) => (
-                        <div key={model.id} className="community-card card">
+                        <Card key={model.id} className="community-card">
                             <div className="community-card-header">
-                                <h4 className="community-card-name">{model.name}</h4>
-                                <span className="community-card-author">by {model.author}</span>
+                                <h4 className="font-bold">{model.name}</h4>
+                                <span className="text-xs font-mono text-[var(--fg-muted)]">
+                                    by {model.author}
+                                </span>
                             </div>
 
                             {model.description && (
-                                <p className="community-card-desc">{model.description}</p>
+                                <p className="text-xs text-[var(--fg-dim)] leading-relaxed">{model.description}</p>
                             )}
 
-                            <div className="community-card-classes">
+                            <div className="flex flex-wrap gap-1">
                                 {model.class_names.map((cls, i) => (
-                                    <span key={i} className="community-class-tag">{cls}</span>
+                                    <Badge key={i} variant="info">{cls}</Badge>
                                 ))}
                             </div>
 
                             <div className="community-card-footer">
-                                <span className="community-card-date">
+                                <span className="text-[0.7rem] font-mono text-[var(--fg-muted)]">
                                     {new Date(model.created_at).toLocaleDateString()}
                                 </span>
-                                <button
-                                    className="btn btn-primary btn-sm"
+                                <Button
+                                    variant="primary"
+                                    size="sm"
                                     onClick={() => handleImport(model.id)}
                                     disabled={importing === model.id}
                                 >
-                                    {importing === model.id ? '⏳ Importing...' : '📥 Import'}
-                                </button>
+                                    <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                                    {importing === model.id ? 'Importing...' : 'Import'}
+                                </Button>
                             </div>
-                        </div>
+                        </Card>
                     ))}
                 </div>
             )}
