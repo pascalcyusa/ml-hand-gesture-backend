@@ -17,8 +17,6 @@ const NAV_ITEMS = [
     { to: '/piano', label: 'Piano', icon: MusicalNoteIcon },
     { to: '/motors', label: 'Motors', icon: CogIcon },
     { to: '/devices', label: 'Devices', icon: SignalIcon },
-    { to: '/community', label: 'Community', icon: GlobeAltIcon },
-    { to: '/about', label: 'About', icon: InformationCircleIcon },
 ];
 
 export default function Header({ user, onSignIn, onLogout }) {
@@ -107,6 +105,22 @@ export default function Header({ user, onSignIn, onLogout }) {
                                     >
                                         Sign Out
                                     </button>
+                                    <div className="dropdown-divider"></div>
+                                    <Link
+                                        to="/community"
+                                        className="dropdown-item"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Community
+                                    </Link>
+                                    <Link
+                                        to="/about"
+                                        className="dropdown-item"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        About
+                                    </Link>
+                                    <div className="dropdown-divider"></div>
                                 </>
                             ) : (
                                 <>
@@ -119,12 +133,27 @@ export default function Header({ user, onSignIn, onLogout }) {
                                     >
                                         Sign In
                                     </button>
+                                    <div className="dropdown-divider"></div>
+                                    <Link
+                                        to="/community"
+                                        className="dropdown-item"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        Community
+                                    </Link>
+                                    <Link
+                                        to="/about"
+                                        className="dropdown-item"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        About
+                                    </Link>
                                 </>
                             )}
                         </div>
                     )}
                 </div>
             </div>
-        </header>
+        </header >
     );
 }

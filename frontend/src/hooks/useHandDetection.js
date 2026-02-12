@@ -78,7 +78,13 @@ export function useHandDetection() {
         canvas.height = video.videoHeight || 480;
 
         const tick = () => {
-            if (!videoRef.current || videoRef.current.paused) return;
+            if (!videoRef.current || videoRef.current.paused || videoRef.current.ended) return;
+
+            // Ensure valid dimensions (fixes ROI width/height > 0 error)
+            if (videoRef.current.videoWidth === 0 || videoRef.current.videoHeight === 0) {
+                animFrameRef.current = requestAnimationFrame(tick);
+                return;
+            }
 
             const timestamp = performance.now();
             if (timestamp === lastTimestampRef.current) {

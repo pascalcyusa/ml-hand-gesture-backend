@@ -13,7 +13,7 @@ import ClassCard from './ClassCard.jsx';
 import PredictionBars from './PredictionBars.jsx';
 import TrainingControls from './TrainingControls.jsx';
 import LoadingOverlay from '../common/LoadingOverlay.jsx';
-import { arrayBufferToBase64, base64ToArrayBuffer } from '../utils/helpers.js';
+import { arrayBufferToBase64, base64ToArrayBuffer } from '../../utils/helpers.js';
 import './TrainTab.css';
 
 
