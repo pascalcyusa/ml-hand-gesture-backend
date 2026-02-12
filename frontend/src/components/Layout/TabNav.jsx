@@ -15,7 +15,11 @@ export default function TabNav({ tabs, activeTab, onTabChange }) {
                         onClick={() => !tab.disabled && onTabChange(tab.id)}
                         disabled={tab.disabled}
                     >
-                        {tab.icon && <tab.icon className="h-4 w-4" />}
+                        {tab.icon && (
+                            <span className="tab-icon-circle">
+                                <tab.icon />
+                            </span>
+                        )}
                         <span className="tab-label">{tab.label}</span>
                         {tab.disabled && <span className="tab-badge-soon">Soon</span>}
                     </button>

@@ -1,6 +1,8 @@
 .app-header {
-    background: var(--bg);
-    border-bottom: 1px solid var(--bg1);
+    background: rgba(40, 40, 40, 0.6);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     padding: var(--space-md) var(--space-xl);
 }
 
@@ -24,16 +26,17 @@
 }
 
 .header-title {
-    font-size: 1.25rem;
-    font-weight: 700;
+    font-size: 1.2rem;
+    font-weight: 600;
     color: var(--fg);
     letter-spacing: -0.02em;
 }
 
 .header-subtitle {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--fg-muted);
     font-family: var(--font-mono);
+    letter-spacing: 0.02em;
 }
 
 .header-user {
@@ -48,7 +51,7 @@
 
 .header-username {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 500;
     color: var(--fg);
     font-family: var(--font-mono);
 }
