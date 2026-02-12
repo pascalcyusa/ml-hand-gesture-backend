@@ -1,0 +1,31 @@
+/* LoadingOverlay — base styles in gruvbox.css */
+
+.loading-progress {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    width: 300px;
+}
+
+.loading-progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg2);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.loading-progress-fill {
+    height: 100%;
+    background: var(--green);
+    border-radius: var(--radius-full);
+    transition: width 300ms ease;
+}
+
+.loading-progress-label {
+    font-size: 0.875rem;
+    font-family: var(--font-mono);
+    color: var(--green);
+    font-weight: 600;
+    min-width: 40px;
+}

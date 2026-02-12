@@ -1,0 +1,115 @@
+.training-controls {
+    padding: var(--space-sm) var(--space-md);
+}
+
+.training-controls-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+}
+
+.controls-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+}
+
+.controls-full-width {
+    width: 100%;
+}
+
+.controls-hint {
+    font-size: 0.75rem;
+    color: var(--yellow);
+    font-family: var(--font-mono);
+    text-align: center;
+}
+
+/* Stats */
+.controls-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+    text-align: center;
+}
+
+.controls-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-sm);
+    background: var(--bg1);
+    border-radius: var(--radius-md);
+}
+
+.controls-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--font-mono);
+    color: var(--fg);
+}
+
+.controls-stat-value.trained {
+    color: var(--green);
+}
+
+.controls-stat-label {
+    font-size: 0.65rem;
+    color: var(--fg-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+}
+
+/* Training Progress */
+.training-progress-section {
+    background: var(--bg1);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
+    margin-bottom: var(--space-md);
+}
+
+.training-progress-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--fg-dim);
+    margin-bottom: var(--space-sm);
+}
+
+.training-progress-track {
+    width: 100%;
+    height: 6px;
+    background: var(--bg2);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.training-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--orange-dim), var(--green));
+    border-radius: var(--radius-full);
+    transition: width 300ms ease;
+}
+
+.training-progress-loss {
+    display: block;
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    color: var(--fg-muted);
+    margin-top: var(--space-xs);
+}
+
+/* Secondary group */
+.controls-secondary {
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.controls-secondary>button,
+.controls-secondary>a {
+    flex: 1;
+    min-width: 0;
+}

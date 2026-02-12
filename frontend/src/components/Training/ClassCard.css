@@ -1,0 +1,193 @@
+.class-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--bg3);
+    background: var(--bg1);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.class-card:hover {
+    border-color: var(--bg4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Header Styling */
+.class-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg2);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: background 0.2s ease;
+}
+
+.class-card.is-expanded .class-card-header {
+    border-bottom-color: var(--bg3);
+    background: var(--bg1);
+}
+
+.class-card-header:hover {
+    background: var(--bg3);
+}
+
+.class-card-title-group {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
+}
+
+.class-card-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--fg-muted);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.class-card-chevron.expanded {
+    transform: rotate(180deg);
+}
+
+.class-card-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.class-card-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    background: var(--bg3);
+    color: var(--fg-muted);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+}
+
+.class-card-actions {
+    display: flex;
+    gap: var(--space-xs);
+    align-items: center;
+}
+
+.collect-btn {
+    gap: var(--space-xs) !important;
+}
+
+.collect-btn span {
+    font-size: 0.75rem;
+}
+
+/* Body and Collapse Transitions */
+.class-card-body {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.class-card.is-expanded .class-card-body {
+    grid-template-rows: 1fr;
+}
+
+.class-card-inner {
+    overflow: hidden;
+}
+
+.class-card-samples-container {
+    padding: var(--space-md);
+    max-height: 200px; /* Constrain height */
+    overflow-y: auto;
+    background: var(--bg1);
+}
+
+.class-card-samples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: var(--space-sm);
+}
+
+/* Sample Icon Styling */
+.sample-icon-wrapper {
+    position: relative;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    aspect-ratio: 1;
+    border: 1px solid var(--bg3);
+    cursor: crosshair;
+    transition: transform 0.15s ease;
+}
+
+.sample-icon-wrapper:hover {
+    transform: scale(1.05);
+    border-color: var(--fg-muted);
+}
+
+.sample-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.sample-remove-overlay {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(220, 38, 38, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    color: white;
+}
+
+.sample-icon-wrapper:hover .sample-remove-overlay {
+    opacity: 1;
+}
+
+/* Empty State */
+.class-card-empty-state {
+    padding: var(--space-lg);
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: var(--bg2);
+    margin: var(--space-md);
+    border-radius: var(--radius-md);
+    border: 1px dashed var(--bg3);
+}
+
+.class-card-empty-state p {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+}
+
+/* Custom Scrollbar */
+.class-card-samples-container::-webkit-scrollbar {
+    width: 5px;
+}
+
+.class-card-samples-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.class-card-samples-container::-webkit-scrollbar-thumb {
+    background: var(--bg3);
+    border-radius: 10px;
+}
+
+.class-card-samples-container::-webkit-scrollbar-thumb:hover {
+    background: var(--bg4);
+}

@@ -1,0 +1,54 @@
+.motors-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: var(--space-xl);
+    align-items: start;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+    .motors-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Empty State Container ── */
+.motors-tab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.motors-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
+}
+
+.motors-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.motors-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.motors-subtitle {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+    margin-top: var(--space-xs);
+}
+
+.motors-section-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}

@@ -1,0 +1,43 @@
+.prediction-bars {
+    padding: var(--space-md);
+}
+
+.prediction-bars-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.prediction-threshold {
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    font-weight: 400;
+}
+
+.prediction-bars-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.prediction-bars-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+    color: var(--fg-muted);
+    font-size: 0.85rem;
+    border: 1px dashed var(--bg3);
+    border-radius: var(--radius-md);
+}
+
+.prediction-pct {
+    margin-left: auto;
+    padding-left: var(--space-md);
+    font-size: 0.75rem;
+    color: var(--fg-dim);
+}
