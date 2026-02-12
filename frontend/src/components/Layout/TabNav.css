@@ -5,7 +5,7 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
     padding: var(--space-sm) var(--space-xl);
     position: sticky;
-    top: 0;
+    top: 64px;
     z-index: 100;
 }
 
