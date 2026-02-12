@@ -81,6 +81,10 @@ class ModelSaveRequest(BaseModel):
     dataset: Optional[dict] = None # { features: [], labels: [] }
     is_public: bool = False
 
+    model_config = {
+        "protected_namespaces": ()
+    }
+
 class ModelListItem(BaseModel):
     id: int
     name: str
@@ -96,6 +100,10 @@ class ModelListItem(BaseModel):
 class ModelDetail(ModelListItem):
     model_data: dict
     dataset: Optional[dict]
+
+    model_config = {
+        "protected_namespaces": ()
+    }
 
 class GestureMappingSchema(BaseModel):
     name: str
@@ -145,7 +153,7 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
         user={"id": user.id, "username": user.username, "email": user.email},
@@ -158,7 +166,7 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
     if not user or not user.hashed_password or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
-    token = create_access_token({"sub": user.id})
+    token = create_access_token({"sub": str(user.id)})
     return TokenResponse(
         access_token=token,
         user={"id": user.id, "username": user.username, "email": user.email},
