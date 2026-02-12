@@ -12,6 +12,8 @@ import {
     ArrowPathIcon,
     ChevronRightIcon,
     ChevronDownIcon,
+    PlayIcon,
+    ClockIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
 import { Badge } from '../ui/badge.jsx';
@@ -97,32 +99,46 @@ export default function MotorSequencer({
 
                                 <div className="motor-field">
                                     <label className="motor-field-label">Action</label>
-                                    <select
-                                        className="motor-select"
-                                        value={motor.action}
-                                        onChange={(e) => updateMotor(motor.port, 'action', e.target.value)}
-                                    >
-                                        {ACTIONS.map((a) => (
-                                            <option key={a} value={a}>{ACTION_LABELS[a]}</option>
-                                        ))}
-                                    </select>
+                                    <div className="motor-action-grid">
+                                        <button
+                                            className={`motor-action-btn ${motor.action === 'stop' ? 'active' : ''}`}
+                                            onClick={() => updateMotor(motor.port, 'action', 'stop')}
+                                        >
+                                            <StopIcon className="h-4 w-4" />
+                                            <span>Stop</span>
+                                        </button>
+                                        <button
+                                            className={`motor-action-btn ${motor.action === 'run_forever' ? 'active' : ''}`}
+                                            onClick={() => updateMotor(motor.port, 'action', 'run_forever')}
+                                        >
+                                            <PlayIcon className="h-4 w-4" />
+                                            <span>Run Forever</span>
+                                        </button>
+                                        <button
+                                            className={`motor-action-btn ${motor.action === 'run_degrees' ? 'active' : ''}`}
+                                            onClick={() => updateMotor(motor.port, 'action', 'run_degrees')}
+                                        >
+                                            <ClockIcon className="h-4 w-4" />
+                                            <span>Degrees</span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {motor.action !== 'stop' && (
                                     <>
                                         <div className="motor-field">
                                             <label className="motor-field-label">Direction</label>
-                                            <select
-                                                className="motor-select"
-                                                value={motor.direction}
-                                                onChange={(e) => updateMotor(motor.port, 'direction', e.target.value)}
-                                            >
+                                            <div className="motor-toggle-group">
                                                 {DIRECTIONS.map((d) => (
-                                                    <option key={d} value={d}>
+                                                    <button
+                                                        key={d}
+                                                        className={`motor-toggle-btn ${motor.direction === d ? 'active' : ''}`}
+                                                        onClick={() => updateMotor(motor.port, 'direction', d)}
+                                                    >
                                                         {d === 'clockwise' ? 'CW' : 'CCW'}
-                                                    </option>
+                                                    </button>
                                                 ))}
-                                            </select>
+                                            </div>
                                         </div>
 
                                         <div className="motor-field">

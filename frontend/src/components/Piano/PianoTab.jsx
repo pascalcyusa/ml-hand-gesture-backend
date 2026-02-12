@@ -212,17 +212,17 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
 
                     <div className="piano-waveform">
                         <label className="piano-waveform-label">Sound</label>
-                        <select
-                            className="piano-waveform-select"
-                            value={waveform}
-                            onChange={(e) => setWaveform(e.target.value)}
-                        >
+                        <div className="piano-waveform-group">
                             {audio.WAVEFORMS.map((w) => (
-                                <option key={w} value={w}>
-                                    {w.charAt(0).toUpperCase() + w.slice(1)}
-                                </option>
+                                <button
+                                    key={w}
+                                    className={`piano-waveform-btn ${waveform === w ? 'active' : ''}`}
+                                    onClick={() => setWaveform(w)}
+                                >
+                                    {w === 'triangle' ? 'Tri' : w === 'square' ? 'Sqr' : w === 'sawtooth' ? 'Saw' : 'Sine'}
+                                </button>
                             ))}
-                        </select>
+                        </div>
                     </div>
 
                     <div className="flex items-center gap-2 ml-auto">
