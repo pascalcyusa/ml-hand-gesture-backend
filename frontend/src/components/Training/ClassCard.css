@@ -1,18 +1,31 @@
 .class-card {
-    padding: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
 }
 
 .class-card-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--space-md);
+    cursor: pointer;
+    user-select: none;
+}
+
+.class-card-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--fg-muted);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.class-card-chevron.expanded {
+    transform: rotate(180deg);
 }
 
 .class-card-info {
     display: flex;
-    align-items: baseline;
-    gap: var(--space-sm);
+    align-items: center;
+    gap: var(--space-xs);
 }
 
 .class-card-name {

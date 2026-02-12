@@ -4,7 +4,7 @@
 
 .train-layout {
     display: grid;
-    grid-template-columns: 420px 1fr;
+    grid-template-columns: 380px 1fr;
     gap: var(--space-xl);
     align-items: start;
 }
@@ -29,10 +29,18 @@
     }
 }
 
+/* ── Right panel: classes grid + predictions sidebar ── */
 .train-right {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 240px;
     gap: var(--space-lg);
+    align-items: start;
+}
+
+@media (max-width: 1280px) {
+    .train-right {
+        grid-template-columns: 1fr;
+    }
 }
 
 .train-section-title {
@@ -51,8 +59,21 @@
     font-weight: 400;
 }
 
+/* ── Classes grid: 2 cards per row ── */
 .train-classes-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-sm);
+}
+
+@media (max-width: 900px) {
+    .train-classes-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Predictions sidebar ── */
+.train-predictions {
+    position: sticky;
+    top: 80px;
 }

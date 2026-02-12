@@ -1,5 +1,5 @@
-import { useRef, useEffect, useCallback } from 'react';
-import { HandRaisedIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useRef, useEffect, useCallback, useState } from 'react';
+import { HandRaisedIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { drawLandmarks } from '../../utils/mediapipe.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
@@ -14,17 +14,19 @@ export default function ClassCard({
     currentLandmarks,
 }) {
     const { id, name, samples } = classData;
+    const [expanded, setExpanded] = useState(false);
 
     return (
         <Card className="class-card animate-fade-in">
-            <div className="class-card-header">
+            <div className="class-card-header" onClick={() => setExpanded(prev => !prev)}>
                 <div className="class-card-info">
+                    <ChevronDownIcon className={`class-card-chevron ${expanded ? 'expanded' : ''}`} />
                     <h4 className="class-card-name">{name}</h4>
                     <span className="class-card-count">
                         {samples.length} sample{samples.length !== 1 ? 's' : ''}
                     </span>
                 </div>
-                <div className="class-card-actions">
+                <div className="class-card-actions" onClick={e => e.stopPropagation()}>
                     <Button
                         variant="primary"
                         size="sm"
@@ -46,7 +48,7 @@ export default function ClassCard({
                 </div>
             </div>
 
-            {samples.length > 0 && (
+            {expanded && samples.length > 0 && (
                 <div className="class-card-samples">
                     {samples.map((sample, i) => (
                         <SampleThumb
@@ -58,7 +60,7 @@ export default function ClassCard({
                 </div>
             )}
 
-            {samples.length === 0 && (
+            {expanded && samples.length === 0 && (
                 <div className="class-card-empty">
                     <p>No samples yet — hold a pose and click Collect</p>
                 </div>

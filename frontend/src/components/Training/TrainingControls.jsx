@@ -51,19 +51,18 @@ export default function TrainingControls({
 
             {/* Primary Actions */}
             <div className="controls-group mt-4">
-                <Button variant="accent" size="lg" className="w-full" onClick={handleAddClass}>
-                    <PlusIcon className="h-5 w-5" />
+                <Button variant="accent" className="w-full" onClick={handleAddClass}>
+                    <PlusIcon className="h-4 w-4" />
                     Add Class
                 </Button>
 
                 <Button
                     variant="primary"
-                    size="lg"
                     className="w-full"
                     onClick={onTrain}
                     disabled={!hasEnoughData || isTraining}
                 >
-                    <CpuChipIcon className="h-5 w-5" />
+                    <CpuChipIcon className="h-4 w-4" />
                     {isTraining ? 'Training...' : 'Train Model'}
                 </Button>
 
@@ -75,7 +74,7 @@ export default function TrainingControls({
             </div>
 
             {/* Training Progress */}
-            {trainingProgress && (
+            {isTraining && trainingProgress && (
                 <div className="training-progress-section">
                     <div className="training-progress-header">
                         <span>Epoch {trainingProgress.epoch}/{trainingProgress.totalEpochs}</span>

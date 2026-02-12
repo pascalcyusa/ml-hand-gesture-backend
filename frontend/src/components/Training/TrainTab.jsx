@@ -334,11 +334,13 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                         </div>
                     </div>
 
-                    <PredictionBars
-                        predictions={prediction.predictions}
-                        classNames={cm.classNames}
-                        threshold={prediction.confidenceThreshold}
-                    />
+                    <div className="train-predictions">
+                        <PredictionBars
+                            predictions={prediction.predictions}
+                            classNames={cm.classNames}
+                            threshold={prediction.confidenceThreshold}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
