@@ -14,8 +14,9 @@ export function useHandDetection() {
     const [isModelLoaded, setIsModelLoaded] = useState(false);
     const [isRunning, setIsRunning] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [isHandDetected, setIsHandDetected] = useState(false); // Triggers UI updates
+
     // Store landmarks in a ref to avoid re-rendering on every frame (~60fps).
-    // This was causing prompt()/confirm() dialogs to be dismissed instantly.
     const currentLandmarksRef = useRef(null);
 
     const handLandmarkerRef = useRef(null);
@@ -94,7 +95,15 @@ export function useHandDetection() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 drawLandmarks(ctx, landmarks, canvas.width, canvas.height);
 
-                currentLandmarksRef.current = landmarks && landmarks.length > 0 ? landmarks : null;
+                const hasHands = landmarks && landmarks.length > 0;
+                currentLandmarksRef.current = hasHands ? landmarks : null;
+
+                // Only update state if changed (debounce UI updates)
+                setIsHandDetected(prev => {
+                    if (prev !== hasHands) return hasHands;
+                    return prev;
+                });
+
             } catch (err) {
                 // Silently handle detection errors (frame timing issues)
             }
@@ -119,6 +128,7 @@ export function useHandDetection() {
             videoRef.current.srcObject = null;
         }
         setIsRunning(false);
+        setIsHandDetected(false);
         currentLandmarksRef.current = null;
     }, []);
 
@@ -136,6 +146,7 @@ export function useHandDetection() {
         isModelLoaded,
         isLoading,
         isRunning,
+        isHandDetected,
         get currentLandmarks() { return currentLandmarksRef.current; },
         start,
         stop,

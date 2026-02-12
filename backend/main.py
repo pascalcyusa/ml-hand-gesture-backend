@@ -419,3 +419,52 @@ def save_piano_sequence(req: MusicSequenceSchema, user: models.User = Depends(re
         is_active=s.is_active,
         created_at=s.created_at.isoformat()
     )
+
+
+# ══════════════════════════════════════════════════════════
+# Training Session Endpoints (Raw Data)
+# ══════════════════════════════════════════════════════════
+
+class TrainingSessionSchema(BaseModel):
+    class_names: list
+    samples: dict  # { features: [], labels: [] }
+
+class TrainingSessionResponse(BaseModel):
+    id: int
+    class_names: list
+    created_at: str
+
+@app.post("/training-sessions", response_model=TrainingSessionResponse)
+def save_training_session(req: TrainingSessionSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    session = models.TrainingSession(
+        user_id=user.id,
+        class_names=req.class_names,
+        samples=req.samples
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+    
+    return TrainingSessionResponse(
+        id=session.id,
+        class_names=session.class_names,
+        created_at=session.created_at.isoformat()
+    )
+
+@app.get("/training-sessions", response_model=List[TrainingSessionResponse])
+def get_training_sessions(user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    results = (
+        db.query(models.TrainingSession)
+        .filter(models.TrainingSession.user_id == user.id)
+        .order_by(models.TrainingSession.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    return [
+        TrainingSessionResponse(
+            id=s.id,
+            class_names=s.class_names,
+            created_at=s.created_at.isoformat()
+        )
+        for s in results
+    ]

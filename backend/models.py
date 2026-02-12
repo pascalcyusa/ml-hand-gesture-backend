@@ -18,6 +18,7 @@ class User(Base):
     high_scores = relationship("HighScore", back_populates="user")
     logs = relationship("Log", back_populates="user")
     saved_models = relationship("SavedModel", back_populates="user")
+    training_sessions = relationship("TrainingSession", back_populates="user")
 
 
 class Profile(Base):
@@ -97,3 +98,15 @@ class SavedModel(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="saved_models")
+
+
+class TrainingSession(Base):
+    __tablename__ = "training_sessions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    class_names = Column(JSON)             # ["thumbs_up", "peace"]
+    samples = Column(JSON)                 # Raw features/landmarks: { features: [], labels: [] }
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="training_sessions")

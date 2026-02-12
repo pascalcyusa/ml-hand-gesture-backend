@@ -152,6 +152,26 @@ export function useStorageManager() {
         }
     }, [getHeaders]);
 
+    // ── Training Sessions (Raw Data) ──
+
+    const saveTrainingSession = useCallback(async (classNames, samples) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+
+            // samples: { features: [], labels: [] }
+            const res = await fetch(`${API_Base}/training-sessions`, {
+                method: 'POST',
+                headers: { ...headers, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ class_names: classNames, samples }),
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Save training session error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
     // Legacy support: importFromCloud (renamed/adjusted)
     // The App.js uses importFromCloud for community models
     const importFromCloud = useCallback(async (modelItem) => {
@@ -180,5 +200,6 @@ export function useStorageManager() {
         getPianoSequences,
         saveGestureMapping,
         getGestureMappings,
+        saveTrainingSession,
     };
 }

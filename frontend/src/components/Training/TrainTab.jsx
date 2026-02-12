@@ -97,6 +97,18 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
         setLoadingMessage('Training model...');
 
         const trainingData = cm.getTrainingData();
+
+        // Auto-save session if logged in
+        if (auth.user) {
+            setLoadingMessage('Backing up training data...');
+            // We don't block training on failure, but we try to save
+            await storage.saveTrainingSession(cm.classNames, {
+                features: trainingData.features,
+                labels: trainingData.labels
+            });
+            setLoadingMessage('Training model...');
+        }
+
         const success = await trainer.train(trainingData);
 
         setShowLoadingOverlay(false);
