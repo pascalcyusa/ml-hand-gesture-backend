@@ -4,6 +4,7 @@ import {
     StopIcon,
     CloudArrowUpIcon,
     CloudArrowDownIcon,
+    PlayIcon,
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
@@ -73,6 +74,32 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         audio.stopAll();
         setIsPlaying(false);
     }, [audio]);
+
+    // Play all Configured Sequences
+    const handlePlayAll = useCallback(async () => {
+        if (isPlaying) return;
+        setIsPlaying(true);
+        try {
+            for (const name of classNames) {
+                const getSlots = sequencerSlotsRef.current[name];
+                if (getSlots) {
+                    const slots = getSlots();
+                    // Optional: Highlight the class currently playing or show a toast
+                    await showToast(`Playing ${name}...`, 'info', 1000);
+
+                    // Filter out empty slots to check if we should play
+                    const hasNotes = slots.some(s => !s.isDelay);
+                    if (hasNotes) {
+                        await audio.playSequence(slots, waveform);
+                        // Small buffer between classes
+                        await new Promise(r => setTimeout(r, 500));
+                    }
+                }
+            }
+        } finally {
+            setIsPlaying(false);
+        }
+    }, [classNames, isPlaying, audio, waveform]);
 
     // Handle prediction-triggered playback
     const lastPredRef = useRef(null);
@@ -214,12 +241,23 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                                 <>
                                     <Button variant="ghost" size="sm" onClick={handleLoadList}>
                                         <CloudArrowDownIcon className="h-4 w-4" />
+                                        Load
                                     </Button>
                                     <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
                                         <CloudArrowUpIcon className="h-4 w-4" />
+                                        Save
                                     </Button>
                                 </>
                             )}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handlePlayAll}
+                                disabled={isPlaying}
+                            >
+                                <PlayIcon className="h-3.5 w-3.5" />
+                                Play All
+                            </Button>
                             <Button
                                 variant="danger"
                                 size="sm"
@@ -249,8 +287,8 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                         />
                     ))}
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
 

@@ -19,6 +19,7 @@ import AuthModal from './components/common/AuthModal.jsx';
 import Toast from './components/common/Toast.jsx';
 
 import { useAuth } from './hooks/useAuth.js';
+import { useBLE } from './hooks/useBLE.js';
 import { useHandDetection } from './hooks/useHandDetection.js';
 import { useClassManager } from './hooks/useClassManager.js';
 import { useModelTrainer } from './hooks/useModelTrainer.js';
@@ -39,6 +40,9 @@ export default function App() {
 
   // ── Auth ──
   const auth = useAuth();
+
+  // ── BLE ──
+  const ble = useBLE();
 
   // ── Shared hooks ──
   const hand = useHandDetection();
@@ -146,11 +150,12 @@ export default function App() {
               showToast={showToast}
               hand={hand}
               prediction={prediction}
+              ble={ble}
             />
           } />
 
           <Route path="/devices" element={
-            <DevicesTab showToast={showToast} />
+            <DevicesTab showToast={showToast} ble={ble} />
           } />
 
           <Route path="/community" element={

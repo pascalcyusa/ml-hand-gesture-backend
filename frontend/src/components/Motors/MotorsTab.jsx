@@ -8,6 +8,7 @@ import {
     CogIcon,
     CloudArrowUpIcon,
     CloudArrowDownIcon,
+    PlayIcon,
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { useAuth } from '../../hooks/useAuth.js';
@@ -17,9 +18,10 @@ import { Input } from '../ui/input.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
+import { generateMotorCommand, encodeCommand } from '../../utils/spikeProtocol.js';
 import './MotorsTab.css';
 
-export default function MotorsTab({ classNames, showToast, hand, prediction }) {
+export default function MotorsTab({ classNames, showToast, hand, prediction, ble }) {
     const storage = useStorageManager();
     const { user } = useAuth();
 
@@ -28,6 +30,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction }) {
     const [saveName, setSaveName] = useState('');
     const [savedConfigs, setSavedConfigs] = useState([]);
     const [configData, setConfigData] = useState({}); // { className: config[] }
+    const [isPlaying, setIsPlaying] = useState(false);
 
     // Store state in a ref to avoid re-renders but have access for saving
     const currentConfigsRef = useRef({});
@@ -67,15 +70,59 @@ export default function MotorsTab({ classNames, showToast, hand, prediction }) {
         }
     };
 
+    // Play All Logic
+    const handlePlayAll = useCallback(async () => {
+        if (isPlaying) return;
+        if (!ble.device?.connected) {
+            showToast('Connect LEGO Hub first!', 'warning');
+            return;
+        }
+
+        setIsPlaying(true);
+        try {
+            for (const name of classNames) {
+                // Get config for this class. 
+                // Prioritize ref (current edits), fallback to configData (loaded)
+                const config = currentConfigsRef.current[name] || configData[name];
+
+                if (config && Array.isArray(config)) {
+                    await showToast(`Executing ${name}...`, 'info', 1000);
+
+                    for (const motor of config) {
+                        if (motor.action === 'stop') continue;
+
+                        const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees);
+                        if (cmdString) {
+                            const bytes = encodeCommand(cmdString);
+                            await ble.write(bytes);
+                        }
+                    }
+
+                    // Fixed delay between classes 
+                    await new Promise(r => setTimeout(r, 2000));
+
+                    // Stop motors before next class (safety)
+                    for (const port of ['A', 'B', 'C', 'D', 'E', 'F']) {
+                        const stopCmd = generateMotorCommand(port, 'stop', 0, 0);
+                        if (stopCmd) await ble.write(encodeCommand(stopCmd));
+                    }
+                }
+            }
+            showToast('Done playing all steps', 'success');
+        } catch (err) {
+            console.error("Play All Error:", err);
+            showToast("Error executing commands", 'error');
+        } finally {
+            setIsPlaying(false);
+        }
+    }, [classNames, ble, isPlaying, configData, showToast]);
+
     if (!classNames || classNames.length === 0) {
         return (
             <div className="motors-tab">
                 <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
                     <CogIcon className="h-12 w-12 text-[var(--fg-muted)] opacity-40" />
-                    <h2 className="text-lg font-bold">Motor Controls</h2>
-                    <p className="text-sm text-[var(--fg-dim)] max-w-[400px]">
-                        Train at least one class in the Train tab to configure motor actions.
-                    </p>
+                    <h2 className="text-lg font-bold">Motors</h2>
                 </Card>
             </div>
         );
@@ -140,25 +187,33 @@ export default function MotorsTab({ classNames, showToast, hand, prediction }) {
                     <div className="motors-header flex justify-between items-start">
                         <div className="flex items-center gap-2">
                             <CogIcon className="h-6 w-6 text-[var(--orange)]" />
-                            <h2>Motor Controls</h2>
+                            <h2>Motors</h2>
                         </div>
 
-                        {user && (
-                            <div className="flex items-center gap-2">
-                                <Button variant="ghost" size="sm" onClick={handleLoadList}>
-                                    <CloudArrowDownIcon className="h-4 w-4 mr-1.5" />
-                                    Load
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
-                                    <CloudArrowUpIcon className="h-4 w-4 mr-1.5" />
-                                    Save
-                                </Button>
-                            </div>
-                        )}
+                        <div className="flex items-center gap-2">
+                            {user && (
+                                <>
+                                    <Button variant="ghost" size="sm" onClick={handleLoadList}>
+                                        <CloudArrowDownIcon className="h-4 w-4 mr-1.5" />
+                                        Load
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+                                        <CloudArrowUpIcon className="h-4 w-4 mr-1.5" />
+                                        Save
+                                    </Button>
+                                </>
+                            )}
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={handlePlayAll}
+                                disabled={isPlaying}
+                            >
+                                <PlayIcon className="h-4 w-4 mr-1.5" />
+                                Play All
+                            </Button>
+                        </div>
                     </div>
-                    <p className="motors-subtitle mt-1">
-                        Configure motor actions for each gesture class. Connect your LEGO Spike Prime in the Devices tab.
-                    </p>
                 </div>
 
                 <div className="motors-section-list mt-6 space-y-4">

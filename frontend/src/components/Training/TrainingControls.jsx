@@ -154,38 +154,44 @@ export default function TrainingControls({
             </div>
 
             {/* Secondary Actions */}
-            <div className="controls-group controls-secondary">
-                {isTrained && (
-                    <>
-                        <Button size="sm" onClick={() => {
-                            const name = prompt('Model name:', 'my-model');
-                            if (name?.trim()) onSave(name);
-                        }}>
-                            <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                            Save
-                        </Button>
-                        <Button size="sm" onClick={onExport}>
-                            <ArrowUpTrayIcon className="h-3.5 w-3.5" />
-                            Export
-                        </Button>
-                    </>
-                )}
+            {/* Secondary Actions */}
+            <div className="controls-group">
+                {/* Row 1: Persistence */}
+                <div className="flex gap-2">
+                    {isTrained && (
+                        <>
+                            <Button size="sm" className="flex-1" onClick={() => {
+                                const name = prompt('Model name:', 'my-model');
+                                if (name?.trim()) onSave(name);
+                            }}>
+                                <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                                Save
+                            </Button>
+                            <Button size="sm" className="flex-1" onClick={onExport}>
+                                <ArrowUpTrayIcon className="h-3.5 w-3.5" />
+                                Export
+                            </Button>
+                        </>
+                    )}
 
-                {savedModels.length > 0 && (
-                    <Button size="sm" onClick={() => setShowLoadDialog(true)}>
-                        <FolderOpenIcon className="h-3.5 w-3.5" />
-                        Load
+                    {savedModels.length > 0 && (
+                        <Button size="sm" className="flex-1" onClick={() => setShowLoadDialog(true)}>
+                            <FolderOpenIcon className="h-3.5 w-3.5" />
+                            Load
+                        </Button>
+                    )}
+
+                    <Button size="sm" className="flex-1" onClick={handleImport}>
+                        <ArrowDownTrayIcon className="h-3.5 w-3.5" />
+                        Import
                     </Button>
-                )}
+                </div>
 
-                <Button size="sm" onClick={handleImport}>
-                    <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                    Import
-                </Button>
-
+                {/* Row 2: Reset */}
                 <Button
                     variant="danger"
                     size="sm"
+                    className="w-full mt-2"
                     onClick={() => {
                         if (window.confirm('Reset all classes and model?')) onReset();
                     }}

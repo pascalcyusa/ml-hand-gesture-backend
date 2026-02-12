@@ -13,7 +13,7 @@ import {
     SignalSlashIcon,
     BoltIcon, // Using BoltIcon for power/connection
 } from '@heroicons/react/24/outline';
-import { useBLE } from '../../hooks/useBLE.js';
+// import { useBLE } from '../../hooks/useBLE.js'; // REMOVED
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
@@ -24,8 +24,8 @@ const DEFAULT_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
 const DEFAULT_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
 const DEFAULT_NOTIFY_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
 
-export default function DevicesTab({ showToast }) {
-    const ble = useBLE();
+export default function DevicesTab({ showToast, ble }) {
+    // const ble = useBLE(); // Lifted to App.jsx
 
     const handleConnect = useCallback(async () => {
         const success = await ble.connect(
