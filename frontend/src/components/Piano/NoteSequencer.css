@@ -1,8 +1,7 @@
 .note-sequencer {
     background: var(--bg-soft);
     border: 1px solid var(--bg1);
-    border-radius: var(--radius-xl);
-    /* Softer */
+    border-radius: var(--radius-lg);
     overflow: hidden;
     transition: border-color var(--transition-normal);
 }
@@ -11,16 +10,67 @@
     border-color: var(--bg3);
 }
 
-/* ... header ... */
+/* ── Header ── */
+.note-seq-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.note-seq-header:hover {
+    background: var(--bg1);
+}
+
+.note-seq-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.note-seq-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.note-seq-slot-count {
+    font-size: 0.7rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+    background: var(--bg2);
+    padding: 1px 8px;
+    border-radius: var(--radius-full);
+}
+
+.note-seq-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+/* ── Body ── */
+.note-seq-body {
+    padding: 0 var(--space-md) var(--space-md);
+}
+
+/* ── Slots Container ── */
+.note-seq-slots {
+    display: flex;
+    gap: var(--space-sm);
+    overflow-x: auto;
+    padding-bottom: var(--space-sm);
+    scrollbar-width: thin;
+}
 
 /* ── Individual Slot ── */
 .note-slot {
-    min-width: 110px;
-    /* Slightly wider */
+    min-width: 100px;
     background: var(--bg1);
     border: 1px solid var(--bg2);
-    border-radius: var(--radius-lg);
-    /* Softer */
+    border-radius: var(--radius-md);
     padding: var(--space-sm);
     display: flex;
     flex-direction: column;
@@ -31,26 +81,101 @@
     position: relative;
 }
 
-/* ... states ... */
+.note-slot:hover {
+    border-color: var(--bg3);
+    background: var(--bg2);
+}
+
+.note-slot.editing {
+    border-color: var(--blue);
+    background: var(--bg2);
+    box-shadow: 0 0 0 2px rgba(131, 165, 152, 0.2);
+}
+
+.note-slot.playing {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(184, 187, 38, 0.3);
+}
+
+.note-slot.note {
+    border-left: 3px solid var(--blue-dim);
+}
+
+.note-slot.delay {
+    border-left: 3px solid var(--yellow-dim);
+    cursor: default;
+}
+
+.note-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.note-slot-index {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--fg-muted);
+    background: rgba(0, 0, 0, 0.2);
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-sm);
+}
+
+.note-slot-type-label {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--fg-dim);
+}
+
+.note-slot-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
+}
+
+.note-display {
+    text-align: center;
+}
+
+.note-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--fg);
+    display: block;
+}
+
+.note-name.delay-label {
+    font-size: 0.9rem;
+    color: var(--yellow);
+}
+
+.note-edit-hint {
+    font-size: 0.6rem;
+    color: var(--fg-muted);
+    display: block;
+    margin-top: -2px;
+}
+
+.note-duration-control {
+    width: 100%;
+}
 
 .duration-select {
     width: 100%;
-    padding: 4px 8px;
+    padding: 2px 4px;
     font-size: 0.7rem;
-    font-family: var(--font-mono);
     background: var(--bg);
     color: var(--fg-dim);
     border: 1px solid var(--bg3);
-    border-radius: var(--radius-md);
-    /* Softer */
+    border-radius: var(--radius-sm);
     text-align: center;
     cursor: pointer;
-    appearance: none;
-    /* Remove default arrow */
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 4px center;
-    background-size: 10px;
 }
 
 /* ── Piano Panel ── */

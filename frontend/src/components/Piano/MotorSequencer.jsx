@@ -103,24 +103,27 @@ export default function MotorSequencer({
                                         <button
                                             className={`motor-action-btn ${motor.action === 'stop' ? 'active' : ''}`}
                                             onClick={() => updateMotor(motor.port, 'action', 'stop')}
+                                            title="Stop"
                                         >
                                             <StopIcon className="h-4 w-4" />
-                                            <span>Stop</span>
                                         </button>
                                         <button
                                             className={`motor-action-btn ${motor.action === 'run_forever' ? 'active' : ''}`}
                                             onClick={() => updateMotor(motor.port, 'action', 'run_forever')}
+                                            title="Run Forever"
                                         >
                                             <PlayIcon className="h-4 w-4" />
-                                            <span>Run Forever</span>
                                         </button>
                                         <button
                                             className={`motor-action-btn ${motor.action === 'run_degrees' ? 'active' : ''}`}
                                             onClick={() => updateMotor(motor.port, 'action', 'run_degrees')}
+                                            title="Run Degrees"
                                         >
                                             <ClockIcon className="h-4 w-4" />
-                                            <span>Degrees</span>
                                         </button>
+                                    </div>
+                                    <div className="motor-action-label-display">
+                                        {ACTION_LABELS[motor.action]}
                                     </div>
                                 </div>
 
@@ -128,17 +131,17 @@ export default function MotorSequencer({
                                     <>
                                         <div className="motor-field">
                                             <label className="motor-field-label">Direction</label>
-                                            <div className="motor-toggle-group">
+                                            <select
+                                                className="motor-select"
+                                                value={motor.direction}
+                                                onChange={(e) => updateMotor(motor.port, 'direction', e.target.value)}
+                                            >
                                                 {DIRECTIONS.map((d) => (
-                                                    <button
-                                                        key={d}
-                                                        className={`motor-toggle-btn ${motor.direction === d ? 'active' : ''}`}
-                                                        onClick={() => updateMotor(motor.port, 'direction', d)}
-                                                    >
+                                                    <option key={d} value={d}>
                                                         {d === 'clockwise' ? 'CW' : 'CCW'}
-                                                    </button>
+                                                    </option>
                                                 ))}
-                                            </div>
+                                            </select>
                                         </div>
 
                                         <div className="motor-field">

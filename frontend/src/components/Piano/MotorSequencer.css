@@ -1,8 +1,7 @@
 .motor-sequencer {
     background: var(--bg-soft);
     border: 1px solid var(--bg1);
-    border-radius: var(--radius-xl);
-    /* Softer edges */
+    border-radius: var(--radius-lg);
     overflow: hidden;
     transition: border-color var(--transition-normal);
 }
@@ -32,6 +31,10 @@
     gap: var(--space-sm);
 }
 
+.motor-seq-icon {
+    font-size: 1.1rem;
+}
+
 .motor-seq-name {
     font-weight: 600;
     font-size: 0.95rem;
@@ -46,6 +49,11 @@
     font-family: var(--font-mono);
 }
 
+.motor-seq-chevron {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+}
+
 /* ── Body ── */
 .motor-seq-body {
     padding: 0 var(--space-md) var(--space-md);
@@ -55,8 +63,7 @@
 .motor-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-md);
-    /* Increased gap */
+    gap: var(--space-sm);
 }
 
 @media (max-width: 768px) {
@@ -68,12 +75,11 @@
 .motor-port-card {
     background: var(--bg1);
     border: 1px solid var(--bg2);
-    border-radius: var(--radius-lg);
-    /* Softer edges */
-    padding: var(--space-md);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm);
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-xs);
 }
 
 .motor-port-label {
@@ -84,14 +90,13 @@
     text-align: center;
     padding-bottom: var(--space-xs);
     border-bottom: 1px solid var(--bg2);
-    margin-bottom: var(--space-xs);
 }
 
 /* ── Field ── */
 .motor-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
 }
 
 .motor-field-label {
@@ -100,90 +105,29 @@
     font-family: var(--font-mono);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    font-weight: 600;
 }
 
-/* ── Action Grid ── */
-.motor-action-grid {
-    display: flex;
-    flex-direction: column;
-    /* Stack vertically for word descriptive buttons */
-    gap: 4px;
-    background: var(--bg);
-    padding: 4px;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--bg3);
-}
-
-.motor-action-btn {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    color: var(--fg-dim);
-    transition: all 0.2s;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-align: left;
-}
-
-.motor-action-btn:hover {
-    background: var(--bg2);
-    color: var(--fg);
-}
-
-.motor-action-btn.active {
-    background: var(--purple-dim);
-    color: var(--purple);
-    font-weight: 600;
-}
-
-/* ── Toggle Group (Direction) ── */
-.motor-toggle-group {
-    display: flex;
-    background: var(--bg);
-    border: 1px solid var(--bg3);
-    border-radius: var(--radius-md);
-    padding: 2px;
-    gap: 2px;
-}
-
-.motor-toggle-btn {
-    flex: 1;
-    padding: 6px;
+.motor-select {
+    width: 100%;
+    padding: 4px 6px;
     font-size: 0.75rem;
     font-family: var(--font-mono);
-    background: transparent;
-    color: var(--fg-dim);
-    border: none;
-    cursor: pointer;
+    background: var(--bg);
+    color: var(--fg);
+    border: 1px solid var(--bg3);
     border-radius: var(--radius-sm);
-    transition: all 0.2s;
+    cursor: pointer;
 }
 
-.motor-toggle-btn:hover {
-    background: var(--bg2);
-    color: var(--fg);
-}
-
-.motor-toggle-btn.active {
-    background: var(--bg3);
-    color: var(--fg);
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+.motor-select:focus {
+    outline: none;
+    border-color: var(--purple);
 }
 
 .motor-slider {
     width: 100%;
     accent-color: var(--purple);
     cursor: pointer;
-    height: 4px;
-    border-radius: 2px;
 }
 
 .motor-value {
@@ -195,19 +139,18 @@
 
 .motor-input {
     width: 100%;
-    padding: 6px 8px;
-    font-size: 0.8rem;
+    padding: 4px 6px;
+    font-size: 0.75rem;
     font-family: var(--font-mono);
     background: var(--bg);
     color: var(--fg);
     border: 1px solid var(--bg3);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
 }
 
 .motor-input:focus {
     outline: none;
     border-color: var(--purple);
-    box-shadow: 0 0 0 2px var(--purple-dim);
 }
 
 /* ── Footer ── */
@@ -215,13 +158,57 @@
     display: flex;
     align-items: center;
     gap: var(--space-sm);
-    margin-top: var(--space-md);
-    padding-top: var(--space-md);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
     border-top: 1px solid var(--bg2);
 }
 
 .motor-hint {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     color: var(--fg-muted);
     font-style: italic;
+}
+
+/* ── New Action Grid ── */
+.motor-action-grid {
+    display: flex;
+    gap: 4px;
+    background: var(--bg);
+    padding: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--bg3);
+}
+
+.motor-action-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+    border-radius: var(--radius-sm);
+    color: var(--fg-muted);
+    transition: all 0.2s;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.motor-action-btn:hover {
+    background: var(--bg2);
+    color: var(--fg);
+}
+
+.motor-action-btn.active {
+    background: var(--purple-dim);
+    color: var(--purple);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.motor-action-label-display {
+    font-size: 0.7rem;
+    color: var(--fg-dim);
+    text-align: center;
+    margin-top: 4px;
+    font-family: var(--font-mono);
+    min-height: 1.2em;
 }
