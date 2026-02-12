@@ -119,10 +119,20 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
 
     if (!classNames || classNames.length === 0) {
         return (
-            <div className="motors-tab">
+            <div className="motors-tab animate-fade-in">
+                <div className="motors-header">
+                    <h2 className="flex items-center gap-2">
+                        <CogIcon className="h-6 w-6 text-[var(--orange)]" />
+                        Motors
+                    </h2>
+                </div>
+
                 <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-                    <CogIcon className="h-12 w-12 text-[var(--fg-muted)] opacity-40" />
-                    <h2 className="text-lg font-bold">Motors</h2>
+                    <CogIcon className="h-16 w-16 text-[var(--fg-muted)] opacity-20" />
+                    <h2 className="text-xl font-bold text-[var(--fg-dim)]">No Model Loaded</h2>
+                    <p className="text-[var(--fg-muted)] max-w-[400px]">
+                        Train gesture classes in the Train tab, or load a pre-trained model to configure motor actions.
+                    </p>
                 </Card>
             </div>
         );

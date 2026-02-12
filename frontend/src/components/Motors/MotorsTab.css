@@ -14,6 +14,22 @@
     }
 }
 
+/* ── Empty State Container ── */
+.motors-tab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-lg);
+}
+
+.motors-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
+}
+
 .motors-header {
     display: flex;
     align-items: center;

@@ -160,12 +160,19 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
 
     if (!classNames || classNames.length === 0) {
         return (
-            <div className="piano-tab">
-                <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-                    <MusicalNoteIcon className="h-12 w-12 text-[var(--fg-muted)] opacity-40" />
-                    <h2 className="text-lg font-bold">Piano Player</h2>
-                    <p className="text-sm text-[var(--fg-dim)] max-w-[400px]">
-                        Train at least one class in the Train tab to configure note sequences.
+            <div className="piano-tab animate-fade-in">
+                <div className="piano-header">
+                    <h2 className="flex items-center gap-2">
+                        <MusicalNoteIcon className="h-6 w-6 text-[var(--purple)]" />
+                        Piano Player
+                    </h2>
+                </div>
+
+                <Card className="piano-empty">
+                    <MusicalNoteIcon className="piano-empty-icon" />
+                    <h2>No Model Loaded</h2>
+                    <p>
+                        Train gesture classes in the Train tab, or load a pre-trained model to start playing music.
                     </p>
                 </Card>
             </div>

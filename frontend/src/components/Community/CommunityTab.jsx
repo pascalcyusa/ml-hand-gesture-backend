@@ -60,7 +60,7 @@ export default function CommunityTab({ auth, onImportModel, showToast }) {
         <div className="community-tab animate-fade-in">
             <div className="community-header">
                 <div className="community-header-text">
-                    <h2 className="flex items-center gap-2 text-xl font-bold">
+                    <h2 className="flex items-center gap-2">
                         <GlobeAltIcon className="h-6 w-6 text-[var(--blue)]" />
                         Community Models
                     </h2>

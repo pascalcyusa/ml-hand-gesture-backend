@@ -48,23 +48,25 @@ export default function ClassCard({
                 </div>
             </div>
 
-            {expanded && samples.length > 0 && (
-                <div className="class-card-samples">
-                    {samples.map((sample, i) => (
-                        <SampleThumb
-                            key={i}
-                            sample={sample}
-                            onDelete={() => onDeleteSample(id, i)}
-                        />
-                    ))}
+            <div className={`class-card-body ${expanded ? 'expanded' : ''}`}>
+                <div className="class-card-content">
+                    {samples.length > 0 ? (
+                        <div className="class-card-samples">
+                            {samples.map((sample, i) => (
+                                <SampleThumb
+                                    key={i}
+                                    sample={sample}
+                                    onDelete={() => onDeleteSample(id, i)}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="class-card-empty">
+                            <p>No samples yet — hold a pose and click Collect</p>
+                        </div>
+                    )}
                 </div>
-            )}
-
-            {expanded && samples.length === 0 && (
-                <div className="class-card-empty">
-                    <p>No samples yet — hold a pose and click Collect</p>
-                </div>
-            )}
+            </div>
         </Card>
     );
 }
