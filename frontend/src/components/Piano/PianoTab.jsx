@@ -2,35 +2,59 @@
  * PianoTab — Orchestrates note sequences per class
  * 
  * Shows NoteSequencer for each trained class.
- * When predictions are active, triggers the matching class's sequence.
- * Motor controls have been moved to the separate Motors tab.
+ * Supports saving/loading configuration to backend.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
     MusicalNoteIcon,
     StopIcon,
+    CloudArrowUpIcon,
+    CloudArrowDownIcon,
+    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
+import { useStorageManager } from '../../hooks/useStorageManager.js';
+import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Switch } from '../ui/switch.jsx';
+import { Input } from '../ui/input.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
 import './PianoTab.css';
 
 export default function PianoTab({ classNames, topPrediction, showToast }) {
     const audio = useAudioEngine();
+    const storage = useStorageManager();
+    const { user } = useAuth();
+
     const [pianoEnabled, setPianoEnabled] = useState(true);
     const [waveform, setWaveform] = useState('sine');
     const [isPlaying, setIsPlaying] = useState(false);
 
+    const [showSaveDialog, setShowSaveDialog] = useState(false);
+    const [showLoadDialog, setShowLoadDialog] = useState(false);
+    const [saveName, setSaveName] = useState('');
+    const [savedSequences, setSavedSequences] = useState([]);
+
     // Refs to note sequencer slots for each class
+    // We will use this to gather data for saving
     const sequencerSlotsRef = useRef({});
 
     // Register slots from each NoteSequencer
     const registerSlots = useCallback((className, getSlots) => {
         sequencerSlotsRef.current[className] = getSlots;
     }, []);
+
+    // Set slots (for loading)
+    // We need a way to push data down to sequencers.
+    // simpler approach: lift state up entirely? 
+    // Or just expose a setter via ref/callback?
+    // Current NoteSequencer manages its own state.
+    // Refactoring to controlled component is cleaner but more work right now.
+    // Let's us a "key" prop on NoteSequencer to force re-render with new initial slots?
+    // Or just pass `initialSlots` prop and update it when loading.
+    const [sequencerData, setSequencerData] = useState({}); // { className: slots[] }
 
     // Play a sequence for a class
     const handlePlaySequence = useCallback(
@@ -75,12 +99,47 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
             handlePlaySequence(slots, null);
         }
 
-        // Clear last prediction after a cooldown
         const timer = setTimeout(() => {
             lastPredRef.current = null;
         }, 1000);
         return () => clearTimeout(timer);
     }, [topPrediction, pianoEnabled, isPlaying, handlePlaySequence]);
+
+    // ── Persistence Handlers ──
+
+    const handleSave = async () => {
+        if (!saveName.trim()) return showToast('Enter a name', 'warning');
+
+        // Gather all current slots
+        const currentData = {};
+        classNames.forEach(name => {
+            if (sequencerSlotsRef.current[name]) {
+                currentData[name] = sequencerSlotsRef.current[name]();
+            }
+        });
+
+        const success = await storage.savePianoSequence(saveName, currentData, true); // Active by default
+        if (success) {
+            showToast('Sequence saved!', 'success');
+            setShowSaveDialog(false);
+        } else {
+            showToast('Failed to save', 'error');
+        }
+    };
+
+    const handleLoadList = async () => {
+        const list = await storage.getPianoSequences();
+        setSavedSequences(list);
+        setShowLoadDialog(true);
+    };
+
+    const handleLoad = (sequence) => {
+        if (sequence.data) {
+            setSequencerData(sequence.data);
+            showToast(`Loaded "${sequence.name_or_title}"`, 'success');
+            setShowLoadDialog(false);
+        }
+    };
 
     if (!classNames || classNames.length === 0) {
         return (
@@ -91,16 +150,52 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                     <p className="text-sm text-[var(--fg-dim)] max-w-[400px]">
                         Train at least one class in the Train tab to configure note sequences.
                     </p>
-                    <p className="text-xs text-[var(--fg-muted)]">
-                        Each trained class can trigger a unique musical sequence when detected.
-                    </p>
                 </Card>
             </div>
         );
     }
 
     return (
-        <div className="piano-tab animate-fade-in">
+        <div className="piano-tab animate-fade-in relative">
+            {/* ── Save Dialog ── */}
+            {showSaveDialog && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <Card className="w-full max-w-sm p-5 space-y-4 shadow-2xl">
+                        <h3 className="font-bold">Save Configuration</h3>
+                        <Input
+                            placeholder="e.g. Dreamy Chords"
+                            value={saveName}
+                            onChange={e => setSaveName(e.target.value)}
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button variant="ghost" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                            <Button onClick={handleSave}>Save</Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {/* ── Load Dialog ── */}
+            {showLoadDialog && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <Card className="w-full max-w-md p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
+                        <div className="flex justify-between items-center">
+                            <h3 className="font-bold">Load Configuration</h3>
+                            <Button variant="ghost" size="sm" onClick={() => setShowLoadDialog(false)}>Close</Button>
+                        </div>
+                        <div className="overflow-y-auto space-y-2 flex-1">
+                            {savedSequences.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No saved sequences.</p> :
+                                savedSequences.map(s => (
+                                    <button key={s.id} onClick={() => handleLoad(s)} className="w-full text-left p-3 rounded bg-[var(--bg3)] hover:bg-[var(--bg2)] flex justify-between">
+                                        <span className="font-medium">{s.name_or_title}</span>
+                                        <span className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</span>
+                                    </button>
+                                ))}
+                        </div>
+                    </Card>
+                </div>
+            )}
+
             {/* Controls Bar */}
             <Card className="piano-controls">
                 <div className="piano-controls-row">
@@ -111,12 +206,12 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                         />
                         <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
                             <MusicalNoteIcon className="h-4 w-4" />
-                            Auto-Play on Detection
+                            Auto-Play
                         </span>
                     </label>
 
                     <div className="piano-waveform">
-                        <label className="piano-waveform-label">Waveform</label>
+                        <label className="piano-waveform-label">Sound</label>
                         <select
                             className="piano-waveform-select"
                             value={waveform}
@@ -130,39 +225,36 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                         </select>
                     </div>
 
-                    <div className="piano-actions">
+                    <div className="flex items-center gap-2 ml-auto">
+                        {user && (
+                            <>
+                                <Button variant="ghost" size="sm" onClick={handleLoadList}>
+                                    <CloudArrowDownIcon className="h-4 w-4" />
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+                                    <CloudArrowUpIcon className="h-4 w-4" />
+                                </Button>
+                            </>
+                        )}
                         <Button
                             variant="danger"
                             size="sm"
                             onClick={handleStopAll}
                         >
                             <StopIcon className="h-3.5 w-3.5" />
-                            Stop All
+                            Stop
                         </Button>
                     </div>
                 </div>
-
-                {topPrediction && pianoEnabled && (
-                    <div className="piano-now-playing">
-                        <span className="now-playing-dot" />
-                        <span>Detected: <strong>{topPrediction.className}</strong></span>
-                        <span className="now-playing-conf">
-                            {Math.round(topPrediction.confidence * 100)}%
-                        </span>
-                    </div>
-                )}
             </Card>
 
             {/* Note Sequences */}
             <div className="piano-section">
-                <h3 className="piano-section-title flex items-center gap-2">
-                    <MusicalNoteIcon className="h-5 w-5 text-[var(--purple)]" />
-                    Note Sequences
-                </h3>
                 <div className="piano-section-list">
                     {classNames.map((name, i) => (
                         <NoteSequencerWithRef
-                            key={`note-${name}-${i}`}
+                            key={`note-${name}-${i}`} // If we change key, component remounts. Not ideal for loading.
+                            // Better: pass initialSlots prop
                             className={name}
                             classId={i}
                             onPlaySequence={handlePlaySequence}
@@ -171,6 +263,7 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                             durations={audio.DURATIONS}
                             isPlaying={isPlaying}
                             registerSlots={registerSlots}
+                            initialSlots={sequencerData[name]} // Load from state
                         />
                     ))}
                 </div>
@@ -191,6 +284,7 @@ function NoteSequencerWithRef({
     durations,
     isPlaying,
     registerSlots,
+    initialSlots,
 }) {
     const slotsRef = useRef(NoteSequencer.getDefaultSlots());
 
@@ -216,6 +310,7 @@ function NoteSequencerWithRef({
             notes={notes}
             durations={durations}
             isPlaying={isPlaying}
+            initialSlots={initialSlots} // Pass down
         />
     );
 }

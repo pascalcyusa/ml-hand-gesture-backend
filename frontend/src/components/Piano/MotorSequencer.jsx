@@ -1,18 +1,11 @@
 /**
  * MotorSequencer — Per-class motor control configuration
  * 
- * Ported from: js/motorGroupController.js
- * 
- * Configures motor actions for ports A, B, C:
- *  - Stop / Run Forever / Run for Degrees
- *  - Direction (CW / CCW)
- *  - Speed/Degrees values
- * 
- * Motor execution requires BLE connection (Phase 3).
- * For now this builds the config UI.
+ * Modified to support initialConfig prop AND onConfigChange callback for parent state tracking.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+// ... imports unchanged
 import {
     CogIcon,
     StopIcon,
@@ -47,9 +40,25 @@ export default function MotorSequencer({
     className,
     classId,
     isConnected = false,
+    initialConfig,
+    onConfigChange, // New prop
 }) {
-    const [motors, setMotors] = useState(createDefaultMotorConfig);
+    const [motors, setMotors] = useState(() => initialConfig || createDefaultMotorConfig());
     const [collapsed, setCollapsed] = useState(true);
+
+    // Update motors if initialConfig changes
+    useEffect(() => {
+        if (initialConfig) {
+            setMotors(initialConfig);
+        }
+    }, [initialConfig]);
+
+    // Notify parent on change
+    useEffect(() => {
+        if (onConfigChange) {
+            onConfigChange(motors);
+        }
+    }, [motors, onConfigChange]);
 
     const updateMotor = useCallback((port, field, value) => {
         setMotors((prev) =>
@@ -63,6 +72,7 @@ export default function MotorSequencer({
 
     return (
         <div className={`motor-sequencer ${collapsed ? 'collapsed' : ''}`}>
+            {/* Same JSX as before */}
             <div className="motor-seq-header" onClick={() => setCollapsed(!collapsed)}>
                 <div className="motor-seq-title">
                     <CogIcon className="h-4 w-4 text-[var(--orange)]" />
@@ -165,3 +175,5 @@ export default function MotorSequencer({
         </div>
     );
 }
+
+MotorSequencer.getDefaultConfig = createDefaultMotorConfig;

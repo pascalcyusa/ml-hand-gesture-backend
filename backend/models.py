@@ -37,8 +37,9 @@ class GestureMapping(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    name = Column(String)
+    name = Column(String)  # e.g. "Spike Prime Config 1"
     mapping_data = Column(JSON)  # Store the actual mapping logic/configuration
+    is_active = Column(Boolean, default=False) # Whether this is the currently active mapping
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="gesture_mappings")
@@ -49,9 +50,9 @@ class MusicSequence(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
-    title = Column(String)
-    sequence_data = Column(JSON)  # Store the sequence of notes/events
-    duration_seconds = Column(Integer)
+    title = Column(String) # e.g. "Piano Session 1"
+    sequence_data = Column(JSON)  # Store the sequence of notes/events per class
+    is_active = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="music_sequences")
@@ -91,6 +92,7 @@ class SavedModel(Base):
     description = Column(String, nullable=True)
     class_names = Column(JSON)             # ["thumbs_up", "peace"]
     model_data = Column(JSON)              # topology + weights (base64 encoded)
+    dataset = Column(JSON, nullable=True)  # { features: [...], labels: [...] } for retraining
     is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 

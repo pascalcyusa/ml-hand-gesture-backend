@@ -1,39 +1,32 @@
-import {
-    HandRaisedIcon,
-    CpuChipIcon,
-    MusicalNoteIcon,
-    SignalIcon,
-    GlobeAltIcon,
-    InformationCircleIcon,
-    ArrowRightEndOnRectangleIcon,
-} from '@heroicons/react/24/outline';
+import { UserCircleIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
+import './Header.css';
 
-export default function Header({ user, onSignIn, onLogout }) {
+export default function Header({ user, onSignIn, onLogout, onProfileClick }) {
     return (
         <header className="app-header">
             <div className="header-inner">
-                <div className="header-logo">
-                    <HandRaisedIcon className="h-8 w-8 text-[var(--green)] drop-shadow-[0_0_8px_rgba(184,187,38,0.4)]" />
-                    <div>
-                        <h1 className="header-title">Hand Pose Trainer</h1>
-                        <p className="header-subtitle">Teachable Machine for Hand Gestures</p>
+                <div className="logo-area">
+                    <span className="logo-emoji">👋</span>
+                    <div className="title-group">
+                        <h1 className="app-title">Hand Pose Trainer</h1>
+                        <span className="app-subtitle">Teach your browser to recognize gestures</span>
                     </div>
                 </div>
-                <div className="header-user">
+
+                <div className="user-area">
                     {user ? (
-                        <>
-                            <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-[var(--bg2)] text-[var(--fg-dim)] text-xs font-bold">
-                                {user.username?.charAt(0).toUpperCase()}
-                            </span>
-                            <span className="header-username">{user.username}</span>
-                            <Button variant="ghost" size="sm" onClick={onLogout}>
-                                <ArrowRightEndOnRectangleIcon className="h-4 w-4" />
-                                Logout
-                            </Button>
-                        </>
+                        <div className="flex items-center gap-3">
+                            <button className="user-profile-btn" onClick={onProfileClick} title="Go to Dashboard">
+                                <div className="user-avatar">
+                                    {user.username.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="username">{user.username}</span>
+                            </button>
+                        </div>
                     ) : (
-                        <Button variant="primary" size="sm" onClick={onSignIn}>
+                        <Button variant="ghost" size="sm" onClick={onSignIn} className="sign-in-btn">
+                            <UserCircleIcon className="h-5 w-5 mr-1" />
                             Sign In
                         </Button>
                     )}

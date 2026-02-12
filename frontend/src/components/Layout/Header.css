@@ -1,61 +1,98 @@
 .app-header {
-    background: rgba(40, 40, 40, 0.6);
+    background: rgba(29, 32, 33, 0.8);
+    /* Gruvbox bg0_h + alpha */
     backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    padding: var(--space-md) var(--space-xl);
+    position: sticky;
+    top: 0;
+    z-index: 50;
 }
 
 .header-inner {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
+    height: 64px;
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
+    padding: 0 var(--space-lg);
 }
 
-.header-logo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-}
-
-.header-icon {
-    font-size: 2rem;
-    filter: drop-shadow(0 0 8px rgba(184, 187, 38, 0.4));
-}
-
-.header-title {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--fg);
-    letter-spacing: -0.02em;
-}
-
-.header-subtitle {
-    font-size: 0.75rem;
-    color: var(--fg-muted);
-    font-family: var(--font-mono);
-    letter-spacing: 0.02em;
-}
-
-.header-user {
+.logo-area {
     display: flex;
     align-items: center;
     gap: var(--space-sm);
 }
 
-.header-avatar {
-    font-size: 1.2rem;
+.logo-emoji {
+    font-size: 1.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 }
 
-.header-username {
-    font-size: 0.85rem;
+.title-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.app-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fg);
+    letter-spacing: -0.01em;
+}
+
+.app-subtitle {
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+}
+
+.user-area {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+}
+
+.user-profile-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-full);
+    transition: background var(--transition-fast);
+}
+
+.user-profile-btn:hover {
+    background: var(--bg1);
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: var(--purple-dim);
+    border: 1px solid var(--purple);
+    color: var(--fg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.username {
+    font-size: 0.9rem;
     font-weight: 500;
     color: var(--fg);
-    font-family: var(--font-mono);
 }
 
-.header-logout {
-    margin-left: var(--space-xs);
+.sign-in-btn {
+    color: var(--fg-dim) !important;
+}
+
+.sign-in-btn:hover {
+    color: var(--fg) !important;
+    background: var(--bg1) !important;
 }

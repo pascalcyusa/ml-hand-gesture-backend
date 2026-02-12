@@ -1,107 +1,115 @@
 /**
- * useAuth — React hook for JWT authentication
- * 
- * Manages signup, login, logout, and authenticated API calls.
- * Stores JWT in localStorage and auto-loads user on mount.
+ * useAuth — Authentication Hook
+ *
+ * Connects to the Python/FastAPI backend for JWT-based auth.
+ * Stores token in localStorage and provides user state to the app.
  */
 
 import { useState, useCallback, useEffect } from 'react';
 
-const TOKEN_KEY = 'handpose-auth-token';
-const USER_KEY = 'handpose-auth-user';
+const API_Base = 'http://localhost:8000';
 
 export function useAuth() {
-    const [user, setUser] = useState(null);
+    const [user, setUser] = useState(null); // { id, username, email }
+    const [token, setToken] = useState(localStorage.getItem('token'));
     const [loading, setLoading] = useState(true);
 
-    // Load stored session on mount
+    // Helper for auth headers
+    const getHeaders = useCallback(() => {
+        const t = localStorage.getItem('token');
+        return t ? { 'Authorization': `Bearer ${t}` } : {};
+    }, []);
+
+    // Check current user on mount if token exists
     useEffect(() => {
-        const storedToken = localStorage.getItem(TOKEN_KEY);
-        const storedUser = localStorage.getItem(USER_KEY);
-        if (storedToken && storedUser) {
-            try {
-                setUser(JSON.parse(storedUser));
-            } catch {
-                localStorage.removeItem(TOKEN_KEY);
-                localStorage.removeItem(USER_KEY);
+        const checkUser = async () => {
+            const t = localStorage.getItem('token');
+            if (!t) {
+                setLoading(false);
+                return;
             }
-        }
-        setLoading(false);
-    }, []);
 
-    // Get stored token
-    const getToken = useCallback(() => {
-        return localStorage.getItem(TOKEN_KEY);
-    }, []);
+            try {
+                const res = await fetch(`${API_Base}/auth/me`, {
+                    headers: { 'Authorization': `Bearer ${t}` }
+                });
 
-    // Authenticated fetch wrapper
-    const fetchWithAuth = useCallback(async (url, options = {}) => {
-        const token = localStorage.getItem(TOKEN_KEY);
-        const headers = {
-            'Content-Type': 'application/json',
-            ...(options.headers || {}),
+                if (res.ok) {
+                    const userData = await res.json();
+                    setUser(userData);
+                } else {
+                    // Token invalid
+                    logout();
+                }
+            } catch (err) {
+                console.error("Auth check failed:", err);
+                logout();
+            } finally {
+                setLoading(false);
+            }
         };
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-        return fetch(url, { ...options, headers });
+
+        checkUser();
     }, []);
 
-    // Signup
-    const signup = useCallback(async (username, email, password) => {
-        const res = await fetch('/api/auth/signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password }),
-        });
-
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || 'Signup failed');
-        }
-
-        const data = await res.json();
-        localStorage.setItem(TOKEN_KEY, data.access_token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        setUser(data.user);
-        return data.user;
-    }, []);
-
-    // Login
     const login = useCallback(async (email, password) => {
-        const res = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password }),
-        });
+        try {
+            const res = await fetch(`${API_Base}/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password }),
+            });
 
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.detail || 'Login failed');
+            if (!res.ok) {
+                return null;
+            }
+
+            const data = await res.json();
+            localStorage.setItem('token', data.access_token);
+            setToken(data.access_token);
+            setUser(data.user);
+            return data.user;
+        } catch (err) {
+            console.error("Login error:", err);
+            return null;
         }
-
-        const data = await res.json();
-        localStorage.setItem(TOKEN_KEY, data.access_token);
-        localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-        setUser(data.user);
-        return data.user;
     }, []);
 
-    // Logout
+    const signup = useCallback(async (username, email, password) => {
+        try {
+            const res = await fetch(`${API_Base}/auth/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password }),
+            });
+
+            if (!res.ok) {
+                throw new Error('Signup failed');
+            }
+
+            const data = await res.json();
+            localStorage.setItem('token', data.access_token);
+            setToken(data.access_token);
+            setUser(data.user);
+            return data.user;
+        } catch (err) {
+            console.error("Signup error:", err);
+            throw err;
+        }
+    }, []);
+
     const logout = useCallback(() => {
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem('token');
+        setToken(null);
         setUser(null);
     }, []);
 
     return {
         user,
         loading,
-        isLoggedIn: !!user,
-        signup,
         login,
+        signup,
         logout,
-        getToken,
-        fetchWithAuth,
+        getHeaders,
     };
 }
