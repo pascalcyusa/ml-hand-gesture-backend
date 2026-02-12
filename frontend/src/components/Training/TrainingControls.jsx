@@ -12,6 +12,7 @@ import {
 import { Button } from '../ui/button.jsx';
 import { Card, CardTitle } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
+import ModalPortal from '../common/ModalPortal.jsx';
 import './TrainingControls.css';
 
 export default function TrainingControls({
@@ -39,6 +40,9 @@ export default function TrainingControls({
     // Save Model Dialog State
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [saveModelName, setSaveModelName] = useState('my-model');
+
+    // Reset Confirm Dialog State
+    const [showResetDialog, setShowResetDialog] = useState(false);
 
     const handleConfirmAddClass = () => {
         if (newClassName?.trim()) {
@@ -72,77 +76,115 @@ export default function TrainingControls({
 
             {/* Add Class Dialog */}
             {showAddClassDialog && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                    <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
-                        <h3 className="font-bold text-sm">Add New Class</h3>
-                        <Input
-                            placeholder="Class Name (e.g. Fist)"
-                            value={newClassName}
-                            onChange={(e) => setNewClassName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleConfirmAddClass()}
-                            autoFocus
-                        />
-                        <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setShowAddClassDialog(false)}>Cancel</Button>
-                            <Button size="sm" onClick={handleConfirmAddClass}>Add</Button>
-                        </div>
-                    </Card>
-                </div>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
+                            <h3 className="font-bold text-sm">Add New Class</h3>
+                            <Input
+                                placeholder="Class Name (e.g. Fist)"
+                                value={newClassName}
+                                onChange={(e) => setNewClassName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleConfirmAddClass()}
+                                autoFocus
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setShowAddClassDialog(false)}>Cancel</Button>
+                                <Button size="sm" onClick={handleConfirmAddClass}>Add</Button>
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
             )}
 
             {/* Save Model Dialog */}
             {showSaveDialog && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                    <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
-                        <h3 className="font-bold text-sm">Save Model</h3>
-                        <Input
-                            placeholder="Model Name"
-                            value={saveModelName}
-                            onChange={(e) => setSaveModelName(e.target.value)}
-                            onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
-                            autoFocus
-                        />
-                        <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-                            <Button size="sm" onClick={handleConfirmSave}>Save</Button>
-                        </div>
-                    </Card>
-                </div>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
+                            <h3 className="font-bold text-sm">Save Model</h3>
+                            <Input
+                                placeholder="Model Name"
+                                value={saveModelName}
+                                onChange={(e) => setSaveModelName(e.target.value)}
+                                onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
+                                autoFocus
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                                <Button size="sm" onClick={handleConfirmSave}>Save</Button>
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
+            )}
+
+            {/* Reset Dialog */}
+            {showResetDialog && (
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
+                            <div className="flex flex-col gap-2">
+                                <h3 className="font-bold text-sm text-[var(--red)] flex items-center gap-2">
+                                    <TrashIcon className="h-4 w-4" />
+                                    Reset Everything?
+                                </h3>
+                                <p className="text-xs text-[var(--fg-muted)]">
+                                    This will delete all gesture classes and samples. This action cannot be undone.
+                                </p>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => setShowResetDialog(false)}>Cancel</Button>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => {
+                                        onReset();
+                                        setShowResetDialog(false);
+                                    }}
+                                >
+                                    Yes, Reset
+                                </Button>
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
             )}
 
             {/* Load Dialog Overlay */}
             {showLoadDialog && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
-                    <Card className="w-full h-full max-h-[300px] flex flex-col shadow-2xl border-none">
-                        <div className="flex justify-between items-center p-3 border-b border-[var(--bg3)]">
-                            <h3 className="font-bold text-sm">Load Model</h3>
-                            <button onClick={() => setShowLoadDialog(false)} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
-                                <XMarkIcon className="h-4 w-4" />
-                            </button>
-                        </div>
-                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
-                            {savedModels.length === 0 ? (
-                                <p className="text-xs text-[var(--fg-muted)] text-center py-4">No saved models.</p>
-                            ) : (
-                                savedModels.map(m => (
-                                    <button
-                                        key={m.id}
-                                        onClick={() => {
-                                            onLoad(m.name);
-                                            setShowLoadDialog(false);
-                                        }}
-                                        className="w-full text-left p-2 rounded hover:bg-[var(--bg2)] text-sm flex justify-between items-center group"
-                                    >
-                                        <span className="font-medium truncate">{m.name}</span>
-                                        <span className="text-[10px] text-[var(--fg-muted)] opacity-0 group-hover:opacity-100">
-                                            {new Date(m.created_at).toLocaleDateString()}
-                                        </span>
-                                    </button>
-                                ))
-                            )}
-                        </div>
-                    </Card>
-                </div>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4 flex flex-col max-h-[400px]">
+                            <div className="flex justify-between items-center border-b border-[var(--bg3)] pb-2">
+                                <h3 className="font-bold text-sm">Load Model</h3>
+                                <button onClick={() => setShowLoadDialog(false)} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
+                                    <XMarkIcon className="h-4 w-4" />
+                                </button>
+                            </div>
+                            <div className="flex-1 overflow-y-auto space-y-1">
+                                {savedModels.length === 0 ? (
+                                    <p className="text-xs text-[var(--fg-muted)] text-center py-4">No saved models.</p>
+                                ) : (
+                                    savedModels.map(m => (
+                                        <button
+                                            key={m.id}
+                                            onClick={() => {
+                                                onLoad(m.name);
+                                                setShowLoadDialog(false);
+                                            }}
+                                            className="w-full text-left p-2 rounded hover:bg-[var(--bg2)] text-sm flex justify-between items-center group"
+                                        >
+                                            <span className="font-medium truncate">{m.name}</span>
+                                            <span className="text-[10px] text-[var(--fg-muted)] opacity-0 group-hover:opacity-100">
+                                                {new Date(m.created_at).toLocaleDateString()}
+                                            </span>
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
             )}
 
             {/* Primary Actions */}
@@ -246,9 +288,7 @@ export default function TrainingControls({
                     variant="danger"
                     size="sm"
                     className="w-full mt-2"
-                    onClick={() => {
-                        if (window.confirm('Reset all classes and model?')) onReset();
-                    }}
+                    onClick={() => setShowResetDialog(true)}
                 >
                     <TrashIcon className="h-3.5 w-3.5" />
                     Reset

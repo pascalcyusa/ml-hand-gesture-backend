@@ -15,6 +15,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
+import ModalPortal from '../common/ModalPortal.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -142,41 +143,45 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         <div className="motors-layout animate-fade-in relative">
             {/* ── Save Dialog ── */}
             {showSaveDialog && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <Card className="w-full max-w-sm p-5 space-y-4 shadow-2xl">
-                        <h3 className="font-bold">Save Configuration</h3>
-                        <Input
-                            placeholder="e.g. Robot Arm Setup"
-                            value={saveName}
-                            onChange={e => setSaveName(e.target.value)}
-                        />
-                        <div className="flex justify-end gap-2">
-                            <Button variant="ghost" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-                            <Button onClick={handleSave}>Save</Button>
-                        </div>
-                    </Card>
-                </div>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 space-y-4 shadow-2xl">
+                            <h3 className="font-bold">Save Configuration</h3>
+                            <Input
+                                placeholder="e.g. Robot Arm Setup"
+                                value={saveName}
+                                onChange={e => setSaveName(e.target.value)}
+                            />
+                            <div className="flex justify-end gap-2">
+                                <Button variant="ghost" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                                <Button onClick={handleSave}>Save</Button>
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
             )}
 
             {/* ── Load Dialog ── */}
             {showLoadDialog && (
-                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-                    <Card className="w-full max-w-md p-5 space-y-4 shadow-2xl max-h-[80vh] flex flex-col">
-                        <div className="flex justify-between items-center">
-                            <h3 className="font-bold">Load Configuration</h3>
-                            <Button variant="ghost" size="sm" onClick={() => setShowLoadDialog(false)}>Close</Button>
-                        </div>
-                        <div className="overflow-y-auto space-y-2 flex-1">
-                            {savedConfigs.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No saved configs.</p> :
-                                savedConfigs.map(s => (
-                                    <button key={s.id} onClick={() => handleLoad(s)} className="w-full text-left p-3 rounded bg-[var(--bg3)] hover:bg-[var(--bg2)] flex justify-between">
-                                        <span className="font-medium">{s.name_or_title}</span>
-                                        <span className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</span>
-                                    </button>
-                                ))}
-                        </div>
-                    </Card>
-                </div>
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-4 space-y-4 shadow-2xl max-h-[400px] flex flex-col">
+                            <div className="flex justify-between items-center">
+                                <h3 className="font-bold">Load Configuration</h3>
+                                <Button variant="ghost" size="sm" onClick={() => setShowLoadDialog(false)}>Close</Button>
+                            </div>
+                            <div className="overflow-y-auto space-y-2 flex-1">
+                                {savedConfigs.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No saved configs.</p> :
+                                    savedConfigs.map(s => (
+                                        <button key={s.id} onClick={() => handleLoad(s)} className="w-full text-left p-3 rounded bg-[var(--bg3)] hover:bg-[var(--bg2)] flex justify-between">
+                                            <span className="font-medium">{s.name_or_title}</span>
+                                            <span className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</span>
+                                        </button>
+                                    ))}
+                            </div>
+                        </Card>
+                    </div>
+                </ModalPortal>
             )}
 
             {/* Left Column: Camera & Predictions */}

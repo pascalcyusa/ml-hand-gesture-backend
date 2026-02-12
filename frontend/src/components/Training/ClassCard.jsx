@@ -12,13 +12,19 @@ export default function ClassCard({
     onDelete,
     isCollecting,
     currentLandmarks,
+    isCollecting,
+    currentLandmarks,
 }) {
     const { id, name, samples } = classData;
-    const [expanded, setExpanded] = useState(false);
+    const [expanded, setExpanded] = useState(true);
+
+    const toggleExpanded = useCallback(() => {
+        setExpanded(prev => !prev);
+    }, []);
 
     return (
-        <Card className="class-card animate-fade-in">
-            <div className="class-card-header" onClick={() => setExpanded(prev => !prev)}>
+        <Card className={`class-card animate-fade-in ${expanded ? 'is-expanded' : 'is-collapsed'}`}>
+            <div className="class-card-header" onClick={toggleExpanded}>
                 <div className="class-card-info">
                     <ChevronDownIcon className={`class-card-chevron ${expanded ? 'expanded' : ''}`} />
                     <h4 className="class-card-name">{name}</h4>

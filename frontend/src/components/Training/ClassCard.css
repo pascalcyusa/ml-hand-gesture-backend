@@ -1,5 +1,16 @@
 .class-card {
-    padding: var(--space-sm) var(--space-md);
+    padding: 0;
+    /* Move padding to inner elements for better collapse control */
+    transition: all 0.3s ease;
+    border: 1px solid var(--bg3);
+    margin-bottom: var(--space-md);
+    /* Ensure separation */
+    overflow: hidden;
+}
+
+.class-card.is-collapsed {
+    background-color: var(--bg2);
+    /* Dim slightly when collapsed */
 }
 
 .class-card-header {
@@ -8,6 +19,12 @@
     align-items: center;
     cursor: pointer;
     user-select: none;
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg1);
+}
+
+.class-card-header:hover {
+    background: var(--bg2);
 }
 
 .class-card-chevron {
@@ -57,13 +74,39 @@
 
 .class-card-content {
     overflow: hidden;
+    padding: 0 var(--space-md) var(--space-md) var(--space-md);
 }
 
 .class-card-samples {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-sm);
-    padding-top: var(--space-md);
+    padding-top: var(--space-sm);
+    max-height: 220px;
+    /* ~3 rows of samples (72px + gap) */
+    overflow-y: auto;
+    /* The "scroll wheel" */
+    padding-right: var(--space-xs);
+    /* Space for scrollbar */
+}
+
+/* Custom scrollbar for samples */
+.class-card-samples::-webkit-scrollbar {
+    width: 6px;
+}
+
+.class-card-samples::-webkit-scrollbar-track {
+    background: var(--bg2);
+    border-radius: 3px;
+}
+
+.class-card-samples::-webkit-scrollbar-thumb {
+    background: var(--fg-muted);
+    border-radius: 3px;
+}
+
+.class-card-samples::-webkit-scrollbar-thumb:hover {
+    background: var(--fg);
 }
 
 
