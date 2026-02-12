@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, JSON
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text, JSON, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from database import Base
@@ -17,6 +17,7 @@ class User(Base):
     music_sequences = relationship("MusicSequence", back_populates="user")
     high_scores = relationship("HighScore", back_populates="user")
     logs = relationship("Log", back_populates="user")
+    saved_models = relationship("SavedModel", back_populates="user")
 
 
 class Profile(Base):
@@ -79,3 +80,18 @@ class Log(Base):
     timestamp = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="logs")
+
+
+class SavedModel(Base):
+    __tablename__ = "saved_models"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    name = Column(String, index=True)
+    description = Column(String, nullable=True)
+    class_names = Column(JSON)             # ["thumbs_up", "peace"]
+    model_data = Column(JSON)              # topology + weights (base64 encoded)
+    is_public = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="saved_models")

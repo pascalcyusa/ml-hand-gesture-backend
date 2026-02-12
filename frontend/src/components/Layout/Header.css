@@ -36,24 +36,23 @@
     font-family: var(--font-mono);
 }
 
-.header-badge {
+.header-user {
     display: flex;
     align-items: center;
-    gap: var(--space-xs);
-    padding: var(--space-xs) var(--space-md);
-    background: rgba(184, 187, 38, 0.1);
-    border: 1px solid var(--green-dim);
-    border-radius: var(--radius-full);
-    font-size: 0.75rem;
+    gap: var(--space-sm);
+}
+
+.header-avatar {
+    font-size: 1.2rem;
+}
+
+.header-username {
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--green);
+    color: var(--fg);
     font-family: var(--font-mono);
 }
 
-.header-badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--green);
-    animation: pulse-glow 2s ease-in-out infinite;
+.header-logout {
+    margin-left: var(--space-xs);
 }

@@ -4,7 +4,8 @@
  * Ported from: js/storageManager.js
  * 
  * Uses TensorFlow.js tf.io for IndexedDB model storage,
- * and localStorage for class metadata.
+ * localStorage for class metadata, and optional cloud save/load
+ * via the backend API.
  */
 
 import { useState, useCallback, useEffect } from 'react';
@@ -31,7 +32,7 @@ export function useStorageManager() {
         }
     }, []);
 
-    // Save model + metadata
+    // Save model + metadata (local IndexedDB)
     const saveModel = useCallback(async (name, model, classesData) => {
         if (!model || !name) return false;
 
@@ -63,7 +64,7 @@ export function useStorageManager() {
         }
     }, [refreshModelList]);
 
-    // Load a saved model
+    // Load a saved model (local IndexedDB)
     const loadModel = useCallback(async (name) => {
         try {
             const modelKey = `${STORAGE_KEY_PREFIX}${name}`;
@@ -102,7 +103,6 @@ export function useStorageManager() {
         if (!model) return false;
 
         try {
-            // Get model topology and weights
             const saveResult = await model.save(tf.io.withSaveHandler(async (artifacts) => {
                 return artifacts;
             }));
@@ -145,9 +145,7 @@ export function useStorageManager() {
                 throw new Error('Invalid model format');
             }
 
-            // Reconstruct weight data
             const weightData = new Uint8Array(data.weightData).buffer;
-
             const model = await tf.loadLayersModel(
                 tf.io.fromMemory(data.modelTopology, data.weightSpecs, weightData)
             );
@@ -163,6 +161,66 @@ export function useStorageManager() {
         }
     }, []);
 
+    // ── Cloud save/load (requires auth) ────────────────────
+
+    // Save model to cloud
+    const saveToCloud = useCallback(async (name, model, classesData, isPublic, fetchWithAuth) => {
+        if (!model || !fetchWithAuth) return false;
+
+        try {
+            const saveResult = await model.save(tf.io.withSaveHandler(async (artifacts) => {
+                return artifacts;
+            }));
+
+            const modelData = {
+                modelTopology: saveResult.modelTopology,
+                weightSpecs: saveResult.weightSpecs,
+                weightData: Array.from(new Uint8Array(saveResult.weightData)),
+            };
+
+            const res = await fetchWithAuth('/api/models/save', {
+                method: 'POST',
+                body: JSON.stringify({
+                    name,
+                    class_names: classesData.map((c) => c.name),
+                    model_data: modelData,
+                    is_public: isPublic,
+                }),
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || 'Cloud save failed');
+            }
+
+            return true;
+        } catch (err) {
+            console.error('Error saving to cloud:', err);
+            return false;
+        }
+    }, []);
+
+    // Import model from community (cloud data)
+    const importFromCloud = useCallback(async (cloudModel) => {
+        try {
+            const { model_data, name, class_names } = cloudModel;
+
+            const weightData = new Uint8Array(model_data.weightData).buffer;
+            const model = await tf.loadLayersModel(
+                tf.io.fromMemory(model_data.modelTopology, model_data.weightSpecs, weightData)
+            );
+
+            return {
+                model,
+                name,
+                classes: class_names.map((n) => ({ name: n, samples: [] })),
+            };
+        } catch (err) {
+            console.error('Error importing from cloud:', err);
+            return null;
+        }
+    }, []);
+
     return {
         savedModels,
         saveModel,
@@ -171,5 +229,8 @@ export function useStorageManager() {
         exportModel,
         importModel,
         refreshModelList,
+        // Cloud methods
+        saveToCloud,
+        importFromCloud,
     };
 }
