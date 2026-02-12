@@ -6,7 +6,7 @@ import {
   GlobeAltIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { CpuChipIcon } from '@heroicons/react/24/solid';
+import { CogIcon, CpuChipIcon } from '@heroicons/react/24/solid';
 
 import './components/Layout/Header.css';
 import './components/Layout/TabNav.css';
@@ -16,6 +16,7 @@ import Header from './components/Layout/Header.jsx';
 import TabNav from './components/Layout/TabNav.jsx';
 import TrainTab from './components/Training/TrainTab.jsx';
 import PianoTab from './components/Piano/PianoTab.jsx';
+import MotorsTab from './components/Motors/MotorsTab.jsx';
 import DevicesTab from './components/Devices/DevicesTab.jsx';
 import CommunityTab from './components/Community/CommunityTab.jsx';
 import AboutTab from './components/About/AboutTab.jsx';
@@ -32,6 +33,7 @@ import { useStorageManager } from './hooks/useStorageManager.js';
 const TABS = [
   { id: 'train', label: 'Train', icon: HandRaisedIcon },
   { id: 'piano', label: 'Piano', icon: MusicalNoteIcon },
+  { id: 'motors', label: 'Motors', icon: CogIcon },
   { id: 'devices', label: 'Devices', icon: SignalIcon },
   { id: 'community', label: 'Community', icon: GlobeAltIcon },
   { id: 'about', label: 'About', icon: InformationCircleIcon },
@@ -101,6 +103,12 @@ export default function App() {
           <PianoTab
             classNames={cm.classNames}
             topPrediction={prediction.topPrediction}
+            showToast={showToast}
+          />
+        )}
+        {activeTab === 'motors' && (
+          <MotorsTab
+            classNames={cm.classNames}
             showToast={showToast}
           />
         )}

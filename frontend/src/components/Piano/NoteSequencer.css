@@ -31,10 +31,6 @@
     gap: var(--space-sm);
 }
 
-.note-seq-icon {
-    font-size: 1.1rem;
-}
-
 .note-seq-name {
     font-weight: 600;
     font-size: 0.95rem;
@@ -55,13 +51,6 @@
     gap: var(--space-sm);
 }
 
-.note-seq-chevron {
-    color: var(--fg-muted);
-    font-size: 0.9rem;
-    width: 20px;
-    text-align: center;
-}
-
 /* ── Body ── */
 .note-seq-body {
     padding: 0 var(--space-md) var(--space-md);
@@ -78,7 +67,7 @@
 
 /* ── Individual Slot ── */
 .note-slot {
-    min-width: 120px;
+    min-width: 100px;
     background: var(--bg1);
     border: 1px solid var(--bg2);
     border-radius: var(--radius-md);
@@ -87,7 +76,25 @@
     flex-direction: column;
     gap: var(--space-xs);
     flex-shrink: 0;
-    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.note-slot:hover {
+    border-color: var(--bg3);
+    background: var(--bg2);
+}
+
+.note-slot.editing {
+    border-color: var(--blue);
+    background: var(--bg2);
+    box-shadow: 0 0 0 2px rgba(131, 165, 152, 0.2);
+}
+
+.note-slot.playing {
+    border-color: var(--green);
+    box-shadow: 0 0 12px rgba(184, 187, 38, 0.3);
 }
 
 .note-slot.note {
@@ -96,11 +103,7 @@
 
 .note-slot.delay {
     border-left: 3px solid var(--yellow-dim);
-}
-
-.note-slot.active {
-    border-color: var(--green);
-    box-shadow: 0 0 12px rgba(184, 187, 38, 0.3);
+    cursor: default;
 }
 
 .note-slot-header {
@@ -113,7 +116,7 @@
     font-size: 0.65rem;
     font-family: var(--font-mono);
     color: var(--fg-muted);
-    background: var(--bg2);
+    background: rgba(0, 0, 0, 0.2);
     width: 18px;
     height: 18px;
     display: flex;
@@ -122,71 +125,79 @@
     border-radius: var(--radius-sm);
 }
 
-.note-slot-type-toggle {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    user-select: none;
-}
-
-.note-slot-type-toggle input {
-    width: 0;
-    height: 0;
-    opacity: 0;
-    position: absolute;
-}
-
 .note-slot-type-label {
     font-size: 0.65rem;
     font-family: var(--font-mono);
     color: var(--fg-dim);
-    transition: color var(--transition-fast);
 }
 
-.note-slot-type-toggle:hover .note-slot-type-label {
-    color: var(--fg);
-}
-
-/* ── Slot Config ── */
-.note-slot-config {
+.note-slot-content {
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
+    gap: 4px;
+    align-items: center;
+    margin-top: 4px;
 }
 
-.note-select,
+.note-display {
+    text-align: center;
+}
+
+.note-name {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--fg);
+    display: block;
+}
+
+.note-name.delay-label {
+    font-size: 0.9rem;
+    color: var(--yellow);
+}
+
+.note-edit-hint {
+    font-size: 0.6rem;
+    color: var(--fg-muted);
+    display: block;
+    margin-top: -2px;
+}
+
+.note-duration-control {
+    width: 100%;
+}
+
 .duration-select {
     width: 100%;
-    padding: 4px 6px;
-    font-size: 0.75rem;
-    font-family: var(--font-mono);
+    padding: 2px 4px;
+    font-size: 0.7rem;
     background: var(--bg);
-    color: var(--fg);
+    color: var(--fg-dim);
     border: 1px solid var(--bg3);
     border-radius: var(--radius-sm);
+    text-align: center;
     cursor: pointer;
-    transition: border-color var(--transition-fast);
 }
 
-.note-select:hover,
-.duration-select:hover {
-    border-color: var(--blue);
+/* ── Piano Panel ── */
+.piano-panel {
+    margin-top: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg2);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--bg3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+    align-items: center;
 }
 
-.note-select:focus,
-.duration-select:focus {
-    outline: none;
-    border-color: var(--green);
-}
-
-.note-test-btn {
-    font-size: 0.7rem !important;
-    padding: 2px 8px !important;
-}
-
-.delay-config {
-    justify-content: center;
+.piano-panel-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--bg3);
 }
 
 /* ── Footer ── */

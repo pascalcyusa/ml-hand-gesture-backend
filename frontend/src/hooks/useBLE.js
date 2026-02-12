@@ -1,64 +1,41 @@
 /**
  * useBLE — React hook for Web Bluetooth device management
  * 
- * Ported from: js/ble.js
- * 
- * Manages multiple BLE device connections with connect/write/notify/disconnect.
- * Each device slot stores connection state, device info, and a write function.
+ * Modified for single-device connection (LEGO Spike Prime).
+ * Simplifies API to connect/disconnect a single hub.
  */
 
 import { useState, useCallback, useRef } from 'react';
 
-const MAX_DEVICES = 4;
-
-function createEmptySlot(index) {
-    return {
-        id: index,
-        name: null,
-        connected: false,
-        connecting: false,
-        error: null,
-    };
-}
-
 export function useBLE() {
-    const [devices, setDevices] = useState(() =>
-        Array.from({ length: MAX_DEVICES }, (_, i) => createEmptySlot(i))
-    );
-    const deviceRefs = useRef(Array.from({ length: MAX_DEVICES }, () => ({
+    const [device, setDevice] = useState(null); // { id, name, connected, connecting, error }
+    const deviceRef = useRef({
         device: null,
         server: null,
         service: null,
         writeChar: null,
         notifyChar: null,
-    })));
-    const callbacksRef = useRef({});
+    });
+    const notificationCallbackRef = useRef(null);
 
     // Check if Web Bluetooth is available
     const isSupported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
 
-    // Update a single device slot
-    const updateSlot = useCallback((index, updates) => {
-        setDevices((prev) =>
-            prev.map((d, i) => (i === index ? { ...d, ...updates } : d))
-        );
-    }, []);
-
-    // Connect a device
-    const connect = useCallback(async (slotIndex, serviceUUID, writeUUID, notifyUUID) => {
+    // Connect to a device
+    const connect = useCallback(async (serviceUUID, writeUUID, notifyUUID) => {
         if (!isSupported) {
-            updateSlot(slotIndex, { error: 'Web Bluetooth not supported in this browser' });
+            setDevice({ error: 'Web Bluetooth not supported in this browser' });
             return false;
         }
 
-        updateSlot(slotIndex, { connecting: true, error: null });
+        setDevice({ connecting: true, error: null });
 
         try {
-            const device = await navigator.bluetooth.requestDevice({
+            const bleDevice = await navigator.bluetooth.requestDevice({
                 filters: [{ services: [serviceUUID] }],
             });
 
-            const server = await device.gatt.connect();
+            const server = await bleDevice.gatt.connect();
             const service = await server.getPrimaryService(serviceUUID);
             const writeChar = await service.getCharacteristic(writeUUID);
             const notifyChar = await service.getCharacteristic(notifyUUID);
@@ -67,36 +44,38 @@ export function useBLE() {
             await notifyChar.startNotifications();
             notifyChar.addEventListener('characteristicvaluechanged', (event) => {
                 const data = new Uint8Array(event.target.value.buffer);
-                const cb = callbacksRef.current[slotIndex];
-                if (cb) cb(data);
+                if (notificationCallbackRef.current) {
+                    notificationCallbackRef.current(data);
+                }
             });
 
             // Handle disconnection
-            device.addEventListener('gattserverdisconnected', () => {
-                updateSlot(slotIndex, {
+            bleDevice.addEventListener('gattserverdisconnected', () => {
+                setDevice({
                     connected: false,
                     connecting: false,
-                    name: device.name || `Device ${slotIndex + 1}`,
+                    name: bleDevice.name || 'Device',
                 });
-                deviceRefs.current[slotIndex] = {
+                deviceRef.current = {
                     device: null, server: null, service: null, writeChar: null, notifyChar: null,
                 };
             });
 
             // Store refs
-            deviceRefs.current[slotIndex] = { device, server, service, writeChar, notifyChar };
+            deviceRef.current = { device: bleDevice, server, service, writeChar, notifyChar };
 
-            updateSlot(slotIndex, {
+            setDevice({
+                id: bleDevice.id,
+                name: bleDevice.name || 'LEGO Spike Prime',
                 connected: true,
                 connecting: false,
-                name: device.name || `Device ${slotIndex + 1}`,
                 error: null,
             });
 
             return true;
         } catch (err) {
-            console.error(`BLE connect error (slot ${slotIndex}):`, err);
-            updateSlot(slotIndex, {
+            console.error('BLE connect error:', err);
+            setDevice({
                 connecting: false,
                 error: err.message === 'User cancelled the requestDevice() chooser.'
                     ? null  // User just closed the picker — not an error
@@ -104,13 +83,13 @@ export function useBLE() {
             });
             return false;
         }
-    }, [isSupported, updateSlot]);
+    }, [isSupported]);
 
-    // Write data to a device
-    const write = useCallback(async (slotIndex, data) => {
-        const ref = deviceRefs.current[slotIndex];
+    // Write data to the connected device
+    const write = useCallback(async (data) => {
+        const ref = deviceRef.current;
         if (!ref?.writeChar) {
-            console.error(`BLE slot ${slotIndex}: not connected`);
+            console.error('BLE: not connected');
             return false;
         }
         try {
@@ -118,45 +97,34 @@ export function useBLE() {
             await ref.writeChar.writeValue(bytes);
             return true;
         } catch (err) {
-            console.error(`BLE write error (slot ${slotIndex}):`, err);
+            console.error('BLE write error:', err);
             return false;
         }
     }, []);
 
-    // Disconnect a device
-    const disconnect = useCallback((slotIndex) => {
-        const ref = deviceRefs.current[slotIndex];
+    // Disconnect
+    const disconnect = useCallback(() => {
+        const ref = deviceRef.current;
         if (ref?.device?.gatt?.connected) {
             ref.device.gatt.disconnect();
         }
-        deviceRefs.current[slotIndex] = {
+        deviceRef.current = {
             device: null, server: null, service: null, writeChar: null, notifyChar: null,
         };
-        updateSlot(slotIndex, createEmptySlot(slotIndex));
-    }, [updateSlot]);
-
-    // Register a notification callback for a device slot
-    const onNotify = useCallback((slotIndex, callback) => {
-        callbacksRef.current[slotIndex] = callback;
+        setDevice(null);
     }, []);
 
-    // Disconnect all
-    const disconnectAll = useCallback(() => {
-        for (let i = 0; i < MAX_DEVICES; i++) {
-            disconnect(i);
-        }
-    }, [disconnect]);
-
-    const connectedCount = devices.filter((d) => d.connected).length;
+    // Register a notification callback
+    const onNotify = useCallback((callback) => {
+        notificationCallbackRef.current = callback;
+    }, []);
 
     return {
-        devices,
+        device,
         isSupported,
-        connectedCount,
         connect,
         write,
         disconnect,
-        disconnectAll,
         onNotify,
     };
 }

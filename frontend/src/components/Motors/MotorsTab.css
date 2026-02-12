@@ -1,0 +1,28 @@
+.motors-tab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+.motors-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.motors-header h2 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.motors-subtitle {
+    font-size: 0.85rem;
+    color: var(--fg-muted);
+    margin-top: var(--space-xs);
+}
+
+.motors-section-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}

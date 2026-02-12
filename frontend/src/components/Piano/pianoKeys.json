@@ -1,0 +1,62 @@
+[
+    {
+        "id": "C",
+        "type": "white",
+        "label": "C"
+    },
+    {
+        "id": "C#",
+        "type": "black",
+        "label": "C#"
+    },
+    {
+        "id": "D",
+        "type": "white",
+        "label": "D"
+    },
+    {
+        "id": "D#",
+        "type": "black",
+        "label": "D#"
+    },
+    {
+        "id": "E",
+        "type": "white",
+        "label": "E"
+    },
+    {
+        "id": "F",
+        "type": "white",
+        "label": "F"
+    },
+    {
+        "id": "F#",
+        "type": "black",
+        "label": "F#"
+    },
+    {
+        "id": "G",
+        "type": "white",
+        "label": "G"
+    },
+    {
+        "id": "G#",
+        "type": "black",
+        "label": "G#"
+    },
+    {
+        "id": "A",
+        "type": "white",
+        "label": "A"
+    },
+    {
+        "id": "A#",
+        "type": "black",
+        "label": "A#"
+    },
+    {
+        "id": "B",
+        "type": "white",
+        "label": "B"
+    }
+]

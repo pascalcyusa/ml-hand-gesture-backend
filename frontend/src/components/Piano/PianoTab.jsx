@@ -1,16 +1,14 @@
 /**
- * PianoTab — Orchestrates note sequences & motor controls per class
+ * PianoTab — Orchestrates note sequences per class
  * 
- * Ported from: js/piano-player.js
- * 
- * Shows NoteSequencer and MotorSequencer for each trained class.
+ * Shows NoteSequencer for each trained class.
  * When predictions are active, triggers the matching class's sequence.
+ * Motor controls have been moved to the separate Motors tab.
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
     MusicalNoteIcon,
-    CogIcon,
     StopIcon,
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
@@ -18,13 +16,11 @@ import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Switch } from '../ui/switch.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
-import MotorSequencer from './MotorSequencer.jsx';
 import './PianoTab.css';
 
 export default function PianoTab({ classNames, topPrediction, showToast }) {
     const audio = useAudioEngine();
     const [pianoEnabled, setPianoEnabled] = useState(true);
-    const [motorEnabled, setMotorEnabled] = useState(false);
     const [waveform, setWaveform] = useState('sine');
     const [isPlaying, setIsPlaying] = useState(false);
 
@@ -108,29 +104,16 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
             {/* Controls Bar */}
             <Card className="piano-controls">
                 <div className="piano-controls-row">
-                    <div className="piano-toggles">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <Switch
-                                checked={pianoEnabled}
-                                onCheckedChange={setPianoEnabled}
-                            />
-                            <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
-                                <MusicalNoteIcon className="h-4 w-4" />
-                                Notes
-                            </span>
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer">
-                            <Switch
-                                checked={motorEnabled}
-                                onCheckedChange={setMotorEnabled}
-                            />
-                            <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
-                                <CogIcon className="h-4 w-4" />
-                                Motors
-                            </span>
-                        </label>
-                    </div>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <Switch
+                            checked={pianoEnabled}
+                            onCheckedChange={setPianoEnabled}
+                        />
+                        <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
+                            <MusicalNoteIcon className="h-4 w-4" />
+                            Auto-Play on Detection
+                        </span>
+                    </label>
 
                     <div className="piano-waveform">
                         <label className="piano-waveform-label">Waveform</label>
@@ -170,7 +153,7 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                 )}
             </Card>
 
-            {/* Note Sequences Section */}
+            {/* Note Sequences */}
             <div className="piano-section">
                 <h3 className="piano-section-title flex items-center gap-2">
                     <MusicalNoteIcon className="h-5 w-5 text-[var(--purple)]" />
@@ -192,25 +175,6 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                     ))}
                 </div>
             </div>
-
-            {/* Motor Sequences Section */}
-            {motorEnabled && (
-                <div className="piano-section animate-fade-in">
-                    <h3 className="piano-section-title flex items-center gap-2">
-                        <CogIcon className="h-5 w-5 text-[var(--orange)]" />
-                        Motor Controls
-                    </h3>
-                    <div className="piano-section-list">
-                        {classNames.map((name, i) => (
-                            <MotorSequencer
-                                key={`motor-${name}-${i}`}
-                                className={name}
-                                classId={i}
-                            />
-                        ))}
-                    </div>
-                </div>
-            )}
         </div>
     );
 }
