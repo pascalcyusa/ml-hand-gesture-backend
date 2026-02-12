@@ -10,6 +10,7 @@ import {
     UserCircleIcon,
     TrashIcon,
     ArrowRightOnRectangleIcon,
+    ArrowLeftIcon,
     CubeIcon,
     MusicalNoteIcon,
     CogIcon,
@@ -21,7 +22,7 @@ import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
 import './Dashboard.css';
 
-export default function Dashboard({ showToast }) {
+export default function Dashboard({ showToast, onBack }) {
     const { user, logout } = useAuth();
     const storage = useStorageManager();
     const [savedModels, setSavedModels] = useState([]);
@@ -57,8 +58,6 @@ export default function Dashboard({ showToast }) {
     }
 
     const handleDeleteModel = async (id) => {
-        // Implement delete model (requires delete endpoint in storage manager)
-        // For now just console log as useStorageManager doesn't expose delete yet
         console.log("Delete model", id);
         showToast("Model deletion not implemented yet", "info");
     };
@@ -66,13 +65,19 @@ export default function Dashboard({ showToast }) {
     return (
         <div className="dashboard-container animate-fade-in">
             <header className="dashboard-header">
-                <div className="user-profile">
-                    <div className="user-avatar-large">
-                        {user.username.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <h1 className="text-2xl font-bold">{user.username}</h1>
-                        <p className="text-[var(--fg-muted)]">{user.email}</p>
+                <div className="dashboard-header-left">
+                    <Button variant="ghost" size="sm" onClick={onBack} title="Back to app">
+                        <ArrowLeftIcon className="h-4 w-4" />
+                        Back
+                    </Button>
+                    <div className="user-profile">
+                        <div className="user-avatar-large">
+                            {user.username.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <h1 className="text-2xl font-bold">{user.username}</h1>
+                            <p className="text-[var(--fg-muted)]">{user.email}</p>
+                        </div>
                     </div>
                 </div>
                 <Button variant="outline" onClick={logout} className="ml-auto">

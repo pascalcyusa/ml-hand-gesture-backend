@@ -114,7 +114,7 @@ export default function App() {
 
       <main className="app-content">
         {showDashboard ? (
-          <Dashboard showToast={showToast} />
+          <Dashboard showToast={showToast} onBack={() => setShowDashboard(false)} />
         ) : (
           <>
             {activeTab === 'train' && (
