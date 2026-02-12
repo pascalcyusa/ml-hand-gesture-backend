@@ -63,9 +63,6 @@ export default function DevicesTab({ showToast }) {
                         <SignalIcon className="h-6 w-6 text-[var(--blue)]" />
                         Connect LEGO Spike Prime
                     </h2>
-                    <p className="devices-subtitle">
-                        Pair your LEGO Hub to control motors with hand gestures.
-                    </p>
                 </div>
             </div>
 
@@ -113,7 +110,6 @@ export default function DevicesTab({ showToast }) {
                         </>
                     ) : (
                         <>
-                            <span className="status-text text-[var(--fg-dim)]">Ready to Connect</span>
                             <span className="text-sm text-[var(--fg-muted)]">Make sure your Hub is turned on</span>
                         </>
                     )}

@@ -1,10 +1,17 @@
-.piano-tab {
-    display: flex;
-    flex-direction: column;
+.piano-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
     gap: var(--space-xl);
+    align-items: start;
     max-width: 1400px;
     margin: 0 auto;
     padding: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+    .piano-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* ── Empty State ── */

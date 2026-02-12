@@ -1,10 +1,17 @@
-.motors-tab {
-    display: flex;
-    flex-direction: column;
+.motors-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
     gap: var(--space-xl);
+    align-items: start;
     max-width: 1400px;
     margin: 0 auto;
     padding: var(--space-lg);
+}
+
+@media (max-width: 1024px) {
+    .motors-layout {
+        grid-template-columns: 1fr;
+    }
 }
 
 .motors-header {

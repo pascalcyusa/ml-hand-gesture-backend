@@ -22,7 +22,7 @@ import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
 import './Dashboard.css';
 
-export default function Dashboard({ showToast, onBack }) {
+export default function Dashboard({ showToast, onBack, onLoadModel }) {
     const { user, logout } = useAuth();
     const storage = useStorageManager();
     const [savedModels, setSavedModels] = useState([]);
@@ -98,7 +98,7 @@ export default function Dashboard({ showToast, onBack }) {
                             <p className="empty-state">No saved models yet. Train a model to save it.</p>
                         ) : (
                             savedModels.map(m => (
-                                <Card key={m.id} className="item-card">
+                                <Card key={m.id} className="item-card relative group">
                                     <div className="item-info">
                                         <h3 className="font-semibold">{m.name}</h3>
                                         <div className="flex gap-2 text-xs text-[var(--fg-muted)] mt-1">
@@ -108,8 +108,16 @@ export default function Dashboard({ showToast, onBack }) {
                                         </div>
                                         {m.description && <p className="text-sm text-[var(--fg-dim)] mt-2 line-clamp-2">{m.description}</p>}
                                     </div>
-                                    <div className="item-actions">
+                                    <div className="item-actions flex items-center gap-2">
                                         {m.is_public && <Badge variant="outline" className="text-xs">Public</Badge>}
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                            onClick={() => onLoadModel(m.id)}
+                                        >
+                                            Load
+                                        </Button>
                                     </div>
                                 </Card>
                             ))

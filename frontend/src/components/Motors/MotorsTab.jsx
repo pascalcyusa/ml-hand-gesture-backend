@@ -15,9 +15,11 @@ import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
+import WebcamPanel from '../Training/WebcamPanel.jsx';
+import PredictionBars from '../Training/PredictionBars.jsx';
 import './MotorsTab.css';
 
-export default function MotorsTab({ classNames, showToast }) {
+export default function MotorsTab({ classNames, showToast, hand, prediction }) {
     const storage = useStorageManager();
     const { user } = useAuth();
 
@@ -33,6 +35,11 @@ export default function MotorsTab({ classNames, showToast }) {
     const handleConfigChange = useCallback((className, config) => {
         currentConfigsRef.current[className] = config;
     }, []);
+
+    // Start camera when tab mounts
+    const handleVideoReady = useCallback((video, canvas) => {
+        hand.start(video, canvas);
+    }, [hand]);
 
     const handleSave = async () => {
         if (!saveName.trim()) return showToast('Enter a name', 'warning');
@@ -75,7 +82,7 @@ export default function MotorsTab({ classNames, showToast }) {
     }
 
     return (
-        <div className="motors-tab animate-fade-in relative">
+        <div className="motors-layout animate-fade-in relative">
             {/* ── Save Dialog ── */}
             {showSaveDialog && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -115,41 +122,56 @@ export default function MotorsTab({ classNames, showToast }) {
                 </div>
             )}
 
-            <div>
-                <div className="motors-header flex justify-between items-start">
-                    <div className="flex items-center gap-2">
-                        <CogIcon className="h-6 w-6 text-[var(--orange)]" />
-                        <h2>Motor Controls</h2>
-                    </div>
-
-                    {user && (
-                        <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="sm" onClick={handleLoadList}>
-                                <CloudArrowDownIcon className="h-4 w-4 mr-1.5" />
-                                Load
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
-                                <CloudArrowUpIcon className="h-4 w-4 mr-1.5" />
-                                Save
-                            </Button>
-                        </div>
-                    )}
-                </div>
-                <p className="motors-subtitle mt-1">
-                    Configure motor actions for each gesture class. Connect your LEGO Spike Prime in the Devices tab.
-                </p>
+            {/* Left Column: Camera & Predictions */}
+            <div className="motors-left flex flex-col gap-6">
+                <WebcamPanel
+                    onVideoReady={handleVideoReady}
+                    isDetecting={hand.isHandDetected || prediction.isPredicting}
+                />
+                <PredictionBars
+                    predictions={prediction.predictions}
+                    classNames={classNames}
+                />
             </div>
 
-            <div className="motors-section-list mt-6 space-y-4">
-                {classNames.map((name, i) => (
-                    <MotorSequencer
-                        key={`motor-${name}-${i}`}
-                        className={name}
-                        classId={i}
-                        onConfigChange={(config) => handleConfigChange(name, config)}
-                        initialConfig={configData[name]}
-                    />
-                ))}
+            {/* Right Column: Motor Controls */}
+            <div className="motors-right flex flex-col gap-6">
+                <div>
+                    <div className="motors-header flex justify-between items-start">
+                        <div className="flex items-center gap-2">
+                            <CogIcon className="h-6 w-6 text-[var(--orange)]" />
+                            <h2>Motor Controls</h2>
+                        </div>
+
+                        {user && (
+                            <div className="flex items-center gap-2">
+                                <Button variant="ghost" size="sm" onClick={handleLoadList}>
+                                    <CloudArrowDownIcon className="h-4 w-4 mr-1.5" />
+                                    Load
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+                                    <CloudArrowUpIcon className="h-4 w-4 mr-1.5" />
+                                    Save
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                    <p className="motors-subtitle mt-1">
+                        Configure motor actions for each gesture class. Connect your LEGO Spike Prime in the Devices tab.
+                    </p>
+                </div>
+
+                <div className="motors-section-list mt-6 space-y-4">
+                    {classNames.map((name, i) => (
+                        <MotorSequencer
+                            key={`motor-${name}-${i}`}
+                            className={name}
+                            classId={i}
+                            onConfigChange={(config) => handleConfigChange(name, config)}
+                            initialConfig={configData[name]}
+                        />
+                    ))}
+                </div>
             </div>
         </div>
     );

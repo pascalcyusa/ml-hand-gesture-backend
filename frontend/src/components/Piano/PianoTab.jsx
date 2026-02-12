@@ -1,35 +1,29 @@
-/**
- * PianoTab — Orchestrates note sequences per class
- * 
- * Shows NoteSequencer for each trained class.
- * Supports saving/loading configuration to backend.
- */
-
 import { useState, useCallback, useRef, useEffect } from 'react';
 import {
     MusicalNoteIcon,
     StopIcon,
     CloudArrowUpIcon,
     CloudArrowDownIcon,
-    ArrowDownTrayIcon,
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
-import { Switch } from '../ui/switch.jsx';
 import { Input } from '../ui/input.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
+import WebcamPanel from '../Training/WebcamPanel.jsx';
+import PredictionBars from '../Training/PredictionBars.jsx';
 import './PianoTab.css';
 
-export default function PianoTab({ classNames, topPrediction, showToast }) {
+export default function PianoTab({ classNames, topPrediction, showToast, hand, prediction }) {
     const audio = useAudioEngine();
     const storage = useStorageManager();
     const { user } = useAuth();
 
-    const [pianoEnabled, setPianoEnabled] = useState(true);
-    const [waveform, setWaveform] = useState('sine');
+    // Default settings (simplified UI)
+    const [pianoEnabled] = useState(true);
+    const [waveform] = useState('sine');
     const [isPlaying, setIsPlaying] = useState(false);
 
     const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -38,7 +32,6 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
     const [savedSequences, setSavedSequences] = useState([]);
 
     // Refs to note sequencer slots for each class
-    // We will use this to gather data for saving
     const sequencerSlotsRef = useRef({});
 
     // Register slots from each NoteSequencer
@@ -46,15 +39,12 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
         sequencerSlotsRef.current[className] = getSlots;
     }, []);
 
-    // Set slots (for loading)
-    // We need a way to push data down to sequencers.
-    // simpler approach: lift state up entirely? 
-    // Or just expose a setter via ref/callback?
-    // Current NoteSequencer manages its own state.
-    // Refactoring to controlled component is cleaner but more work right now.
-    // Let's us a "key" prop on NoteSequencer to force re-render with new initial slots?
-    // Or just pass `initialSlots` prop and update it when loading.
     const [sequencerData, setSequencerData] = useState({}); // { className: slots[] }
+
+    // Start camera when tab mounts
+    const handleVideoReady = useCallback((video, canvas) => {
+        hand.start(video, canvas);
+    }, [hand]);
 
     // Play a sequence for a class
     const handlePlaySequence = useCallback(
@@ -156,7 +146,7 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
     }
 
     return (
-        <div className="piano-tab animate-fade-in relative">
+        <div className="piano-layout animate-fade-in relative">
             {/* ── Save Dialog ── */}
             {showSaveDialog && (
                 <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
@@ -196,65 +186,57 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                 </div>
             )}
 
-            {/* Controls Bar */}
-            <Card className="piano-controls">
-                <div className="piano-controls-row">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                        <Switch
-                            checked={pianoEnabled}
-                            onCheckedChange={setPianoEnabled}
-                        />
-                        <span className="flex items-center gap-1.5 text-sm text-[var(--fg-dim)]">
-                            <MusicalNoteIcon className="h-4 w-4" />
-                            Auto-Play
-                        </span>
-                    </label>
+            {/* Left Column: Camera & Predictions */}
+            <div className="piano-left flex flex-col gap-6">
+                <WebcamPanel
+                    onVideoReady={handleVideoReady}
+                    isDetecting={hand.isHandDetected || prediction.isPredicting}
+                />
+                <PredictionBars
+                    predictions={prediction.predictions}
+                    classNames={classNames}
+                />
+            </div>
 
-                    <div className="piano-waveform">
-                        <label className="piano-waveform-label">Sound</label>
-                        <select
-                            className="piano-waveform-select"
-                            value={waveform}
-                            onChange={(e) => setWaveform(e.target.value)}
-                        >
-                            {audio.WAVEFORMS.map((w) => (
-                                <option key={w} value={w}>
-                                    {w.charAt(0).toUpperCase() + w.slice(1)}
-                                </option>
-                            ))}
-                        </select>
+            {/* Right Column: Piano Controls */}
+            <div className="piano-right flex flex-col gap-6">
+
+                {/* Controls Bar */}
+                <Card className="piano-controls">
+                    <div className="piano-controls-row">
+                        <div className="flex items-center gap-2">
+                            <MusicalNoteIcon className="h-6 w-6 text-[var(--purple)]" />
+                            <h2 className="text-lg font-semibold">Piano Sequencer</h2>
+                        </div>
+
+                        <div className="flex items-center gap-2 ml-auto">
+                            {user && (
+                                <>
+                                    <Button variant="ghost" size="sm" onClick={handleLoadList}>
+                                        <CloudArrowDownIcon className="h-4 w-4" />
+                                    </Button>
+                                    <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
+                                        <CloudArrowUpIcon className="h-4 w-4" />
+                                    </Button>
+                                </>
+                            )}
+                            <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={handleStopAll}
+                            >
+                                <StopIcon className="h-3.5 w-3.5" />
+                                Stop
+                            </Button>
+                        </div>
                     </div>
+                </Card>
 
-                    <div className="flex items-center gap-2 ml-auto">
-                        {user && (
-                            <>
-                                <Button variant="ghost" size="sm" onClick={handleLoadList}>
-                                    <CloudArrowDownIcon className="h-4 w-4" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(true)}>
-                                    <CloudArrowUpIcon className="h-4 w-4" />
-                                </Button>
-                            </>
-                        )}
-                        <Button
-                            variant="danger"
-                            size="sm"
-                            onClick={handleStopAll}
-                        >
-                            <StopIcon className="h-3.5 w-3.5" />
-                            Stop
-                        </Button>
-                    </div>
-                </div>
-            </Card>
-
-            {/* Note Sequences */}
-            <div className="piano-section">
+                {/* Note Sequences */}
                 <div className="piano-section-list">
                     {classNames.map((name, i) => (
                         <NoteSequencerWithRef
-                            key={`note-${name}-${i}`} // If we change key, component remounts. Not ideal for loading.
-                            // Better: pass initialSlots prop
+                            key={`note-${name}-${i}`}
                             className={name}
                             classId={i}
                             onPlaySequence={handlePlaySequence}
@@ -263,7 +245,7 @@ export default function PianoTab({ classNames, topPrediction, showToast }) {
                             durations={audio.DURATIONS}
                             isPlaying={isPlaying}
                             registerSlots={registerSlots}
-                            initialSlots={sequencerData[name]} // Load from state
+                            initialSlots={sequencerData[name]}
                         />
                     ))}
                 </div>

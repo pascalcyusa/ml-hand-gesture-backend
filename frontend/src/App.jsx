@@ -24,6 +24,8 @@ import { useClassManager } from './hooks/useClassManager.js';
 import { useModelTrainer } from './hooks/useModelTrainer.js';
 import { usePredictionManager } from './hooks/usePredictionManager.js';
 import { useStorageManager } from './hooks/useStorageManager.js';
+import * as tf from '@tensorflow/tfjs';
+import { base64ToArrayBuffer } from './utils/helpers.js';
 
 export default function App() {
   const navigate = useNavigate();
@@ -63,6 +65,43 @@ export default function App() {
     return false;
   }, [storage, trainer, cm, navigate, showToast]);
 
+  // Load model from Dashboard
+  const handleLoadModel = useCallback(async (modelId) => {
+    try {
+      const modelData = await storage.loadModel(modelId);
+      if (modelData && modelData.model_data) {
+
+        // Restore classes
+        if (modelData.dataset && modelData.dataset.classes) {
+          cm.restoreClasses(modelData.dataset.classes);
+        } else {
+          // Fallback if no dataset (legacy)
+          cm.restoreClasses(modelData.class_names.map(n => ({ name: n, samples: [] })));
+        }
+
+        // Restore model
+        const { modelTopology, weightSpecs, weightData } = modelData.model_data;
+        const weightBuffer = base64ToArrayBuffer(weightData);
+
+        const model = await tf.loadLayersModel(tf.io.fromMemory(
+          modelTopology,
+          weightSpecs,
+          weightBuffer
+        ));
+
+        trainer.setModel(model, modelData.class_names.length);
+
+        navigate('/train');
+        showToast(`Loaded model: ${modelData.name}`, 'success');
+      } else {
+        showToast('Failed to load model data', 'error');
+      }
+    } catch (err) {
+      console.error("Error loading model:", err);
+      showToast('Error loading model', 'error');
+    }
+  }, [storage, trainer, cm, navigate, showToast]);
+
   return (
     <div className="app flex flex-col min-h-screen">
       <Header
@@ -77,58 +116,63 @@ export default function App() {
 
       <main className="app-content flex-grow">
         <Routes>
-            <Route path="/" element={<Navigate to="/train" replace />} />
+          <Route path="/" element={<Navigate to="/train" replace />} />
 
-            <Route path="/train" element={
-              <TrainTab
-                showToast={showToast}
-                hand={hand}
-                cm={cm}
-                trainer={trainer}
-                prediction={prediction}
-                storage={storage}
-                auth={auth}
-              />
-            } />
+          <Route path="/train" element={
+            <TrainTab
+              showToast={showToast}
+              hand={hand}
+              cm={cm}
+              trainer={trainer}
+              prediction={prediction}
+              storage={storage}
+              auth={auth}
+            />
+          } />
 
-            <Route path="/piano" element={
-              <PianoTab
-                classNames={cm.classNames}
-                topPrediction={prediction.topPrediction}
-                showToast={showToast}
-              />
-            } />
+          <Route path="/piano" element={
+            <PianoTab
+              classNames={cm.classNames}
+              topPrediction={prediction.topPrediction}
+              showToast={showToast}
+              hand={hand}
+              prediction={prediction}
+            />
+          } />
 
-            <Route path="/motors" element={
-              <MotorsTab
-                classNames={cm.classNames}
-                showToast={showToast}
-              />
-            } />
+          <Route path="/motors" element={
+            <MotorsTab
+              classNames={cm.classNames}
+              showToast={showToast}
+              hand={hand}
+              prediction={prediction}
+            />
+          } />
 
-            <Route path="/devices" element={
-              <DevicesTab showToast={showToast} />
-            } />
+          <Route path="/devices" element={
+            <DevicesTab showToast={showToast} />
+          } />
 
-            <Route path="/community" element={
-              <CommunityTab
-                auth={auth}
-                onImportModel={handleImportCommunityModel}
-                showToast={showToast}
-              />
-            } />
+          <Route path="/community" element={
+            <CommunityTab
+              auth={auth}
+              onImportModel={handleImportCommunityModel}
+              showToast={showToast}
+            />
+          } />
 
-            <Route path="/about" element={<AboutTab />} />
+          <Route path="/about" element={<AboutTab />} />
 
-            <Route path="/dashboard" element={
-              <Dashboard
-                showToast={showToast}
-                onBack={() => navigate('/')}
-              />
-            } />
+          <Route path="/dashboard" element={
+            <Dashboard
+              showToast={showToast}
+              onBack={() => navigate('/')}
+              onLoadModel={handleLoadModel}
+            />
+          } />
 
-            {/* Fallback for unknown routes */}
-            <Route path="*" element={<Navigate to="/train" replace />} />
+          {/* Fallback for unknown routes */}
+          <Route path="*" element={<Navigate to="/train" replace />} />
         </Routes>
       </main>
 

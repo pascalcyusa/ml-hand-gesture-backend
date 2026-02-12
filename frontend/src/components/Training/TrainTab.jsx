@@ -13,29 +13,9 @@ import ClassCard from './ClassCard.jsx';
 import PredictionBars from './PredictionBars.jsx';
 import TrainingControls from './TrainingControls.jsx';
 import LoadingOverlay from '../common/LoadingOverlay.jsx';
+import { arrayBufferToBase64, base64ToArrayBuffer } from '../utils/helpers.js';
 import './TrainTab.css';
 
-// Helper: Convert ArrayBuffer to Base64
-function arrayBufferToBase64(buffer) {
-    let binary = '';
-    const bytes = new Uint8Array(buffer);
-    const len = bytes.byteLength;
-    for (let i = 0; i < len; i++) {
-        binary += String.fromCharCode(bytes[i]);
-    }
-    return window.btoa(binary);
-}
-
-// Helper: Convert Base64 to ArrayBuffer
-function base64ToArrayBuffer(base64) {
-    const binary_string = window.atob(base64);
-    const len = binary_string.length;
-    const bytes = new Uint8Array(len);
-    for (let i = 0; i < len; i++) {
-        bytes[i] = binary_string.charCodeAt(i);
-    }
-    return bytes.buffer;
-}
 
 export default function TrainTab({ showToast, hand, cm, trainer, prediction, storage, auth }) {
     const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);

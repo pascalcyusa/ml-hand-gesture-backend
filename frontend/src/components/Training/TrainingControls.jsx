@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     PlusIcon,
     CpuChipIcon,
@@ -6,6 +7,7 @@ import {
     FolderOpenIcon,
     TrashIcon,
     CheckIcon,
+    XMarkIcon,
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
 import { Card, CardTitle } from '../ui/card.jsx';
@@ -27,6 +29,8 @@ export default function TrainingControls({
     numClasses,
     savedModels,
 }) {
+    const [showLoadDialog, setShowLoadDialog] = useState(false);
+
     const handleAddClass = () => {
         const name = prompt('Enter class name:');
         if (name?.trim()) {
@@ -46,8 +50,43 @@ export default function TrainingControls({
     };
 
     return (
-        <Card className="training-controls">
+        <Card className="training-controls relative">
             <CardTitle>Controls</CardTitle>
+
+            {/* Load Dialog Overlay */}
+            {showLoadDialog && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-lg p-4">
+                    <Card className="w-full h-full max-h-[300px] flex flex-col shadow-2xl border-none">
+                        <div className="flex justify-between items-center p-3 border-b border-[var(--bg3)]">
+                            <h3 className="font-bold text-sm">Load Model</h3>
+                            <button onClick={() => setShowLoadDialog(false)} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
+                                <XMarkIcon className="h-4 w-4" />
+                            </button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+                            {savedModels.length === 0 ? (
+                                <p className="text-xs text-[var(--fg-muted)] text-center py-4">No saved models.</p>
+                            ) : (
+                                savedModels.map(m => (
+                                    <button
+                                        key={m.id}
+                                        onClick={() => {
+                                            onLoad(m.name);
+                                            setShowLoadDialog(false);
+                                        }}
+                                        className="w-full text-left p-2 rounded hover:bg-[var(--bg2)] text-sm flex justify-between items-center group"
+                                    >
+                                        <span className="font-medium truncate">{m.name}</span>
+                                        <span className="text-[10px] text-[var(--fg-muted)] opacity-0 group-hover:opacity-100">
+                                            {new Date(m.created_at).toLocaleDateString()}
+                                        </span>
+                                    </button>
+                                ))
+                            )}
+                        </div>
+                    </Card>
+                </div>
+            )}
 
             {/* Primary Actions */}
             <div className="controls-group mt-4">
@@ -68,7 +107,7 @@ export default function TrainingControls({
 
                 {!hasEnoughData && numClasses > 0 && (
                     <p className="controls-hint">
-                        Need ≥2 classes with ≥1 sample each
+                        Add at least 2 classes with 1 sample each.
                     </p>
                 )}
             </div>
@@ -133,12 +172,7 @@ export default function TrainingControls({
                 )}
 
                 {savedModels.length > 0 && (
-                    <Button size="sm" onClick={() => {
-                        const name = prompt(
-                            `Load model:\n${savedModels.map((m) => `• ${m.name}`).join('\n')}`
-                        );
-                        if (name?.trim()) onLoad(name);
-                    }}>
+                    <Button size="sm" onClick={() => setShowLoadDialog(true)}>
                         <FolderOpenIcon className="h-3.5 w-3.5" />
                         Load
                     </Button>

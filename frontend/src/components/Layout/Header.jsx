@@ -119,13 +119,6 @@ export default function Header({ user, onSignIn, onLogout }) {
                                     >
                                         Sign In
                                     </button>
-                                    <Link
-                                        to="/about"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        About
-                                    </Link>
                                 </>
                             )}
                         </div>
