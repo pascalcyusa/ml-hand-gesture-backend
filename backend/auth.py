@@ -5,6 +5,7 @@ Provides password hashing (bcrypt), JWT token creation/verification,
 and a FastAPI dependency to extract the current user from a Bearer token.
 """
 
+import hashlib
 import os
 from datetime import datetime, timedelta
 from typing import Optional
@@ -26,11 +27,18 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))  # 24
 # ── Password hashing ───────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
+def _normalize_password(password: str) -> str:
+    """
+    Pre-hash password with SHA256 to ensure it fits within bcrypt's 72-byte limit.
+    Returns the hex digest (64 chars).
+    """
+    return hashlib.sha256(password.encode()).hexdigest()
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(_normalize_password(password))
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return pwd_context.verify(_normalize_password(plain_password), hashed_password)
 
 # ── JWT tokens ──────────────────────────────────────────
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
