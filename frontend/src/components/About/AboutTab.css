@@ -1,0 +1,134 @@
+.about-tab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* ── Hero ── */
+.about-hero {
+    text-align: center;
+    padding: var(--space-2xl) 0 var(--space-lg);
+}
+
+.about-hero-icon {
+    font-size: 3.5rem;
+    display: block;
+    margin-bottom: var(--space-md);
+}
+
+.about-hero h2 {
+    font-size: 2rem;
+    margin-bottom: var(--space-xs);
+}
+
+.about-tagline {
+    color: var(--fg-muted);
+    font-size: 1.05rem;
+    font-family: var(--font-mono);
+}
+
+/* ── Grid ── */
+.about-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+}
+
+@media (max-width: 768px) {
+    .about-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.about-card {
+    padding: var(--space-lg);
+}
+
+.about-card h3 {
+    font-size: 1.05rem;
+    margin-bottom: var(--space-md);
+}
+
+/* ── Steps ── */
+.about-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding-left: var(--space-lg);
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+}
+
+.about-steps li::marker {
+    color: var(--green);
+    font-weight: 700;
+}
+
+/* ── Tech List ── */
+.about-tech-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.about-tech-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    transition: background var(--transition-fast);
+}
+
+.about-tech-item:hover {
+    background: var(--bg1);
+}
+
+.about-tech-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+.about-tech-desc {
+    font-size: 0.75rem;
+    color: var(--fg-muted);
+    font-family: var(--font-mono);
+}
+
+/* ── Features ── */
+.about-features {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding-left: var(--space-lg);
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+}
+
+.about-features li::marker {
+    color: var(--blue);
+}
+
+/* ── Open Source ── */
+.about-open-source {
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+}
+
+.about-privacy {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    background: rgba(184, 187, 38, 0.08);
+    border: 1px solid var(--green-dim);
+    border-radius: var(--radius-md);
+    font-size: 0.8rem;
+    color: var(--green);
+}
+
+.about-privacy-icon {
+    font-size: 1.1rem;
+}

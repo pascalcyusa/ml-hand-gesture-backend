@@ -1,0 +1,204 @@
+.devices-tab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xl);
+}
+
+/* ── Header ── */
+.devices-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+}
+
+.devices-header h2 {
+    font-size: 1.4rem;
+    margin-bottom: var(--space-xs);
+}
+
+.devices-subtitle {
+    color: var(--fg-muted);
+    font-size: 0.9rem;
+}
+
+.devices-status {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.devices-count {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    background: var(--bg1);
+    color: var(--fg-muted);
+}
+
+.devices-count.active {
+    background: rgba(184, 187, 38, 0.15);
+    color: var(--green);
+}
+
+/* ── Warning ── */
+.devices-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-md);
+    padding: var(--space-md) var(--space-lg);
+    border-color: var(--yellow-dim);
+    background: rgba(250, 189, 47, 0.05);
+}
+
+.devices-warning-icon {
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.devices-warning p {
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+    margin-top: var(--space-xs);
+}
+
+/* ── Device Grid ── */
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-md);
+}
+
+@media (max-width: 1024px) {
+    .devices-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .devices-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── Device Card ── */
+.device-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    transition: border-color var(--transition-normal), box-shadow var(--transition-normal);
+}
+
+.device-card.connected {
+    border-color: var(--green-dim);
+    box-shadow: 0 0 16px rgba(184, 187, 38, 0.1);
+}
+
+.device-card.connecting {
+    border-color: var(--yellow-dim);
+    animation: pulse-glow 1.5s ease-in-out infinite;
+}
+
+.device-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.device-slot-label {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--fg-muted);
+}
+
+.device-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    transition: background var(--transition-normal);
+}
+
+.device-status-dot.on {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+}
+
+.device-status-dot.off {
+    background: var(--bg3);
+}
+
+/* ── Card Body ── */
+.device-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 50px;
+    justify-content: center;
+}
+
+.device-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.device-name.idle {
+    color: var(--fg-muted);
+}
+
+.device-state {
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    color: var(--green);
+}
+
+.device-state.connecting {
+    color: var(--yellow);
+}
+
+.device-error {
+    font-size: 0.75rem;
+    color: var(--red);
+    font-family: var(--font-mono);
+}
+
+/* ── Card Footer ── */
+.device-card-footer {
+    margin-top: auto;
+}
+
+.device-btn {
+    width: 100%;
+}
+
+/* ── Info Card ── */
+.devices-info {
+    padding: var(--space-lg);
+}
+
+.devices-info h4 {
+    margin-bottom: var(--space-md);
+    font-size: 1rem;
+}
+
+.devices-steps {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding-left: var(--space-lg);
+    font-size: 0.85rem;
+    color: var(--fg-dim);
+}
+
+.devices-steps li::marker {
+    color: var(--blue);
+    font-weight: 700;
+}
+
+.devices-steps strong {
+    color: var(--fg);
+}

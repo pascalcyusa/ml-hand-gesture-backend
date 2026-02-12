@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import './components/Layout/Header.css';
 import './components/Layout/TabNav.css';
 import './components/common/Toast.css';
@@ -7,6 +7,8 @@ import Header from './components/Layout/Header.jsx';
 import TabNav from './components/Layout/TabNav.jsx';
 import TrainTab from './components/Training/TrainTab.jsx';
 import PianoTab from './components/Piano/PianoTab.jsx';
+import DevicesTab from './components/Devices/DevicesTab.jsx';
+import AboutTab from './components/About/AboutTab.jsx';
 import Toast from './components/common/Toast.jsx';
 
 import { useHandDetection } from './hooks/useHandDetection.js';
@@ -18,8 +20,8 @@ import { useStorageManager } from './hooks/useStorageManager.js';
 const TABS = [
   { id: 'train', label: '🤚 Train', icon: '🧠' },
   { id: 'piano', label: '🎹 Piano', icon: '🎵' },
-  { id: 'devices', label: '📡 Devices', icon: '🔌', disabled: true },
-  { id: 'about', label: '📖 About', icon: 'ℹ️', disabled: true },
+  { id: 'devices', label: '📡 Devices', icon: '🔌' },
+  { id: 'about', label: '📖 About', icon: 'ℹ️' },
 ];
 
 export default function App() {
@@ -31,7 +33,7 @@ export default function App() {
     setTimeout(() => setToast(null), duration);
   }, []);
 
-  // ── Shared hooks (lifted from TrainTab so PianoTab can access) ──
+  // ── Shared hooks (lifted so PianoTab can access classNames + topPrediction) ──
   const hand = useHandDetection();
   const cm = useClassManager();
   const trainer = useModelTrainer();
@@ -43,15 +45,10 @@ export default function App() {
     classNames: cm.classNames,
   });
 
-  // Stop audio/motors when switching tabs
-  const handleTabChange = useCallback((tabId) => {
-    setActiveTab(tabId);
-  }, []);
-
   return (
     <div className="app">
       <Header />
-      <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
+      <TabNav tabs={TABS} activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="app-content">
         {activeTab === 'train' && (
@@ -72,18 +69,10 @@ export default function App() {
           />
         )}
         {activeTab === 'devices' && (
-          <div className="placeholder-tab">
-            <span className="placeholder-emoji">📡</span>
-            <h2>Connect Devices</h2>
-            <p>Coming in Phase 3</p>
-          </div>
+          <DevicesTab showToast={showToast} />
         )}
         {activeTab === 'about' && (
-          <div className="placeholder-tab">
-            <span className="placeholder-emoji">📖</span>
-            <h2>About</h2>
-            <p>Coming soon</p>
-          </div>
+          <AboutTab />
         )}
       </main>
 
