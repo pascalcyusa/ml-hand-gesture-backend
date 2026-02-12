@@ -163,18 +163,14 @@ export default function App() {
           onClose={() => setShowAuth(false)}
           onLogin={async (email, pw) => {
             const user = await auth.login(email, pw);
-            if (user) showToast(`Welcome back, ${user.username}!`, 'success');
-            else showToast('Login failed', 'error');
+            if (!user) throw new Error('Invalid email or password');
+            showToast(`Welcome back, ${user.username}!`, 'success');
             setShowAuth(false);
           }}
           onSignup={async (username, email, pw) => {
-            try {
-              const user = await auth.signup(username, email, pw);
-              showToast(`Welcome, ${user.username}!`, 'success');
-              setShowAuth(false);
-            } catch (e) {
-              showToast('Signup failed', 'error');
-            }
+            const user = await auth.signup(username, email, pw);
+            showToast(`Welcome, ${user.username}!`, 'success');
+            setShowAuth(false);
           }}
         />
       )}

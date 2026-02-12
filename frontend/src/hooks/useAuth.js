@@ -84,7 +84,8 @@ export function useAuth() {
             });
 
             if (!res.ok) {
-                throw new Error('Signup failed');
+                const body = await res.json().catch(() => null);
+                throw new Error(body?.detail || 'Signup failed');
             }
 
             const data = await res.json();

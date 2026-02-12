@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
-import { Input } from '../ui/input.jsx';
 import { Card } from '../ui/card.jsx';
 import './AuthModal.css';
 
@@ -25,7 +24,6 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
             } else {
                 await onLogin(email.trim(), password);
             }
-            onClose();
         } catch (err) {
             setError(err.message);
         } finally {
@@ -35,14 +33,12 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
 
     return (
         <div className="auth-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-            <Card className="auth-modal animate-fade-in max-w-[420px] w-full mx-4 p-8">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-[var(--fg)]">
-                        {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-                    </h2>
-                    <Button variant="ghost" size="icon" onClick={onClose}>
+            <Card className="auth-modal animate-fade-in">
+                <div className="auth-header">
+                    <h2>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
+                    <button className="auth-close" onClick={onClose}>
                         <XMarkIcon className="h-5 w-5" />
-                    </Button>
+                    </button>
                 </div>
 
                 <div className="auth-tabs">
@@ -60,13 +56,12 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                     </button>
                 </div>
 
-                <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                <form className="auth-form" onSubmit={handleSubmit}>
                     {mode === 'signup' && (
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
-                                Username
-                            </label>
-                            <Input
+                        <div className="auth-field">
+                            <label className="auth-label">Username</label>
+                            <input
+                                className="auth-input"
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
@@ -77,11 +72,10 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                         </div>
                     )}
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
-                            Email
-                        </label>
-                        <Input
+                    <div className="auth-field">
+                        <label className="auth-label">Email</label>
+                        <input
+                            className="auth-input"
                             type="email"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
@@ -91,11 +85,10 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-[var(--fg-dim)] font-[var(--font-mono)]">
-                            Password
-                        </label>
-                        <Input
+                    <div className="auth-field">
+                        <label className="auth-label">Password</label>
+                        <input
+                            className="auth-input"
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
@@ -107,16 +100,13 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                     </div>
 
                     {error && (
-                        <p className="text-xs font-[var(--font-mono)] text-[var(--red)] bg-[rgba(251,73,52,0.08)] px-3 py-1.5 rounded-[var(--radius-sm)]">
-                            {error}
-                        </p>
+                        <p className="auth-error">{error}</p>
                     )}
 
                     <Button
                         type="submit"
                         variant="primary"
-                        size="lg"
-                        className="w-full mt-2"
+                        className="auth-submit"
                         disabled={loading}
                     >
                         {loading ? 'Please wait...' : mode === 'login' ? 'Log In' : 'Create Account'}

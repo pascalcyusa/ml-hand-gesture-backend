@@ -152,16 +152,6 @@ export default function DevicesTab({ showToast }) {
                     </p>
                 )}
             </Card>
-
-            <Card>
-                <h4 className="font-bold mb-3 text-[var(--fg)]">How It Works</h4>
-                <ol className="devices-steps">
-                    <li>Turn on your <strong>LEGO Spike Prime Hub</strong> (hold the center button until it lights up).</li>
-                    <li>Click the <strong>Connect to Hub</strong> button above.</li>
-                    <li>Select your Hub from the browser's Bluetooth popup and click <strong>Pair</strong>.</li>
-                    <li>Once connected, go to the <strong>Motors</strong> tab to assign actions to gestures!</li>
-                </ol>
-            </Card>
         </div>
     );
 }
