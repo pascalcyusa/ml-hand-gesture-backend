@@ -4,6 +4,7 @@ import {
     StarIcon,
     CodeBracketIcon,
     LockClosedIcon,
+    HeartIcon,
 } from '@heroicons/react/24/outline';
 import { Card, CardTitle, CardContent } from '../ui/card.jsx';
 import './AboutTab.css';
