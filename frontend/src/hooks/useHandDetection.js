@@ -7,7 +7,7 @@
  * requestAnimationFrame detection loop.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { loadHandLandmarker, extractFeatures, drawLandmarks } from '../utils/mediapipe.js';
 
 export function useHandDetection() {
@@ -148,7 +148,7 @@ export function useHandDetection() {
         return () => stop();
     }, [stop]);
 
-    return {
+    return useMemo(() => ({
         isModelLoaded,
         isLoading,
         isRunning,
@@ -158,5 +158,5 @@ export function useHandDetection() {
         stop,
         getFeatures,
         loadModel,
-    };
+    }), [isModelLoaded, isLoading, isRunning, isHandDetected, start, stop, getFeatures, loadModel]);
 }
