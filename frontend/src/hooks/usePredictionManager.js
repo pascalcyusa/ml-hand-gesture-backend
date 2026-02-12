@@ -19,6 +19,12 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
 
     const intervalRef = useRef(null);
     const onPredictionCallbackRef = useRef(null);
+    const classNamesRef = useRef(classNames);
+
+    // Keep classNames ref in sync
+    useEffect(() => {
+        classNamesRef.current = classNames;
+    }, [classNames]);
 
     // Set external callback for when a high-confidence prediction is made
     const onPrediction = useCallback((callback) => {
@@ -42,7 +48,7 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
             if (!result) return;
 
             const mapped = result.map((r) => ({
-                className: classNames[r.classIndex] || `Class ${r.classIndex}`,
+                className: classNamesRef.current[r.classIndex] || `Class ${r.classIndex}`,
                 confidence: r.confidence,
             }));
 
@@ -62,7 +68,7 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
                 setTopPrediction(null);
             }
         }, PREDICTION_INTERVAL);
-    }, [getFeatures, predict, classNames]);
+    }, [getFeatures, predict]); // Removed classNames dependency as we use ref
 
     // Stop prediction loop
     const stopPredicting = useCallback(() => {

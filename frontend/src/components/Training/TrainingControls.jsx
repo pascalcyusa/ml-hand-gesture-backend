@@ -157,7 +157,7 @@ export default function TrainingControls({
             {/* Secondary Actions */}
             <div className="controls-group">
                 {/* Row 1: Persistence */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                     {isTrained && (
                         <>
                             <Button size="sm" className="flex-1" onClick={() => {
