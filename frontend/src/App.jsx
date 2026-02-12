@@ -1,27 +1,20 @@
 import { useState, useCallback } from 'react';
-import {
-  HandRaisedIcon,
-  MusicalNoteIcon,
-  SignalIcon,
-  GlobeAltIcon,
-  InformationCircleIcon,
-  UserCircleIcon, // Import for dashboard tab/icon
-} from '@heroicons/react/24/outline';
-import { CogIcon, CpuChipIcon } from '@heroicons/react/24/solid';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import './components/Layout/Header.css';
-import './components/Layout/TabNav.css';
 import './components/common/Toast.css';
 import './components/common/LoadingOverlay.css';
+
 import Header from './components/Layout/Header.jsx';
-import TabNav from './components/Layout/TabNav.jsx';
+import Footer from './components/Layout/Footer.jsx';
+
 import TrainTab from './components/Training/TrainTab.jsx';
 import PianoTab from './components/Piano/PianoTab.jsx';
 import MotorsTab from './components/Motors/MotorsTab.jsx';
 import DevicesTab from './components/Devices/DevicesTab.jsx';
 import CommunityTab from './components/Community/CommunityTab.jsx';
 import AboutTab from './components/About/AboutTab.jsx';
-import Dashboard from './components/Dashboard/Dashboard.jsx'; // Import Dashboard
+import Dashboard from './components/Dashboard/Dashboard.jsx';
 import AuthModal from './components/common/AuthModal.jsx';
 import Toast from './components/common/Toast.jsx';
 
@@ -32,20 +25,10 @@ import { useModelTrainer } from './hooks/useModelTrainer.js';
 import { usePredictionManager } from './hooks/usePredictionManager.js';
 import { useStorageManager } from './hooks/useStorageManager.js';
 
-const TABS = [
-  { id: 'train', label: 'Train', icon: HandRaisedIcon },
-  { id: 'piano', label: 'Piano', icon: MusicalNoteIcon },
-  { id: 'motors', label: 'Motors', icon: CogIcon },
-  { id: 'devices', label: 'Devices', icon: SignalIcon },
-  { id: 'community', label: 'Community', icon: GlobeAltIcon },
-  { id: 'about', label: 'About', icon: InformationCircleIcon },
-];
-
 export default function App() {
-  const [activeTab, setActiveTab] = useState('train');
+  const navigate = useNavigate();
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
-  const [showDashboard, setShowDashboard] = useState(false); // State for dashboard view
 
   const showToast = useCallback((message, type = 'info', duration = 3000) => {
     setToast({ message, type });
@@ -69,55 +52,34 @@ export default function App() {
 
   // Import community model into local training
   const handleImportCommunityModel = useCallback(async (cloudModel) => {
-    // If dataset exists in cloud model, restore it?
-    // Current flow: imports model (topology+weights)
-    // If we have dataset, we should restore classes AND maybe set dataset in trainer if trainer supports it.
-    // train tab usually handles dataset via cm.
-
-    // For now, load model & classes
     const result = await storage.importFromCloud(cloudModel);
     if (result) {
-      trainer.setModel(result.model, result.classes.length); // pass numClasses
+      trainer.setModel(result.model, result.classes.length);
       cm.restoreClasses(result.classes);
-      // result.dataset could be used here if trainer supported loading samples
-      // We will enhance TrainTab to handle dataset loading separately or here
+      navigate('/train');
+      showToast('Model imported successfully!', 'success');
       return true;
     }
     return false;
-  }, [storage, trainer, cm]);
-
-  const handleDashboardClick = () => {
-    setShowDashboard(true);
-  };
-
-  const handleTabChange = (tabId) => {
-    setShowDashboard(false);
-    setActiveTab(tabId);
-  };
+  }, [storage, trainer, cm, navigate, showToast]);
 
   return (
-    <div className="app">
+    <div className="app flex flex-col min-h-screen">
       <Header
         user={auth.user}
         onSignIn={() => setShowAuth(true)}
         onLogout={() => {
           auth.logout();
           showToast('Logged out', 'info');
-          setShowDashboard(false);
+          navigate('/');
         }}
-        onProfileClick={handleDashboardClick} // New prop for user avatar click
       />
 
-      {!showDashboard && (
-        <TabNav tabs={TABS} activeTab={activeTab} onTabChange={handleTabChange} />
-      )}
+      <main className="app-content flex-grow">
+        <Routes>
+            <Route path="/" element={<Navigate to="/train" replace />} />
 
-      <main className="app-content">
-        {showDashboard ? (
-          <Dashboard showToast={showToast} onBack={() => setShowDashboard(false)} />
-        ) : (
-          <>
-            {activeTab === 'train' && (
+            <Route path="/train" element={
               <TrainTab
                 showToast={showToast}
                 hand={hand}
@@ -125,38 +87,52 @@ export default function App() {
                 trainer={trainer}
                 prediction={prediction}
                 storage={storage}
-                auth={auth} // Pass auth to train tab for conditional UI
+                auth={auth}
               />
-            )}
-            {activeTab === 'piano' && (
+            } />
+
+            <Route path="/piano" element={
               <PianoTab
                 classNames={cm.classNames}
                 topPrediction={prediction.topPrediction}
                 showToast={showToast}
               />
-            )}
-            {activeTab === 'motors' && (
+            } />
+
+            <Route path="/motors" element={
               <MotorsTab
                 classNames={cm.classNames}
                 showToast={showToast}
               />
-            )}
-            {activeTab === 'devices' && (
+            } />
+
+            <Route path="/devices" element={
               <DevicesTab showToast={showToast} />
-            )}
-            {activeTab === 'community' && (
+            } />
+
+            <Route path="/community" element={
               <CommunityTab
                 auth={auth}
                 onImportModel={handleImportCommunityModel}
                 showToast={showToast}
               />
-            )}
-            {activeTab === 'about' && (
-              <AboutTab />
-            )}
-          </>
-        )}
+            } />
+
+            <Route path="/about" element={<AboutTab />} />
+
+            <Route path="/dashboard" element={
+              <Dashboard
+                showToast={showToast}
+                onBack={() => navigate('/')}
+              />
+            } />
+
+            {/* Fallback for unknown routes */}
+            <Route path="*" element={<Navigate to="/train" replace />} />
+        </Routes>
       </main>
+
+      <Footer />
 
       {showAuth && (
         <AuthModal
