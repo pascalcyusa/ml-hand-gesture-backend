@@ -98,6 +98,49 @@ export function useAuth() {
             throw err;
         }
     }, []);
+    const updateProfile = useCallback(async (data) => {
+        try {
+            const t = localStorage.getItem('token');
+            const res = await fetch(`${API_Base}/auth/profile`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${t}`
+                },
+                body: JSON.stringify(data),
+            });
+
+            if (!res.ok) throw new Error('Failed to update profile');
+
+            const updatedUser = await res.json();
+            setUser(updatedUser);
+            return updatedUser;
+        } catch (err) {
+            console.error("Update profile error:", err);
+            throw err;
+        }
+    }, []);
+
+    const updatePassword = useCallback(async (currentPassword, newPassword) => {
+        try {
+            const t = localStorage.getItem('token');
+            const res = await fetch(`${API_Base}/auth/password`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${t}`
+                },
+                body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+            });
+
+            if (!res.ok) throw new Error('Failed to update password');
+            return true;
+        } catch (err) {
+            console.error("Update password error:", err);
+            throw err;
+        }
+    }, []);
+
 
     const logout = useCallback(() => {
         localStorage.removeItem('token');
@@ -111,6 +154,8 @@ export function useAuth() {
         login,
         signup,
         logout,
+        updateProfile,
+        updatePassword,
         getHeaders,
     };
 }

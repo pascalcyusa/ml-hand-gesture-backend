@@ -1,88 +1,232 @@
+/* Dashboard.css */
+
 .dashboard-container {
-    max-width: 1000px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: var(--space-xl) var(--space-lg);
+    padding: 0;
+    min-height: 100vh;
+    background: var(--bg-hard);
+    color: var(--fg);
+    font-family: var(--font-ui);
 }
 
-.dashboard-header {
+
+
+/* ── Main Content Area ── */
+.dashboard-content {
+    padding: var(--space-2xl) var(--space-xl);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dashboard-header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: var(--space-2xl);
-    padding-bottom: var(--space-lg);
     border-bottom: 1px solid var(--bg2);
+    padding-bottom: var(--space-md);
 }
 
-.dashboard-header-left {
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--fg);
+}
+
+/* ── Layout Grid (Sidebar + Main) ── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 60px;
+    /* Generous spacing like the reference */
+    align-items: start;
+}
+
+@media (max-width: 1024px) {
+    .profile-grid {
+        grid-template-columns: 1fr;
+        gap: var(--space-xl);
+    }
+}
+
+/* ── Left Sidebar (User Info) ── */
+.user-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.user-identity {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
 }
 
-.user-profile {
-    display: flex;
-    align-items: center;
-    gap: var(--space-lg);
-}
-
 .user-avatar-large {
-    width: 64px;
-    height: 64px;
+    width: 100px;
+    height: 100px;
     background: var(--bg2);
-    color: var(--fg);
+    color: var(--fg-dim);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 2rem;
-    font-weight: bold;
+    font-size: 2.5rem;
+    font-weight: 600;
     border: 2px solid var(--bg3);
 }
 
-.dashboard-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: var(--space-xl);
+.user-name {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 4px;
 }
 
-.dashboard-section {
+.user-email {
+    font-size: 0.9rem;
+    color: var(--fg-muted);
+}
+
+/* Sidebar Menu (The "Personal information", "Billing" links) */
+.sidebar-menu {
     display: flex;
     flex-direction: column;
     gap: var(--space-md);
+    margin-top: var(--space-lg);
 }
 
-.section-title {
-    font-size: 1.1rem;
+.sidebar-item {
+    font-size: 1rem;
+    color: var(--fg-muted);
+    cursor: pointer;
+    padding: 8px 0;
+    transition: color 0.2s;
+}
+
+.sidebar-item.active {
+    color: var(--orange);
     font-weight: 600;
-    color: var(--fg);
-    padding-bottom: var(--space-xs);
-    border-bottom: 1px solid var(--bg1);
+    background: var(--bg2);
+    border-radius: 8px;
+    padding-left: 12px;
 }
 
-.items-list {
+.sidebar-item:hover {
+    color: var(--fg);
+    background: var(--bg2);
+    border-radius: 8px;
+    padding-left: 12px;
+}
+
+/* ── Right Content (The Cards) ── */
+.main-section {
     display: flex;
     flex-direction: column;
-    gap: var(--space-sm);
+    gap: var(--space-xl);
 }
 
-.item-card {
+.section-heading {
+    margin-bottom: var(--space-lg);
+}
+
+.section-heading h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: var(--space-xs);
+}
+
+.section-heading p {
+    color: var(--fg-muted);
+    font-size: 0.95rem;
+}
+
+/* The Info Cards Grid */
+.info-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-lg);
+}
+
+.info-card {
+    background: var(--bg1);
+    /* Lighter card bg */
+    border: 1px solid var(--bg2);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 140px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.info-card:hover {
+    border-color: var(--bg3);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.card-header {
     display: flex;
     justify-content: space-between;
-    align-items: start;
-    padding: var(--space-md);
+    align-items: flex-start;
+    margin-bottom: var(--space-md);
+}
+
+.card-label {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--fg);
+}
+
+.card-icon {
+    color: var(--orange);
+    /* Icon color from reference */
+    width: 20px;
+    height: 20px;
+}
+
+.card-value {
+    font-size: 0.95rem;
+    color: var(--fg-dim);
+    line-height: 1.5;
+}
+
+.card-meta {
+    margin-top: auto;
+    font-size: 0.8rem;
+    color: var(--fg-muted);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Custom Load Button inside card */
+.card-action-btn {
+    margin-top: var(--space-md);
+    align-self: flex-start;
+    font-size: 0.85rem;
+    color: var(--blue);
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.card-action-btn:hover {
+    text-decoration: underline;
+}
+
+/* ── Settings Forms ── */
+.settings-form {
     background: var(--bg1);
     border: 1px solid var(--bg2);
-    transition: all var(--transition-fast);
+    border-radius: 16px;
+    padding: 24px;
 }
 
-.item-card:hover {
-    background: var(--bg2);
-    border-color: var(--bg3);
-}
-
-.empty-state {
-    font-size: 0.9rem;
-    color: var(--fg-muted);
-    font-style: italic;
-    padding: var(--space-sm);
+.form-section {
+    margin-bottom: 24px;
 }
