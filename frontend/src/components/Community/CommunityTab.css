@@ -41,7 +41,7 @@
 
 .community-search-input:focus {
     outline: none;
-    border-color: var(--blue);
+    border-color: var(--fg-muted);
 }
 
 .community-search-input::placeholder {

@@ -1,115 +1,256 @@
-.training-controls {
-    padding: var(--space-sm) var(--space-md);
-}
+/* TrainingControls.css */
 
-.training-controls-title {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: var(--space-md);
-}
-
-.controls-group {
+.training-controls-container {
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-md);
+    gap: var(--space-lg);
+    height: 100%;
 }
 
-.controls-full-width {
-    width: 100%;
-}
-
-.controls-hint {
-    font-size: 0.75rem;
-    color: var(--yellow);
-    font-family: var(--font-mono);
-    text-align: center;
-}
-
-/* Stats */
-.controls-stats {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-sm);
-    margin-bottom: var(--space-md);
-    text-align: center;
-}
-
-.controls-stat {
+/* ── Main Control Card ── */
+.control-panel {
+    background: var(--bg1);
+    border: 1px solid var(--bg2);
+    border-radius: 24px;
+    /* Super rounded like the reference */
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding: var(--space-sm);
-    background: var(--bg1);
-    border-radius: var(--radius-md);
+    gap: 20px;
+    box-shadow: var(--shadow-md);
 }
 
-.controls-stat-value {
-    font-size: 1.1rem;
-    font-weight: 700;
-    font-family: var(--font-mono);
-    color: var(--fg);
-}
-
-.controls-stat-value.trained {
-    color: var(--green);
-}
-
-.controls-stat-label {
-    font-size: 0.65rem;
-    color: var(--fg-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-}
-
-/* Training Progress */
-.training-progress-section {
-    background: var(--bg1);
-    border-radius: var(--radius-md);
-    padding: var(--space-sm);
-    margin-bottom: var(--space-md);
-}
-
-.training-progress-header {
+.panel-header {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
-    font-family: var(--font-mono);
-    color: var(--fg-dim);
-    margin-bottom: var(--space-sm);
+    align-items: center;
+    margin-bottom: 4px;
 }
 
-.training-progress-track {
-    width: 100%;
-    height: 6px;
-    background: var(--bg2);
-    border-radius: var(--radius-full);
+.panel-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--fg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bg3);
+    box-shadow: 0 0 0 2px var(--bg1);
+}
+
+.status-indicator.ready {
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+}
+
+/* ── Primary Action Grid (Add & Train) ── */
+.action-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+/* The Big Pill Buttons */
+.control-btn {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px;
+    height: 100px;
+    /* Tall button like the reference */
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: var(--font-ui);
     overflow: hidden;
 }
 
-.training-progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--orange-dim), var(--green));
-    border-radius: var(--radius-full);
-    transition: width 300ms ease;
+/* Inactive State (Dark Gray) */
+.control-btn.secondary {
+    background: var(--bg2);
+    color: var(--fg);
 }
 
-.training-progress-loss {
-    display: block;
-    font-size: 0.7rem;
+.control-btn.secondary:hover {
+    background: var(--bg3);
+}
+
+/* Active/Primary State (Bright Color) */
+.control-btn.primary {
+    background: var(--green);
+    color: var(--bg-hard);
+    /* Dark text on bright bg */
+}
+
+.control-btn.primary:hover {
+    background: var(--green-dim);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(184, 187, 38, 0.4);
+}
+
+.control-btn.accent {
+    background: var(--yellow);
+    color: var(--bg-hard);
+}
+
+.control-btn.accent:hover {
+    background: var(--yellow-dim);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px -4px rgba(250, 189, 47, 0.4);
+}
+
+/* Disabled State */
+.control-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+/* Button Content Styling */
+.btn-icon-wrapper {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.1);
+    /* Subtle darkening behind icon */
+    margin-bottom: auto;
+}
+
+.btn-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    z-index: 1;
+}
+
+.btn-sublabel {
+    font-size: 0.75rem;
+    opacity: 0.8;
+    font-weight: 500;
+}
+
+/* ── Stats Row (Like the "Power Analytics" bars) ── */
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.stat-pill {
+    background: var(--bg-hard);
+    border: 1px solid var(--bg2);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--fg);
     font-family: var(--font-mono);
+    line-height: 1.2;
+}
+
+.stat-label {
+    font-size: 0.7rem;
     color: var(--fg-muted);
-    margin-top: var(--space-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
 }
 
-/* Secondary group */
-.controls-secondary {
-    flex-direction: row;
-    flex-wrap: nowrap;
+/* ── Secondary Tools Grid (File Ops) ── */
+.tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
 }
 
-.controls-secondary>button,
-.controls-secondary>a {
-    flex: 1;
-    min-width: 0;
+.tool-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: var(--bg2);
+    border: none;
+    border-radius: 9999px;
+    /* Full Pill Shape */
+    color: var(--fg-dim);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.tool-btn:hover {
+    background: var(--bg3);
+    color: var(--fg);
+}
+
+.tool-btn svg {
+    width: 18px;
+    height: 18px;
+}
+
+.tool-btn.danger {
+    background: rgba(204, 36, 29, 0.2);
+    color: var(--red);
+}
+
+.tool-btn.danger:hover {
+    background: var(--red);
+    color: var(--bg-hard);
+}
+
+/* ── Training Progress Bar (The "Slider" look) ── */
+.progress-container {
+    background: var(--bg-hard);
+    border-radius: 16px;
+    padding: 16px;
+    margin-top: 4px;
+    border: 1px solid var(--bg2);
+}
+
+.progress-info {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    font-size: 0.8rem;
+    color: var(--fg);
+    font-weight: 500;
+}
+
+.progress-track {
+    height: 12px;
+    background: var(--bg2);
+    border-radius: 9999px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: var(--green);
+    /* Bright neon green fill */
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(184, 187, 38, 0.5);
+    /* Glow effect */
 }

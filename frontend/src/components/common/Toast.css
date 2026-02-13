@@ -1,1 +1,143 @@
-/* Toast styles are in gruvbox.css */
+/* components/common/Toast.css */
+
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none;
+    /* Let clicks pass through empty space */
+}
+
+.toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-width: 320px;
+    max-width: 400px;
+    padding: 16px;
+    background: var(--bg1);
+    /* Gruvbox dark card bg */
+    border: 1px solid var(--bg2);
+    border-radius: 12px;
+    /* Matches the rounded look */
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    color: var(--fg);
+    font-family: var(--font-ui);
+    animation: slideInRight 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+    backdrop-filter: blur(8px);
+}
+
+.toast.fade-out {
+    animation: fadeOutRight 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ── Icon Styles ── */
+.toast-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* Success */
+.toast-success .toast-icon-wrapper {
+    color: var(--green);
+    background: rgba(184, 187, 38, 0.15);
+    /* Low opacity green bg */
+}
+
+.toast-success {
+    border-left: 4px solid var(--green);
+}
+
+/* Error */
+.toast-error .toast-icon-wrapper {
+    color: var(--red);
+    background: rgba(204, 36, 29, 0.15);
+}
+
+.toast-error {
+    border-left: 4px solid var(--red);
+}
+
+/* Warning */
+.toast-warning .toast-icon-wrapper {
+    color: var(--yellow);
+    background: rgba(250, 189, 47, 0.15);
+}
+
+.toast-warning {
+    border-left: 4px solid var(--yellow);
+}
+
+/* Info */
+.toast-info .toast-icon-wrapper {
+    color: var(--blue);
+    background: rgba(131, 165, 152, 0.15);
+}
+
+.toast-info {
+    border-left: 4px solid var(--blue);
+}
+
+/* ── Content ── */
+.toast-message {
+    flex: 1;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--fg);
+}
+
+/* ── Close Button ── */
+.toast-close {
+    background: transparent;
+    border: none;
+    color: var(--fg-muted);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.toast-close:hover {
+    background: var(--bg2);
+    color: var(--fg);
+}
+
+/* ── Animations ── */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+}

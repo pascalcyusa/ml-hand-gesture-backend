@@ -1,5 +1,7 @@
+/* TrainTab.css */
 .train-tab {
     animation: fade-in 400ms ease;
+    padding-bottom: 80px;
 }
 
 .train-layout {
@@ -23,7 +25,8 @@
     flex-direction: column;
     gap: var(--space-lg);
     position: sticky;
-    top: 80px;
+    top: 24px;
+    z-index: 10;
 }
 
 @media (max-width: 1024px) {
@@ -32,55 +35,73 @@
     }
 }
 
-/* ── Right panel: classes grid + predictions sidebar ── */
+/* ── Right panel ── */
 .train-right {
-    display: grid;
-    grid-template-columns: 1fr 240px;
-    gap: var(--space-lg);
-    align-items: start;
+    display: flex;
+    flex-direction: column-reverse;
+    gap: var(--space-xl);
 }
 
-@media (max-width: 1280px) {
+@media (min-width: 1280px) {
     .train-right {
-        grid-template-columns: 1fr;
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        align-items: start;
+        gap: var(--space-lg);
     }
 }
 
 .train-section-title {
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     margin-bottom: var(--space-md);
+    color: var(--fg);
     display: flex;
-    align-items: baseline;
-    gap: var(--space-sm);
+    align-items: center;
+    gap: var(--space-md);
+    font-family: var(--font-ui);
 }
 
 .train-section-hint {
     font-size: 0.75rem;
     color: var(--fg-muted);
+    font-weight: 500;
+    background: var(--bg2);
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
     font-family: var(--font-mono);
-    font-weight: 400;
 }
 
-/* ── Classes grid: 2 cards per row ── */
+/* ── Classes List ── */
 .train-classes-list {
     display: flex;
     flex-direction: column;
-    gap: var(--space-lg);
-    /* Consistent vertical spacing */
+    gap: var(--space-md);
 }
 
-/* If you want 2 columns on large screens, use grid but with bigger gaps */
-@media (min-width: 1200px) {
+@media (min-width: 1400px) {
     .train-classes-list {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: var(--space-lg);
+        align-items: start;
     }
 }
 
-/* ── Predictions sidebar ── */
+/* ── Predictions Sidebar ── */
 .train-predictions {
+    background: var(--bg1);
+    padding: var(--space-lg);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--bg2);
     position: sticky;
-    top: 80px;
+    top: 24px;
+    box-shadow: var(--shadow-md);
+}
+
+.train-predictions h3 {
+    margin-top: 0;
+    color: var(--fg);
+    font-size: 1rem;
+    margin-bottom: var(--space-md);
 }

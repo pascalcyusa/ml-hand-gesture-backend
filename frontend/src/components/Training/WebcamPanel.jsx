@@ -1,49 +1,63 @@
 import { useRef, useEffect, useState } from 'react';
+import { VideoCameraIcon } from '@heroicons/react/24/outline';
 import './WebcamPanel.css';
 
-export default function WebcamPanel({ onVideoReady, isDetecting, showVideo = true }) {
+export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [videoBlurred, setVideoBlurred] = useState(false);
 
     useEffect(() => {
-        if (videoRef.current && canvasRef.current && onVideoReady) {
+        if (isStarted && videoRef.current && canvasRef.current && onVideoReady) {
             onVideoReady(videoRef.current, canvasRef.current);
         }
-    }, [onVideoReady]);
+    }, [isStarted, onVideoReady]);
 
     return (
         <div className="webcam-panel card">
             <div className="webcam-header">
                 <h3 className="webcam-title">
                     <span className="webcam-dot" data-active={isDetecting} />
-                    Camera Feed
+                    Camera
                 </h3>
-                <label className="toggle-switch">
-                    <input
-                        type="checkbox"
-                        checked={!videoBlurred}
-                        onChange={(e) => setVideoBlurred(!e.target.checked)}
-                    />
-                    <span className="toggle-slider" />
-                    <span className="toggle-label">Show Video</span>
-                </label>
+                {isStarted && (
+                    <label className="toggle-switch">
+                        <input
+                            type="checkbox"
+                            checked={!videoBlurred}
+                            onChange={(e) => setVideoBlurred(!e.target.checked)}
+                        />
+                        <span className="toggle-slider" />
+                        <span className="toggle-label">Show Video</span>
+                    </label>
+                )}
             </div>
 
             <div className="webcam-container">
-                <video
-                    ref={videoRef}
-                    className={`webcam-video ${videoBlurred ? 'blurred' : ''}`}
-                    playsInline
-                    muted
-                    autoPlay
-                />
-                <canvas ref={canvasRef} className="webcam-canvas" />
-
-                {!isDetecting && (
+                {isStarted ? (
+                    <>
+                        <video
+                            ref={videoRef}
+                            className={`webcam-video ${videoBlurred ? 'blurred' : ''}`}
+                            playsInline
+                            muted
+                            autoPlay
+                        />
+                        <canvas ref={canvasRef} className="webcam-canvas" />
+                    </>
+                ) : (
                     <div className="webcam-placeholder">
-                        <span className="webcam-placeholder-icon">📷</span>
-                        <p>Camera will start when you begin</p>
+                        <VideoCameraIcon className="w-16 h-16 text-[var(--fg-muted)] opacity-50 mb-2" />
+                        <button className="start-camera-btn" onClick={onStartCamera}>
+                            Start Camera
+                        </button>
+                    </div>
+                )}
+
+                {isStarted && !isDetecting && (
+                    <div className="webcam-placeholder">
+                        <VideoCameraIcon className="w-16 h-16 text-[var(--fg-muted)] opacity-50 mb-2 animate-pulse" />
+                        <p>Loading hand detection...</p>
                     </div>
                 )}
             </div>

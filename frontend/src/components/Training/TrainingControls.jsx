@@ -8,9 +8,10 @@ import {
     TrashIcon,
     CheckIcon,
     XMarkIcon,
+    AdjustmentsHorizontalIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
-import { Card, CardTitle } from '../ui/card.jsx';
+import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import ModalPortal from '../common/ModalPortal.jsx';
 import './TrainingControls.css';
@@ -31,19 +32,15 @@ export default function TrainingControls({
     numClasses,
     savedModels,
 }) {
+    // Dialog States
     const [showLoadDialog, setShowLoadDialog] = useState(false);
-
-    // Add Class Dialog State
     const [showAddClassDialog, setShowAddClassDialog] = useState(false);
     const [newClassName, setNewClassName] = useState('');
-
-    // Save Model Dialog State
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [saveModelName, setSaveModelName] = useState('my-model');
-
-    // Reset Confirm Dialog State
     const [showResetDialog, setShowResetDialog] = useState(false);
 
+    // Handlers
     const handleConfirmAddClass = () => {
         if (newClassName?.trim()) {
             onAddClass(newClassName);
@@ -71,111 +68,186 @@ export default function TrainingControls({
     };
 
     return (
-        <Card className="training-controls relative">
-            <CardTitle>Controls</CardTitle>
+        <div className="training-controls-container">
 
-            {/* Add Class Dialog */}
+            {/* ── Main Control Panel ── */}
+            <div className="control-panel">
+
+                {/* Header */}
+                <div className="panel-header">
+                    <div className="panel-title">
+                        <AdjustmentsHorizontalIcon className="h-5 w-5 text-[var(--fg-muted)]" />
+                        <span>Control Center</span>
+                    </div>
+                    <div className={`status-indicator ${isTrained ? 'ready' : ''}`} title={isTrained ? "Model Ready" : "Untrained"} />
+                </div>
+
+                {/* Primary Actions Grid (Big Buttons) */}
+                <div className="action-grid">
+                    {/* Add Class Button (Yellow Accent) */}
+                    <button
+                        className="control-btn accent"
+                        onClick={() => setShowAddClassDialog(true)}
+                    >
+                        <div className="btn-icon-wrapper">
+                            <PlusIcon className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <span className="btn-label">Add Class</span>
+                        </div>
+                    </button>
+
+                    {/* Train Button (Green Primary) */}
+                    <button
+                        className={`control-btn ${isTraining ? 'secondary' : 'primary'}`}
+                        onClick={onTrain}
+                        disabled={!hasEnoughData || isTraining}
+                    >
+                        <div className="btn-icon-wrapper">
+                            <CpuChipIcon className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <span className="btn-label">
+                                {isTraining ? 'Training...' : 'Train Model'}
+                            </span>
+                            <div className="btn-sublabel">
+                                {hasEnoughData ? 'Ready to start' : 'Need samples'}
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                {/* Stats Row */}
+                <div className="stats-row">
+                    <div className="stat-pill">
+                        <span className="stat-value">{numClasses}</span>
+                        <span className="stat-label">Classes</span>
+                    </div>
+                    <div className="stat-pill">
+                        <span className="stat-value">{totalSamples}</span>
+                        <span className="stat-label">Samples</span>
+                    </div>
+                    <div className="stat-pill" style={{ color: isTrained ? 'var(--green)' : 'var(--fg-muted)' }}>
+                        <span className="stat-value">
+                            {isTrained ? <CheckIcon className="h-6 w-6" /> : '—'}
+                        </span>
+                        <span className="stat-label">Status</span>
+                    </div>
+                </div>
+
+                {/* Progress Bar (Visible only when training) */}
+                {isTraining && trainingProgress && (
+                    <div className="progress-container">
+                        <div className="progress-info">
+                            <span>Epoch {trainingProgress.epoch} / {trainingProgress.totalEpochs}</span>
+                            <span>{Math.round((trainingProgress.accuracy || 0) * 100)}%</span>
+                        </div>
+                        <div className="progress-track">
+                            <div
+                                className="progress-fill"
+                                style={{ width: `${(trainingProgress.epoch / trainingProgress.totalEpochs) * 100}%` }}
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {/* Secondary Tools Grid */}
+                <div className="tools-grid">
+                    {/* Save */}
+                    <button className="tool-btn" onClick={() => setShowSaveDialog(true)} disabled={!isTrained}>
+                        <ArrowDownTrayIcon />
+                        <span>Save</span>
+                    </button>
+
+                    {/* Load */}
+                    <button className="tool-btn" onClick={() => setShowLoadDialog(true)}>
+                        <FolderOpenIcon />
+                        <span>Load</span>
+                    </button>
+
+                    {/* Import */}
+                    <button className="tool-btn" onClick={handleImport}>
+                        <ArrowDownTrayIcon />
+                        <span>Import</span>
+                    </button>
+
+                    {/* Reset (Danger) */}
+                    <button className="tool-btn danger" onClick={() => setShowResetDialog(true)}>
+                        <TrashIcon />
+                        <span>Reset</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* ── Modals (Keep existing functionality) ── */}
             {showAddClassDialog && (
                 <ModalPortal>
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
-                            <h3 className="font-bold text-sm">Add New Class</h3>
+                        <Card className="w-full max-w-sm p-6 shadow-2xl border border-[var(--bg2)] bg-[var(--bg1)] space-y-4 rounded-2xl">
+                            <h3 className="font-bold text-lg">Add New Class</h3>
                             <Input
                                 placeholder="Class Name (e.g. Fist)"
                                 value={newClassName}
                                 onChange={(e) => setNewClassName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleConfirmAddClass()}
                                 autoFocus
+                                className="bg-[var(--bg-hard)] border-[var(--bg3)]"
                             />
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setShowAddClassDialog(false)}>Cancel</Button>
-                                <Button size="sm" onClick={handleConfirmAddClass}>Add</Button>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <Button variant="ghost" onClick={() => setShowAddClassDialog(false)}>Cancel</Button>
+                                <Button variant="primary" onClick={handleConfirmAddClass}>Add Class</Button>
                             </div>
                         </Card>
                     </div>
                 </ModalPortal>
             )}
 
-            {/* Save Model Dialog */}
+            {/* Save Dialog */}
             {showSaveDialog && (
                 <ModalPortal>
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
-                            <h3 className="font-bold text-sm">Save Model</h3>
+                        <Card className="w-full max-w-sm p-6 shadow-2xl border border-[var(--bg2)] bg-[var(--bg1)] space-y-4 rounded-2xl">
+                            <h3 className="font-bold text-lg">Save Model</h3>
                             <Input
                                 placeholder="Model Name"
                                 value={saveModelName}
                                 onChange={(e) => setSaveModelName(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleConfirmSave()}
                                 autoFocus
+                                className="bg-[var(--bg-hard)] border-[var(--bg3)]"
                             />
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
-                                <Button size="sm" onClick={handleConfirmSave}>Save</Button>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <Button variant="ghost" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
+                                <Button variant="primary" onClick={handleConfirmSave}>Save</Button>
                             </div>
                         </Card>
                     </div>
                 </ModalPortal>
             )}
 
-            {/* Reset Dialog */}
-            {showResetDialog && (
-                <ModalPortal>
-                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4">
-                            <div className="flex flex-col gap-2">
-                                <h3 className="font-bold text-sm text-[var(--red)] flex items-center gap-2">
-                                    <TrashIcon className="h-4 w-4" />
-                                    Reset Everything?
-                                </h3>
-                                <p className="text-xs text-[var(--fg-muted)]">
-                                    This will delete all gesture classes and samples. This action cannot be undone.
-                                </p>
-                            </div>
-                            <div className="flex justify-end gap-2">
-                                <Button variant="ghost" size="sm" onClick={() => setShowResetDialog(false)}>Cancel</Button>
-                                <Button
-                                    variant="danger"
-                                    size="sm"
-                                    onClick={() => {
-                                        onReset();
-                                        setShowResetDialog(false);
-                                    }}
-                                >
-                                    Yes, Reset
-                                </Button>
-                            </div>
-                        </Card>
-                    </div>
-                </ModalPortal>
-            )}
-
-            {/* Load Dialog Overlay */}
+            {/* Load Dialog */}
             {showLoadDialog && (
                 <ModalPortal>
                     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-                        <Card className="w-full max-w-sm p-4 shadow-2xl border-none space-y-4 flex flex-col max-h-[400px]">
-                            <div className="flex justify-between items-center border-b border-[var(--bg3)] pb-2">
-                                <h3 className="font-bold text-sm">Load Model</h3>
+                        <Card className="w-full max-w-sm p-6 shadow-2xl border border-[var(--bg2)] bg-[var(--bg1)] flex flex-col max-h-[400px] rounded-2xl">
+                            <div className="flex justify-between items-center border-b border-[var(--bg3)] pb-4 mb-2">
+                                <h3 className="font-bold text-lg">Load Model</h3>
                                 <button onClick={() => setShowLoadDialog(false)} className="text-[var(--fg-muted)] hover:text-[var(--fg)]">
-                                    <XMarkIcon className="h-4 w-4" />
+                                    <XMarkIcon className="h-5 w-5" />
                                 </button>
                             </div>
-                            <div className="flex-1 overflow-y-auto space-y-1">
+                            <div className="flex-1 overflow-y-auto space-y-2 pr-2">
                                 {savedModels.length === 0 ? (
-                                    <p className="text-xs text-[var(--fg-muted)] text-center py-4">No saved models.</p>
+                                    <p className="text-sm text-[var(--fg-muted)] text-center py-4">No saved models found.</p>
                                 ) : (
                                     savedModels.map(m => (
                                         <button
                                             key={m.id}
-                                            onClick={() => {
-                                                onLoad(m.name);
-                                                setShowLoadDialog(false);
-                                            }}
-                                            className="w-full text-left p-2 rounded hover:bg-[var(--bg2)] text-sm flex justify-between items-center group"
+                                            onClick={() => { onLoad(m.name); setShowLoadDialog(false); }}
+                                            className="w-full text-left p-3 rounded-xl bg-[var(--bg2)] hover:bg-[var(--bg3)] transition-colors flex justify-between items-center group"
                                         >
-                                            <span className="font-medium truncate">{m.name}</span>
-                                            <span className="text-[10px] text-[var(--fg-muted)] opacity-0 group-hover:opacity-100">
+                                            <span className="font-medium text-[var(--fg)]">{m.name}</span>
+                                            <span className="text-xs text-[var(--fg-muted)]">
                                                 {new Date(m.created_at).toLocaleDateString()}
                                             </span>
                                         </button>
@@ -187,113 +259,29 @@ export default function TrainingControls({
                 </ModalPortal>
             )}
 
-            {/* Primary Actions */}
-            <div className="controls-group mt-4">
-                <Button variant="accent" className="w-full" onClick={() => setShowAddClassDialog(true)}>
-                    <PlusIcon className="h-4 w-4" />
-                    Add Class
-                </Button>
-
-                <Button
-                    variant="primary"
-                    className="w-full"
-                    onClick={onTrain}
-                    disabled={!hasEnoughData || isTraining}
-                >
-                    <CpuChipIcon className="h-4 w-4" />
-                    {isTraining ? 'Training...' : 'Train Model'}
-                </Button>
-
-                {!hasEnoughData && numClasses > 0 && (
-                    <p className="controls-hint">
-                        Add at least 2 classes with 1 sample each.
-                    </p>
-                )}
-            </div>
-
-            {/* Training Progress */}
-            {isTraining && trainingProgress && (
-                <div className="training-progress-section">
-                    <div className="training-progress-header">
-                        <span>Epoch {trainingProgress.epoch}/{trainingProgress.totalEpochs}</span>
-                        <span>{Math.round((trainingProgress.accuracy || 0) * 100)}% acc</span>
+            {/* Reset Dialog */}
+            {showResetDialog && (
+                <ModalPortal>
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+                        <Card className="w-full max-w-sm p-6 shadow-2xl border border-[var(--bg2)] bg-[var(--bg1)] space-y-4 rounded-2xl">
+                            <div className="flex flex-col gap-3">
+                                <h3 className="font-bold text-lg text-[var(--red)] flex items-center gap-2">
+                                    <TrashIcon className="h-5 w-5" />
+                                    Confirm Reset
+                                </h3>
+                                <p className="text-sm text-[var(--fg-muted)] leading-relaxed">
+                                    This will delete all current gesture classes and samples. <br />
+                                    <strong>This action cannot be undone.</strong>
+                                </p>
+                            </div>
+                            <div className="flex justify-end gap-2 mt-4">
+                                <Button variant="ghost" onClick={() => setShowResetDialog(false)}>Cancel</Button>
+                                <Button variant="danger" onClick={() => { onReset(); setShowResetDialog(false); }}>Yes, Reset</Button>
+                            </div>
+                        </Card>
                     </div>
-                    <div className="training-progress-track">
-                        <div
-                            className="training-progress-fill"
-                            style={{
-                                width: `${(trainingProgress.epoch / trainingProgress.totalEpochs) * 100}%`,
-                            }}
-                        />
-                    </div>
-                    {trainingProgress.loss !== undefined && (
-                        <span className="training-progress-loss">
-                            loss: {trainingProgress.loss.toFixed(4)}
-                        </span>
-                    )}
-                </div>
+                </ModalPortal>
             )}
-
-            {/* Stats */}
-            <div className="controls-stats">
-                <div className="controls-stat">
-                    <span className="controls-stat-value">{numClasses}</span>
-                    <span className="controls-stat-label">Classes</span>
-                </div>
-                <div className="controls-stat">
-                    <span className="controls-stat-value">{totalSamples}</span>
-                    <span className="controls-stat-label">Samples</span>
-                </div>
-                <div className="controls-stat">
-                    <span className={`controls-stat-value ${isTrained ? 'trained' : ''}`}>
-                        {isTrained ? <CheckIcon className="h-4 w-4 inline" /> : '—'}
-                    </span>
-                    <span className="controls-stat-label">Trained</span>
-                </div>
-            </div>
-
-            {/* Secondary Actions */}
-            {/* Secondary Actions */}
-            <div className="controls-group">
-                {/* Row 1: Persistence */}
-                <div className="flex gap-2 flex-wrap">
-                    {isTrained && (
-                        <>
-                            <Button size="sm" className="flex-1" onClick={() => setShowSaveDialog(true)}>
-                                <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                                Save
-                            </Button>
-                            <Button size="sm" className="flex-1" onClick={onExport}>
-                                <ArrowUpTrayIcon className="h-3.5 w-3.5" />
-                                Export
-                            </Button>
-                        </>
-                    )}
-
-                    {savedModels.length > 0 && (
-                        <Button size="sm" className="flex-1" onClick={() => setShowLoadDialog(true)}>
-                            <FolderOpenIcon className="h-3.5 w-3.5" />
-                            Load
-                        </Button>
-                    )}
-
-                    <Button size="sm" className="flex-1" onClick={handleImport}>
-                        <ArrowDownTrayIcon className="h-3.5 w-3.5" />
-                        Import
-                    </Button>
-                </div>
-
-                {/* Row 2: Reset */}
-                <Button
-                    variant="danger"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() => setShowResetDialog(true)}
-                >
-                    <TrashIcon className="h-3.5 w-3.5" />
-                    Reset
-                </Button>
-            </div>
-        </Card>
+        </div>
     );
 }

@@ -1,125 +1,128 @@
 import { useState } from 'react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
-import { Button } from '../ui/button.jsx';
-import { Card } from '../ui/card.jsx';
-import ModalPortal from './ModalPortal.jsx';
+import {
+    XMarkIcon,
+    ArrowRightIcon,
+    EnvelopeIcon,
+    LockClosedIcon,
+    UserIcon
+} from '@heroicons/react/24/outline';
 import './AuthModal.css';
 
 export default function AuthModal({ onClose, onLogin, onSignup }) {
-    const [mode, setMode] = useState('login');
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [username, setUsername] = useState('');
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [isLogin, setIsLogin] = useState(true);
+    const [formData, setFormData] = useState({
+        username: '',
+        email: '',
+        password: ''
+    });
 
-    const handleSubmit = async (e) => {
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = (e) => {
         e.preventDefault();
-        setError(null);
-        setLoading(true);
-
-        try {
-            if (mode === 'signup') {
-                if (!username.trim()) throw new Error('Username is required');
-                await onSignup(username.trim(), email.trim(), password);
-            } else {
-                await onLogin(email.trim(), password);
-            }
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+        if (isLogin) {
+            onLogin(formData.email, formData.password);
+        } else {
+            onSignup(formData.username, formData.email, formData.password);
         }
     };
 
     return (
-        <ModalPortal>
-            <div className="auth-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-                <Card className="auth-modal animate-fade-in">
+        <div className="auth-overlay" onClick={onClose}>
+            <div className="auth-card" onClick={(e) => e.stopPropagation()}>
+                {/* The Green Glow */}
+                <div className="auth-glow"></div>
+
+                <button className="close-btn" onClick={onClose}>
+                    <XMarkIcon className="w-6 h-6" />
+                </button>
+
+                <div className="auth-content">
                     <div className="auth-header">
-                        <h2>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
-                        <button className="auth-close" onClick={onClose}>
-                            <XMarkIcon className="h-5 w-5" />
-                        </button>
+                        <h2 className="auth-title">
+                            {isLogin ? 'Welcome back' : 'Create account'}
+                        </h2>
+                        <p className="auth-subtitle">
+                            {isLogin ? 'Sign in to your account' : 'Get started with your free account'}
+                        </p>
                     </div>
 
-                    <div className="auth-tabs">
-                        <button
-                            className={`auth-tab ${mode === 'login' ? 'active' : ''}`}
-                            onClick={() => { setMode('login'); setError(null); }}
-                        >
-                            Log In
-                        </button>
-                        <button
-                            className={`auth-tab ${mode === 'signup' ? 'active' : ''}`}
-                            onClick={() => { setMode('signup'); setError(null); }}
-                        >
-                            Sign Up
-                        </button>
-                    </div>
-
-                    <form className="auth-form" onSubmit={handleSubmit}>
-                        {mode === 'signup' && (
-                            <div className="auth-field">
-                                <label className="auth-label">Username</label>
+                    <form onSubmit={handleSubmit} className="auth-fields">
+                        {!isLogin && (
+                            <div className="input-group">
+                                <label className="input-label">Username</label>
                                 <input
-                                    className="auth-input"
                                     type="text"
-                                    value={username}
-                                    onChange={(e) => setUsername(e.target.value)}
-                                    placeholder="your_username"
-                                    required
-                                    autoComplete="username"
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    className="auth-input"
+                                    placeholder="johndoe"
+                                    autoFocus={!isLogin}
                                 />
                             </div>
                         )}
 
-                        <div className="auth-field">
-                            <label className="auth-label">Email</label>
+                        <div className="input-group">
+                            <label className="input-label">Email</label>
                             <input
-                                className="auth-input"
                                 type="email"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
-                                placeholder="you@example.com"
-                                required
-                                autoComplete="email"
-                            />
-                        </div>
-
-                        <div className="auth-field">
-                            <label className="auth-label">Password</label>
-                            <input
+                                name="email"
+                                value={formData.email}
+                                onChange={handleChange}
                                 className="auth-input"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                required
-                                minLength={6}
-                                autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                                placeholder="name@example.com"
+                                autoFocus={isLogin}
                             />
                         </div>
 
-                        {error && (
-                            <p className="auth-error">{error}</p>
-                        )}
+                        <div className="input-group">
+                            <label className="input-label">Password</label>
+                            <input
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                className="auth-input"
+                                placeholder="••••••••"
+                            />
+                        </div>
 
-                        <Button
-                            type="submit"
-                            variant="primary"
-                            className="auth-submit"
-                            disabled={loading}
-                        >
-                            {loading ? 'Please wait...' : mode === 'login' ? 'Log In' : 'Create Account'}
-                        </Button>
+                        {/* Submit Button - Circular style to match the image's arrow button */}
+                        <div className="submit-row">
+                            <button type="submit" className="submit-btn">
+                                <ArrowRightIcon className="w-6 h-6 stroke-[3px]" />
+                            </button>
+                        </div>
                     </form>
 
-                    <button className="auth-guest" onClick={onClose}>
-                        Continue as Guest →
+                    <div className="auth-divider">OR</div>
+
+                    {/* Placeholder for future social logins to match image style */}
+                    <button className="alt-auth-btn" onClick={() => alert("Google Auth not implemented yet")}>
+                        <div className="flex items-center gap-3">
+                            <span className="font-bold text-[var(--blue)]">G</span>
+                            <span>Continue with Google</span>
+                        </div>
+                        <ArrowRightIcon className="w-4 h-4 text-[var(--fg-muted)]" />
                     </button>
-                </Card>
+
+                    <div className="auth-footer">
+                        {isLogin ? "Don't have an account?" : "Already have an account?"}
+                        <span
+                            className="auth-link"
+                            onClick={() => {
+                                setIsLogin(!isLogin);
+                                setFormData({ username: '', email: '', password: '' });
+                            }}
+                        >
+                            {isLogin ? 'Sign up' : 'Sign in'}
+                        </span>
+                    </div>
+                </div>
             </div>
-        </ModalPortal>
+        </div>
     );
 }

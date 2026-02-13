@@ -4,7 +4,7 @@
  * Replaces localStorage with backend API calls.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 
 const API_Base = 'http://localhost:8000';
@@ -190,7 +190,7 @@ export function useStorageManager() {
     }, [loadModel]);
 
 
-    return {
+    return useMemo(() => ({
         saveModel,
         listMyModels,
         loadModel,
@@ -201,5 +201,16 @@ export function useStorageManager() {
         saveGestureMapping,
         getGestureMappings,
         saveTrainingSession,
-    };
+    }), [
+        saveModel,
+        listMyModels,
+        loadModel,
+        listCommunityModels,
+        importFromCloud,
+        savePianoSequence,
+        getPianoSequences,
+        saveGestureMapping,
+        getGestureMappings,
+        saveTrainingSession,
+    ]);
 }

@@ -1,14 +1,14 @@
 import { useRef, useEffect, useCallback, useState } from 'react';
-import { HandRaisedIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import {
+    HandRaisedIcon,
+    XMarkIcon,
+    ChevronDownIcon,
+    CheckCircleIcon
+} from '@heroicons/react/24/outline';
 import { drawLandmarks } from '../../utils/mediapipe.js';
 import { Button } from '../ui/button.jsx';
-import { Card } from '../ui/card.jsx';
 import './ClassCard.css';
 
-/**
- * ClassCard - Rebuilt from scratch for better state isolation and aesthetics.
- * Each card manages its own expanded state and provides a scrollable sample area.
- */
 export default function ClassCard({
     classData,
     onCollect,
@@ -20,50 +20,65 @@ export default function ClassCard({
     const [isExpanded, setIsExpanded] = useState(true);
 
     const toggleExpanded = useCallback((e) => {
-        // Only toggle if we didn't click an action button
-        if (e.target.closest('.class-card-actions')) return;
+        // Prevent toggle if clicking buttons
+        if (e.target.closest('button')) return;
         setIsExpanded(prev => !prev);
     }, []);
 
+    const sampleCount = samples?.length || 0;
+
     return (
-        <Card className={`class-card animate-fade-in ${isExpanded ? 'is-expanded' : 'is-collapsed'}`}>
-            {/* Header Area */}
+        <div className={`class-card ${isExpanded ? 'is-expanded' : ''}`}>
+            {/* Header: Delete Left | Title Middle | Collect & Collapse Right */}
             <div className="class-card-header" onClick={toggleExpanded}>
+
                 <div className="class-card-title-group">
-                    <ChevronDownIcon className={`class-card-chevron ${isExpanded ? 'expanded' : ''}`} />
-                    <h4 className="class-card-name">{name}</h4>
-                    <span className="class-card-badge">{samples.length}</span>
+                    {/* 1. Delete Icon (Moved to Left) */}
+                    <button
+                        className="icon-btn delete-class-btn"
+                        onClick={(e) => {
+                            e.stopPropagation(); // Stop card from collapsing
+                            onDelete(id);
+                        }}
+                        title={`Delete class "${name}"`}
+                    >
+                        <XMarkIcon className="h-5 w-5" />
+                    </button>
+
+                    {/* 2. Title with Ellipsis */}
+                    <h4 className="class-card-name" title={name}>{name}</h4>
                 </div>
 
                 <div className="class-card-actions">
+                    {/* 3. Rounded Collect Button */}
                     <Button
-                        variant="primary"
-                        size="sm"
-                        onClick={() => onCollect(id)}
+                        variant="primary" /* or 'outline' depending on preference */
+                        size="icon"     /* Helper class if you have it, or handled by CSS below */
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onCollect(id);
+                        }}
                         disabled={!currentLandmarks}
-                        title={!currentLandmarks ? 'Show your hand to collect' : `Collect sample for ${name}`}
+                        title={!currentLandmarks ? 'Show hand to enable' : 'Collect Sample'}
                         className="collect-btn"
                     >
-                        <HandRaisedIcon className="h-3.5 w-3.5" />
-                        <span>Collect</span>
+                        <HandRaisedIcon className="h-5 w-5" />
                     </Button>
-                    <Button
-                        variant="danger"
-                        size="icon"
-                        onClick={() => onDelete(id)}
-                        title={`Delete class "${name}"`}
-                        className="delete-btn"
-                    >
-                        <XMarkIcon className="h-4 w-4" />
-                    </Button>
+
+                    {/* 4. Aligned Chevron */}
+                    <div className="chevron-wrapper">
+                        <ChevronDownIcon
+                            className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                        />
+                    </div>
                 </div>
             </div>
 
-            {/* Body Area with smooth transition */}
+            {/* Middle: Thumbnail Grid */}
             <div className="class-card-body">
                 <div className="class-card-inner">
-                    {samples.length > 0 ? (
-                        <div className="class-card-samples-container">
+                    <div className="class-card-samples-container">
+                        {sampleCount > 0 ? (
                             <div className="class-card-samples-grid">
                                 {samples.map((sample, i) => (
                                     <SampleIcon
@@ -73,22 +88,33 @@ export default function ClassCard({
                                     />
                                 ))}
                             </div>
-                        </div>
-                    ) : (
-                        <div className="class-card-empty-state">
-                            <p>No samples collected yet</p>
-                            <span className="text-xs text-[var(--fg-muted)]">Hold a pose and click Collect</span>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="empty-placeholder">
+                                <p>No samples yet</p>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </Card>
+
+            {/* Footer: Stats */}
+            <div className="class-card-footer">
+                {sampleCount > 0 ? (
+                    <div className="status-badge active">
+                        <CheckCircleIcon className="status-icon" />
+                        <span>{sampleCount} Samples collected</span>
+                    </div>
+                ) : (
+                    <div className="status-badge">
+                        <div className="h-2 w-2 rounded-full bg-gray-500 mr-2"></div>
+                        <span>0 Samples</span>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }
 
-/**
- * Optimized Sample Thumbnail
- */
 function SampleIcon({ sample, onDelete }) {
     const canvasRef = useRef(null);
 
@@ -97,29 +123,23 @@ function SampleIcon({ sample, onDelete }) {
         if (!canvas || !sample.landmarks) return;
 
         const ctx = canvas.getContext('2d');
-        const size = 64; // Slightly smaller for better grid fit
+        const size = 64;
         canvas.width = size;
         canvas.height = size;
 
-        ctx.fillStyle = '#1d2021';
+        ctx.fillStyle = '#1d2021'; // Gruvbox dark bg
         ctx.fillRect(0, 0, size, size);
 
         drawLandmarks(ctx, sample.landmarks, size, size);
     }, [sample]);
 
-    const handleRemove = (e) => {
-        e.preventDefault();
-        if (window.confirm('Delete this sample?')) {
-            onDelete();
-        }
-    };
-
     return (
-        <div className="sample-icon-wrapper" onDoubleClick={handleRemove} title="Double-click to delete">
+        <div
+            className="sample-icon-wrapper"
+            onClick={onDelete}
+            title="Click to delete this sample"
+        >
             <canvas ref={canvasRef} className="sample-canvas" />
-            <button className="sample-remove-overlay" onClick={handleRemove}>
-                <XMarkIcon className="h-3 w-3" />
-            </button>
         </div>
     );
 }
