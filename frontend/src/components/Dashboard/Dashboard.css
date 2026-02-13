@@ -115,9 +115,7 @@
 
 .sidebar-item:hover {
     color: var(--fg);
-    background: var(--bg2);
-    border-radius: 8px;
-    padding-left: 12px;
+    /* No background or border-radius on hover as requested */
 }
 
 /* ── Right Content (The Cards) ── */

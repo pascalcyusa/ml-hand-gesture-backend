@@ -68,7 +68,7 @@ export default function ProfileSettings({ user, onUpdate }) {
             </div>
 
             <div className="flex justify-end pt-4">
-                <Button type="submit" variant="primary" disabled={loading}>
+                <Button type="submit" variant="accent" className="bg-[var(--orange)] text-white hover:bg-[var(--orange-dim)] border-none" disabled={loading}>
                     {loading ? 'Saving...' : 'Save Changes'}
                 </Button>
             </div>

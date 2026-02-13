@@ -175,6 +175,7 @@ export default function App() {
               showToast={showToast}
               onBack={() => navigate('/')}
               onLoadModel={handleLoadModel}
+              auth={auth}
             />
           } />
 
@@ -189,15 +190,23 @@ export default function App() {
         <AuthModal
           onClose={() => setShowAuth(false)}
           onLogin={async (email, pw) => {
-            const user = await auth.login(email, pw);
-            if (!user) throw new Error('Invalid email or password');
-            showToast(`Welcome back, ${user.username}!`, 'success');
-            setShowAuth(false);
+            try {
+              const user = await auth.login(email, pw);
+              if (!user) throw new Error('Invalid email or password');
+              showToast(`Welcome back, ${user.username}!`, 'success');
+              setShowAuth(false);
+            } catch (err) {
+              showToast(err.message, 'error');
+            }
           }}
           onSignup={async (username, email, pw) => {
-            const user = await auth.signup(username, email, pw);
-            showToast(`Welcome, ${user.username}!`, 'success');
-            setShowAuth(false);
+            try {
+              const user = await auth.signup(username, email, pw);
+              showToast(`Welcome, ${user.username}!`, 'success');
+              setShowAuth(false);
+            } catch (err) {
+              showToast(err.message || 'Signup failed', 'error');
+            }
           }}
         />
       )}

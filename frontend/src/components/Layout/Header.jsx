@@ -131,7 +131,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                                             setIsMenuOpen(false);
                                         }}
                                     >
-                                        Sign In
+                                        Log In
                                     </button>
                                     <div className="dropdown-divider"></div>
                                     <Link

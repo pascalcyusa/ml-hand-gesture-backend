@@ -164,7 +164,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
             {showLoadingOverlay && (
                 <LoadingOverlay
                     message={loadingMessage}
-                    progress={trainer.trainingProgress ? (trainer.trainingProgress.epoch / trainer.trainingProgress.totalEpochs) : 0}
+                    progress={trainer.trainingProgress ? (trainer.trainingProgress.epoch / trainer.trainingProgress.totalEpochs) : null}
                 />
             )}
 

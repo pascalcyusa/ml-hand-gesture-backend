@@ -45,7 +45,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                             {isLogin ? 'Welcome back' : 'Create account'}
                         </h2>
                         <p className="auth-subtitle">
-                            {isLogin ? 'Sign in to your account' : 'Get started with your free account'}
+                            {isLogin ? 'Log in to your account' : 'Get started with your free account'}
                         </p>
                     </div>
 
@@ -118,7 +118,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                                 setFormData({ username: '', email: '', password: '' });
                             }}
                         >
-                            {isLogin ? 'Sign up' : 'Sign in'}
+                            {isLogin ? 'Sign up' : 'Log in'}
                         </span>
                     </div>
                 </div>

@@ -9,15 +9,14 @@ import {
     UserCircleIcon,
     LockClosedIcon
 } from '@heroicons/react/24/outline';
-import { useAuth } from '../../hooks/useAuth.js';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { Button } from '../ui/button.jsx';
 import ProfileSettings from './ProfileSettings.jsx';
 import SecuritySettings from './SecuritySettings.jsx';
 import './Dashboard.css';
 
-export default function Dashboard({ showToast, onBack, onLoadModel }) {
-    const { user, logout, updateProfile, updatePassword } = useAuth();
+export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
+    const { user, logout, updateProfile, updatePassword } = auth;
     const storage = useStorageManager();
     const navigate = useNavigate();
 
@@ -86,7 +85,11 @@ export default function Dashboard({ showToast, onBack, onLoadModel }) {
                 <div className="dashboard-header-row">
                     <h1 className="page-title">Account Settings</h1>
                     <div className="flex gap-4">
-                        <Button variant="accent" onClick={() => { logout(); navigate('/'); }} className="bg-[var(--orange)] text-white hover:bg-[var(--orange-dim)] border-none">
+                        <Button variant="accent" onClick={() => {
+                            logout();
+                            showToast('Logged out', 'info');
+                            navigate('/');
+                        }} className="bg-[var(--orange)] text-white hover:bg-[var(--orange-dim)] border-none">
                             Sign out
                         </Button>
                     </div>
@@ -126,15 +129,24 @@ export default function Dashboard({ showToast, onBack, onLoadModel }) {
 
                             <div className="h-px bg-[var(--bg2)] my-2" />
 
-                            <div className="sidebar-item" onClick={() => navigate('/train')}>
+                            <div
+                                className={`sidebar-item ${activeTab === 'models' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('models')}
+                            >
                                 <CubeIcon className="w-5 h-5 inline mr-2" />
                                 Saved Models <span className="text-xs bg-[var(--bg2)] px-2 py-0.5 rounded-full ml-auto">{savedModels.length}</span>
                             </div>
-                            <div className="sidebar-item" onClick={() => navigate('/piano')}>
+                            <div
+                                className={`sidebar-item ${activeTab === 'piano' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('piano')}
+                            >
                                 <MusicalNoteIcon className="w-5 h-5 inline mr-2" />
                                 Piano Sequences <span className="text-xs bg-[var(--bg2)] px-2 py-0.5 rounded-full ml-auto">{savedPiano.length}</span>
                             </div>
-                            <div className="sidebar-item" onClick={() => navigate('/motors')}>
+                            <div
+                                className={`sidebar-item ${activeTab === 'motors' ? 'active' : ''}`}
+                                onClick={() => setActiveTab('motors')}
+                            >
                                 <CogIcon className="w-5 h-5 inline mr-2" />
                                 Motor Configs <span className="text-xs bg-[var(--bg2)] px-2 py-0.5 rounded-full ml-auto">{savedGestures.length}</span>
                             </div>
@@ -148,7 +160,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel }) {
                             <>
                                 <div className="section-heading">
                                     <h2>Personal Information</h2>
-                                    <p>Manage your public profile and contact details.</p>
+                                    <p>Manage your profile and account details.</p>
                                 </div>
                                 <ProfileSettings user={user} onUpdate={handleProfileUpdate} />
                             </>
@@ -161,6 +173,99 @@ export default function Dashboard({ showToast, onBack, onLoadModel }) {
                                     <p>Update your password and security settings.</p>
                                 </div>
                                 <SecuritySettings onUpdatePassword={handlePasswordUpdate} />
+                            </>
+                        )}
+
+                        {activeTab === 'models' && (
+                            <>
+                                <div className="section-heading">
+                                    <h2>Saved Models</h2>
+                                    <p>View and load your trained gesture models.</p>
+                                </div>
+                                <div className="info-cards-grid">
+                                    {savedModels.length === 0 ? (
+                                        <div className="col-span-full text-[var(--fg-muted)] italic">No models found.</div>
+                                    ) : (
+                                        savedModels.map(model => (
+                                            <div key={model.id} className="info-card">
+                                                <div className="card-header">
+                                                    <span className="card-label">{model.name}</span>
+                                                    <CubeIcon className="card-icon" />
+                                                </div>
+                                                <div className="card-value">
+                                                    {model.class_names.length} Classes • {model.is_public ? 'Public' : 'Private'}
+                                                </div>
+                                                <div className="card-meta">
+                                                    Created: {new Date(model.created_at).toLocaleDateString()}
+                                                </div>
+                                                <div
+                                                    className="card-action-btn"
+                                                    onClick={() => onLoadModel(model.id)}
+                                                >
+                                                    Load Model →
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'piano' && (
+                            <>
+                                <div className="section-heading">
+                                    <h2>Piano Sequences</h2>
+                                    <p>View and load your recorded piano sequences.</p>
+                                </div>
+                                <div className="info-cards-grid">
+                                    {savedPiano.length === 0 ? (
+                                        <div className="col-span-full text-[var(--fg-muted)] italic">No sequences found.</div>
+                                    ) : (
+                                        savedPiano.map((seq, idx) => (
+                                            <div key={idx} className="info-card">
+                                                <div className="card-header">
+                                                    <span className="card-label">{seq.name || `Sequence ${idx + 1}`}</span>
+                                                    <MusicalNoteIcon className="card-icon" />
+                                                </div>
+                                                <div className="card-value">
+                                                    {seq.notes?.length || 0} Notes
+                                                </div>
+                                                <div className="card-action-btn" onClick={() => navigate('/piano')}>
+                                                    Load Sequence →
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {activeTab === 'motors' && (
+                            <>
+                                <div className="section-heading">
+                                    <h2>Motor Configurations</h2>
+                                    <p>View and load your motor configurations.</p>
+                                </div>
+                                <div className="info-cards-grid">
+                                    {savedGestures.length === 0 ? (
+                                        <div className="col-span-full text-[var(--fg-muted)] italic">No configurations found.</div>
+                                    ) : (
+                                        savedGestures.map((config, idx) => (
+                                            <div key={idx} className="info-card">
+                                                <div className="card-header">
+                                                    <span className="card-label">{config.name || `Config ${idx + 1}`}</span>
+                                                    <CogIcon className="card-icon" />
+                                                </div>
+                                                <div className="card-value">
+                                                    {Object.keys(config.mappings || {}).length} Mappings
+                                                </div>
+                                                <div className="card-action-btn" onClick={() => navigate('/motors')}>
+                                                    Load Configuration →
+                                                </div>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </>
                         )}
 

@@ -111,7 +111,7 @@ export default function TrainingControls({
                                 {isTraining ? 'Training...' : 'Train Model'}
                             </span>
                             <div className="btn-sublabel">
-                                {hasEnoughData ? 'Ready to start' : 'Need samples'}
+                                {hasEnoughData ? 'Ready to train' : 'Take samples'}
                             </div>
                         </div>
                     </button>
