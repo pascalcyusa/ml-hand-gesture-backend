@@ -89,7 +89,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                             logout();
                             showToast('Logged out', 'info');
                             navigate('/');
-                        }} className="bg-[var(--orange)] text-white hover:bg-[var(--orange-dim)] border-none">
+                        }} className="bg-[var(--gold)] text-white hover:bg-[var(--gold-dim)] border-none">
                             Sign out
                         </Button>
                     </div>

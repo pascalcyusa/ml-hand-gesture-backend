@@ -13,7 +13,7 @@
     max-width: 1400px;
     /* Slightly wider to fit nav */
     margin: 0 auto;
-    height: 64px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -30,7 +30,7 @@
 }
 
 .logo-img {
-    height: 48px;
+    height: 100px;
     width: auto;
     border-radius: var(--radius-sm);
 }
@@ -65,12 +65,12 @@
 
 .nav-link:hover {
     background: var(--bg1);
-    color: var(--fg);
+    color: var(--gold-light);
 }
 
 .nav-link.active {
     background: var(--bg-card);
-    color: var(--blue);
+    color: var(--gold);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
@@ -107,8 +107,8 @@
 .user-avatar {
     width: 32px;
     height: 32px;
-    background: var(--purple-dim);
-    border: 1px solid var(--purple);
+    background: var(--gold-dim);
+    border: 1px solid var(--gold);
     color: var(--fg);
     border-radius: 50%;
     display: flex;

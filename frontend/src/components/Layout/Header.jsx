@@ -7,7 +7,8 @@ import {
     SignalIcon,
     GlobeAltIcon,
     InformationCircleIcon,
-    ChevronDownIcon
+    ChevronDownIcon,
+    ArrowRightOnRectangleIcon
 } from '@heroicons/react/24/outline';
 import { CogIcon } from '@heroicons/react/24/solid';
 import './Header.css';
@@ -97,13 +98,16 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         Dashboard
                                     </Link>
                                     <button
-                                        className="dropdown-item text-red-400 hover:text-red-300"
+                                        className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
                                         onClick={() => {
                                             onLogout();
                                             setIsMenuOpen(false);
                                         }}
                                     >
-                                        Sign Out
+                                        <div className="flex items-center gap-2 w-full">
+                                            <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                            <span>Sign Out</span>
+                                        </div>
                                     </button>
                                     <div className="dropdown-divider"></div>
                                     <Link

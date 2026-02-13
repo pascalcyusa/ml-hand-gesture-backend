@@ -97,7 +97,7 @@ export default function TrainingControls({
                         </div>
                     </button>
 
-                    {/* Train Button (Green Primary) */}
+                    {/* Train Button (Gold Primary) */}
                     <button
                         className={`control-btn ${isTraining ? 'secondary' : 'primary'}`}
                         onClick={onTrain}
@@ -127,7 +127,7 @@ export default function TrainingControls({
                         <span className="stat-value">{totalSamples}</span>
                         <span className="stat-label">Samples</span>
                     </div>
-                    <div className="stat-pill" style={{ color: isTrained ? 'var(--green)' : 'var(--fg-muted)' }}>
+                    <div className="stat-pill" style={{ color: isTrained ? 'var(--gold)' : 'var(--fg-muted)' }}>
                         <span className="stat-value">
                             {isTrained ? <CheckIcon className="h-6 w-6" /> : '—'}
                         </span>

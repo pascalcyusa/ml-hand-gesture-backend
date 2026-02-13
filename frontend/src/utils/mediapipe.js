@@ -82,7 +82,7 @@ export function drawLandmarks(ctx, landmarks, width, height) {
 
     for (const hand of landmarks) {
         // Draw connections
-        ctx.strokeStyle = '#b8bb26'; // green
+        ctx.strokeStyle = 'var(--gold)';
         ctx.lineWidth = 2;
         for (const [a, b] of connections) {
             ctx.beginPath();
@@ -93,7 +93,7 @@ export function drawLandmarks(ctx, landmarks, width, height) {
 
         // Draw landmarks
         for (const lm of hand) {
-            ctx.fillStyle = '#fe8019'; // orange
+            ctx.fillStyle = 'var(--gold)';
             ctx.beginPath();
             ctx.arc(lm.x * width, lm.y * height, 4, 0, 2 * Math.PI);
             ctx.fill();

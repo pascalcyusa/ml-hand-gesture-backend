@@ -61,7 +61,7 @@ export default function CommunityTab({ auth, onImportModel, showToast }) {
             <div className="community-header">
                 <div className="community-header-text">
                     <h2 className="flex items-center gap-2">
-                        <GlobeAltIcon className="h-6 w-6 text-[var(--blue)]" />
+                        <GlobeAltIcon className="h-6 w-6 text-[var(--gold)]" />
                         Community Models
                     </h2>
                     <p className="community-subtitle">

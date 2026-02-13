@@ -64,7 +64,7 @@
 }
 
 .about-steps li::marker {
-    color: var(--green);
+    color: var(--gold);
     font-weight: 700;
 }
 
@@ -127,10 +127,10 @@
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
     background: rgba(184, 187, 38, 0.08);
-    border: 1px solid var(--green-dim);
+    border: 1px solid var(--gold-dim);
     border-radius: var(--radius-md);
     font-size: 0.8rem;
-    color: var(--green);
+    color: var(--gold);
 }
 
 .about-privacy-icon {

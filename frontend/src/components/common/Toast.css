@@ -50,13 +50,13 @@
 
 /* Success */
 .toast-success .toast-icon-wrapper {
-    color: var(--green);
+    color: var(--gold);
     background: rgba(184, 187, 38, 0.15);
-    /* Low opacity green bg */
+    /* Low opacity gold bg */
 }
 
 .toast-success {
-    border-left: 4px solid var(--green);
+    border-left: 4px solid var(--gold);
 }
 
 /* Error */

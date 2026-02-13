@@ -35,7 +35,7 @@
     left: -100px;
     width: 300px;
     height: 300px;
-    background: radial-gradient(circle, var(--green) 0%, rgba(184, 187, 38, 0) 70%);
+    background: radial-gradient(circle, var(--gold) 0%, rgba(184, 187, 38, 0) 70%);
     opacity: 0.25;
     filter: blur(60px);
     pointer-events: none;
@@ -88,7 +88,7 @@
 }
 
 .input-group:focus-within {
-    border-color: var(--green);
+    border-color: var(--gold);
     background: rgba(0, 0, 0, 0.4);
     box-shadow: 0 0 0 2px rgba(184, 187, 38, 0.1);
 }
@@ -132,7 +132,7 @@
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: var(--green);
+    background: var(--gold);
     color: var(--bg-hard);
     border: none;
     cursor: pointer;
@@ -142,7 +142,7 @@
 
 .submit-btn:hover {
     transform: scale(1.05);
-    background: var(--green-dim);
+    background: var(--gold-dim);
     box-shadow: 0 8px 24px rgba(184, 187, 38, 0.4);
 }
 
@@ -157,7 +157,7 @@
     width: 100%;
     padding: 16px;
     border-radius: 99px;
-    background: var(--green);
+    background: var(--gold);
     color: var(--bg-hard);
     font-weight: 600;
     border: none;
@@ -228,7 +228,7 @@
 }
 
 .auth-link:hover {
-    color: var(--green);
+    color: var(--gold);
     text-decoration: underline;
 }
 

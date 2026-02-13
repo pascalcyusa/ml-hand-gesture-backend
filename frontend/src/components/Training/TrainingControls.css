@@ -45,8 +45,8 @@
 }
 
 .status-indicator.ready {
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
 }
 
 /* ── Primary Action Grid (Add & Train) ── */
@@ -85,27 +85,28 @@
 }
 
 /* Active/Primary State (Bright Color) */
+/* Active/Primary State (Bright Color) */
 .control-btn.primary {
-    background: var(--green);
+    background: var(--gold);
     color: var(--bg-hard);
     /* Dark text on bright bg */
 }
 
 .control-btn.primary:hover {
-    background: var(--green-dim);
+    background: var(--gold-dim);
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px -4px rgba(184, 187, 38, 0.4);
+    box-shadow: 0 8px 16px -4px rgba(213, 182, 100, 0.4);
 }
 
 .control-btn.accent {
-    background: var(--yellow);
+    background: var(--gold);
     color: var(--bg-hard);
 }
 
 .control-btn.accent:hover {
-    background: var(--yellow-dim);
+    background: var(--gold-dim);
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px -4px rgba(250, 189, 47, 0.4);
+    box-shadow: 0 8px 16px -4px rgba(213, 182, 100, 0.4);
 }
 
 /* Disabled State */
@@ -247,8 +248,8 @@
 
 .progress-fill {
     height: 100%;
-    background: var(--green);
-    /* Bright neon green fill */
+    background: var(--gold);
+    /* Bright neon gold fill */
     border-radius: 9999px;
     transition: width 0.3s ease;
     box-shadow: 0 0 10px rgba(184, 187, 38, 0.5);

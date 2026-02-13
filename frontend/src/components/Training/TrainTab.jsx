@@ -198,9 +198,6 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                     <div className="train-classes">
                         <h3 className="train-section-title">
                             Gesture Classes
-                            {cm.classes.length === 0 && (
-                                <span className="train-section-hint">Click "Add Class" to start</span>
-                            )}
                         </h3>
                         <div className="train-classes-list">
                             {cm.classes.map((cls, index) => (

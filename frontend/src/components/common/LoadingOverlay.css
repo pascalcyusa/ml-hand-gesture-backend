@@ -17,7 +17,7 @@
 
 .loading-progress-fill {
     height: 100%;
-    background: var(--green);
+    background: var(--gold);
     border-radius: var(--radius-full);
     transition: width 300ms ease;
 }
@@ -25,7 +25,7 @@
 .loading-progress-label {
     font-size: 0.875rem;
     font-family: var(--font-mono);
-    color: var(--green);
+    color: var(--gold);
     font-weight: 600;
     min-width: 40px;
 }

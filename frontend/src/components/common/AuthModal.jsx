@@ -32,7 +32,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
     return (
         <div className="auth-overlay" onClick={onClose}>
             <div className="auth-card" onClick={(e) => e.stopPropagation()}>
-                {/* The Green Glow */}
+                {/* The Gold Glow */}
                 <div className="auth-glow"></div>
 
                 <button className="close-btn" onClick={onClose}>
@@ -103,7 +103,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
                     {/* Placeholder for future social logins to match image style */}
                     <button className="alt-auth-btn" onClick={() => alert("Google Auth not implemented yet")}>
                         <div className="flex items-center gap-3">
-                            <span className="font-bold text-[var(--blue)]">G</span>
+                            <span className="font-bold text-[var(--gold)]">G</span>
                             <span>Continue with Google</span>
                         </div>
                         <ArrowRightIcon className="w-4 h-4 text-[var(--fg-muted)]" />

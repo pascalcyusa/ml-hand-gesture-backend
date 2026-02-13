@@ -77,14 +77,14 @@
 .device-connection-area.connected .hub-body {
     background: #ebdbb2;
     box-shadow:
-        0 0 40px rgba(184, 187, 38, 0.4),
+        0 0 40px rgba(213, 182, 100, 0.4),
         0 10px 30px rgba(0, 0, 0, 0.5),
-        inset 0 0 0 2px rgba(184, 187, 38, 0.5);
+        inset 0 0 0 2px rgba(213, 182, 100, 0.5);
 }
 
 .device-connection-area.connected .hub-pixel.lit {
-    background: var(--green);
-    box-shadow: 0 0 8px var(--green);
+    background: var(--gold);
+    box-shadow: 0 0 8px var(--gold);
 }
 
 /* Connecting State Animation */
@@ -104,7 +104,7 @@
 
     50% {
         transform: scale(1.02);
-        box-shadow: 0 0 30px rgba(254, 128, 25, 0.3);
+        box-shadow: 0 0 30px rgba(213, 182, 100, 0.3);
     }
 
     100% {
@@ -119,7 +119,7 @@
     }
 
     100% {
-        background: var(--orange);
+        background: var(--gold);
     }
 }
 
@@ -140,7 +140,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    border: 2px solid var(--green);
+    border: 2px solid var(--gold);
     border-radius: 50%;
     opacity: 0;
     width: 160px;
@@ -192,9 +192,9 @@
 
 .device-name {
     font-family: var(--font-mono);
-    color: var(--green);
+    color: var(--gold);
     font-size: 0.9rem;
-    background: rgba(184, 187, 38, 0.1);
+    background: rgba(213, 182, 100, 0.1);
     padding: 2px 8px;
     border-radius: var(--radius-sm);
 }
