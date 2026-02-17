@@ -17,8 +17,11 @@ Endpoints:
   POST /piano               — Save a piano sequence
 """
 
-from fastapi import FastAPI, Depends, HTTPException, Query
+import os
+from fastapi import FastAPI, Depends, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
@@ -30,22 +33,52 @@ from auth import (
     create_access_token,
     require_user,
     get_current_user,
+    SECRET_KEY
 )
+
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
+# Setup Rate Limiter
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(title="Hand Pose Trainer API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# CORS — allow frontend dev server
+# Security Headers Middleware
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(SlowAPIMiddleware)
+
+# CORS Config
+origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177")
+origins = [origin.strip() for origin in origins_str.split(",")]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+async def startup_event():
+    if SECRET_KEY == "dev-secret-change-in-production":
+         print("WARNING: You are using the default secret key. Please set JWT_SECRET_KEY environment variable in production.")
 
 # ══════════════════════════════════════════════════════════
 # Pydantic Schemas
@@ -136,7 +169,8 @@ def read_health():
 # ══════════════════════════════════════════════════════════
 
 @app.post("/auth/signup", response_model=TokenResponse)
-def signup(req: SignupRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def signup(req: SignupRequest, request: Request, db: Session = Depends(get_db)):
     # Check existing
     existing = db.query(models.User).filter(
         (models.User.email == req.email) | (models.User.username == req.username)
@@ -161,7 +195,8 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/auth/login", response_model=TokenResponse)
-def login(req: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(req: LoginRequest, request: Request, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user or not user.hashed_password or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -279,21 +314,19 @@ def list_community_models(
 
 
 @app.get("/models/{model_id}", response_model=ModelDetail)
-def get_model(model_id: int, db: Session = Depends(get_db)):
+def get_model(
+    model_id: int,
+    db: Session = Depends(get_db),
+    user: Optional[models.User] = Depends(get_current_user)
+):
     m = db.query(models.SavedModel).filter(models.SavedModel.id == model_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Model not found")
     
-    # If explicit permission check needed (if private and not owner)
-    # But for now, we only block private if it's strictly enforced. 
-    # Let's say if private, only owner.
-    # We don't have user context here unless we require it... 
-    # But frontend might fetch public models anonymously.
-    # So we'll check is_public.
-    
     if not m.is_public:
-         # Ideally check user, but since this route is open...
-         pass 
+         # If private, user must be the owner
+         if not user or user.id != m.user_id:
+             raise HTTPException(status_code=403, detail="Not authorized to access this model")
 
     return ModelDetail(
         id=m.id,
