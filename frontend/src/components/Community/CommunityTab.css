@@ -7,6 +7,12 @@
     padding: var(--space-lg);
 }
 
+@media (max-width: 768px) {
+    .community-tab {
+        padding: var(--space-md);
+    }
+}
+
 /* ── Header ── */
 .community-header h2 {
     font-size: 1.5rem;

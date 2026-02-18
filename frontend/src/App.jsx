@@ -89,11 +89,11 @@ export default function App() {
         const { modelTopology, weightSpecs, weightData } = modelData.model_data;
         const weightBuffer = base64ToArrayBuffer(weightData);
 
-        const model = await tf.loadLayersModel(tf.io.fromMemory(
+        const model = await tf.loadLayersModel(tf.io.fromMemory({
           modelTopology,
           weightSpecs,
-          weightBuffer
-        ));
+          weightData: weightBuffer
+        }));
 
         trainer.setModel(model, modelData.class_names.length);
 

@@ -7,6 +7,12 @@
     padding: var(--space-lg);
 }
 
+@media (max-width: 768px) {
+    .devices-tab {
+        padding: var(--space-md);
+    }
+}
+
 .devices-header-text h2 {
     font-size: 1.5rem;
     font-weight: 700;

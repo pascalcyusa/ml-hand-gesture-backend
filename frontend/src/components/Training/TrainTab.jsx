@@ -154,9 +154,11 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                 // Restore Model
                 if (modelData.model_data) {
                     const { modelTopology, weightSpecs, weightData } = modelData.model_data;
-                    const model = await tf.loadLayersModel(tf.io.fromMemory(
-                        modelTopology, weightSpecs, base64ToArrayBuffer(weightData)
-                    ));
+                    const model = await tf.loadLayersModel(tf.io.fromMemory({
+                        modelTopology,
+                        weightSpecs,
+                        weightData: base64ToArrayBuffer(weightData)
+                    }));
                     trainer.setModel(model, modelData.class_names.length);
                     showToast(`Model loaded!`, 'success');
                     prediction.startPredicting();

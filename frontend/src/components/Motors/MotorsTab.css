@@ -11,6 +11,8 @@
 @media (max-width: 1024px) {
     .motors-layout {
         grid-template-columns: 1fr;
+        padding: var(--space-md);
+        gap: var(--space-lg);
     }
 }
 

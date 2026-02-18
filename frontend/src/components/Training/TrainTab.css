@@ -17,6 +17,9 @@
 @media (max-width: 1024px) {
     .train-layout {
         grid-template-columns: 1fr;
+        padding: var(--space-md);
+        /* Reduce padding on mobile */
+        gap: var(--space-lg);
     }
 }
 
@@ -32,6 +35,8 @@
 @media (max-width: 1024px) {
     .train-left {
         position: static;
+        order: -1;
+        /* Ensure camera stays on top */
     }
 }
 
