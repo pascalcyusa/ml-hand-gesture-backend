@@ -33,15 +33,9 @@ from auth import (
 )
 
 # Create tables
-models.Base.metadata.create_all(bind=engine)
-
-app = FastAPI(title="Hand Pose Trainer API")
-
-import os
-
 # CORS — allow frontend dev server + production domains
 origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
-origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
+origins = [origin.strip().rstrip("/") for origin in origins_str.split(",") if origin.strip()]
 
 from auth import SECRET_KEY
 if SECRET_KEY == "dev-secret-change-in-production":
@@ -54,6 +48,19 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+def startup_event():
+    # Create tables on startup
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"❌ Error creating database tables: {e}")
+
+@app.get("/")
+def read_root():
+    return {"message": "Hand Pose Trainer API is running", "docs_url": "/docs"}
 
 
 # ══════════════════════════════════════════════════════════
