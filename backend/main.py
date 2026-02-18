@@ -43,6 +43,10 @@ import os
 origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
 origins = [origin.strip() for origin in origins_str.split(",") if origin.strip()]
 
+from auth import SECRET_KEY
+if SECRET_KEY == "dev-secret-change-in-production":
+    print("\n⚠️  WARNING: You are using the default JWT_SECRET_KEY. Please set JWT_SECRET_KEY environment variable in production.\n")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,

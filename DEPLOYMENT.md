@@ -12,6 +12,15 @@ The architecture consists of:
 - **Docker** installed (for testing locally).
 - Accounts on the respective cloud providers.
 
+## 🛡️ Security Checklist (Critical)
+
+Before deploying, generate a strong secret key for your backend.
+Run this in your terminal:
+```bash
+openssl rand -hex 32
+```
+Save this output. You will need it for the `JWT_SECRET_KEY` environment variable.
+
 ---
 
 ## Part 1: Backend Deployment
@@ -33,6 +42,7 @@ Choose ONE of the following options. **Sevalla** is recommended for the easiest 
     - Sevalla should auto-detect the `Dockerfile` in `backend`.
     - **Environment Variables**: Add the following:
         - `DATABASE_URL`: *(Paste the connection string from step 2)*
+        - `JWT_SECRET_KEY`: *(Paste the string generated in Security Checklist)*
         - `ALLOWED_ORIGINS`: `https://YOUR-NETLIFY-SITE.netlify.app` *(You can add this later after deploying frontend)*
     - Click **Deploy**.
 4.  **Get Backend URL**: Once deployed, copy the provided domain (e.g., `https://backend-xyz.sevalla.app`).
@@ -48,7 +58,9 @@ Choose ONE of the following options. **Sevalla** is recommended for the easiest 
     gcloud run deploy ml-hand-gesture-backend --source . --allow-unauthenticated
     ```
     - Follow the prompts.
-    - When asked for environment variables, set `DATABASE_URL`.
+    - When asked for environment variables, set:
+      - `DATABASE_URL`
+      - `JWT_SECRET_KEY`
 4.  **Get Backend URL**: The command will output a URL (e.g., `https://ml-hand-gesture-backend-xyz-uc.a.run.app`).
 
 ### Option C: AWS (App Runner)
@@ -63,6 +75,7 @@ Choose ONE of the following options. **Sevalla** is recommended for the easiest 
     - **Port**: 8080
 4.  **Environment Variables**:
     - Add `DATABASE_URL`.
+    - Add `JWT_SECRET_KEY`.
     - Add `ALLOWED_ORIGINS`.
 
 ---
