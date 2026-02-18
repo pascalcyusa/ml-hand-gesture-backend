@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { VideoCameraIcon } from '@heroicons/react/24/outline';
 import './WebcamPanel.css';
 
-export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera, error }) {
+export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const [videoBlurred, setVideoBlurred] = useState(false);
@@ -34,19 +34,7 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
             </div>
 
             <div className="webcam-container">
-                {error ? (
-                    <div className="webcam-error">
-                        <VideoCameraIcon className="w-16 h-16 text-red-500 mb-2" />
-                        <p className="text-red-400 text-center px-4">
-                            {error.name === 'NotAllowedError'
-                                ? 'Camera access denied. Please allow camera permissions in your browser settings.'
-                                : `Camera error: ${error.message}`}
-                        </p>
-                        <button className="start-camera-btn mt-4" onClick={onStartCamera}>
-                            Retry
-                        </button>
-                    </div>
-                ) : isStarted ? (
+                {isStarted ? (
                     <>
                         <video
                             ref={videoRef}
@@ -66,7 +54,7 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
                     </div>
                 )}
 
-                {isStarted && !isDetecting && !error && (
+                {isStarted && !isDetecting && (
                     <div className="webcam-placeholder">
                         <VideoCameraIcon className="w-16 h-16 text-[var(--gold)] opacity-50 mb-2 animate-pulse" />
                         <p>Loading hand detection...</p>

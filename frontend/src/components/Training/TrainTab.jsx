@@ -41,6 +41,17 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
         showToast('Hand detection ready!', 'success');
     }, [hand, showToast]);
 
+    // ── Handle webcam errors ──
+    useEffect(() => {
+        if (hand.error) {
+            const msg = hand.error.name === 'NotAllowedError'
+                ? 'Camera permissions denied'
+                : `Camera error: ${hand.error.message}`;
+            showToast(msg, 'error');
+            setIsCameraStarted(false);
+        }
+    }, [hand.error, showToast]);
+
     const handleStartCamera = useCallback(() => {
         setIsCameraStarted(true);
     }, []);
@@ -176,7 +187,6 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                         isDetecting={hand.isRunning}
                         isStarted={isCameraStarted}
                         onStartCamera={handleStartCamera}
-                        error={hand.error}
                     />
                     <TrainingControls
                         onAddClass={cm.addClass}
