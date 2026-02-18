@@ -91,8 +91,7 @@ export default function CommunityTab({ auth, onImportModel, onImportPiano, onImp
             <div className="community-card-header">
                 <h4 className="font-bold">{item.name_or_title || item.name}</h4>
                 <div className="flex items-center gap-2 text-xs font-mono text-[var(--fg-muted)]">
-                    {type === 'model' && <span>by {item.author}</span>}
-                    {type !== 'model' && <span>by Community Member</span>}
+                    <span>by {item.author || 'Community Member'}</span>
                 </div>
             </div>
 

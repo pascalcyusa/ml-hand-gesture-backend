@@ -497,8 +497,9 @@ def get_piano_sequences(user: models.User = Depends(require_user), db: Session =
             name_or_title=s.title,
             data=s.sequence_data,
             is_active=s.is_active,
-            is_public=s.is_public, # Added field
-            created_at=s.created_at.isoformat()
+            is_public=s.is_public, 
+            created_at=s.created_at.isoformat(),
+            author=user.username
         )
         for s in results
     ]
