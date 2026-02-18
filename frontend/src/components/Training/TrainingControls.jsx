@@ -38,6 +38,7 @@ export default function TrainingControls({
     const [newClassName, setNewClassName] = useState('');
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [saveModelName, setSaveModelName] = useState('my-model');
+    const [isPublic, setIsPublic] = useState(false);
     const [showResetDialog, setShowResetDialog] = useState(false);
 
     // Handlers
@@ -51,7 +52,7 @@ export default function TrainingControls({
 
     const handleConfirmSave = () => {
         if (saveModelName?.trim()) {
-            onSave(saveModelName);
+            onSave(saveModelName, isPublic);
             setShowSaveDialog(false);
         }
     };
@@ -216,6 +217,17 @@ export default function TrainingControls({
                                 autoFocus
                                 className="bg-[var(--bg-hard)] border-[var(--bg3)]"
                             />
+
+                            <label className="flex items-center gap-2 cursor-pointer text-sm text-[var(--fg)] select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={isPublic}
+                                    onChange={(e) => setIsPublic(e.target.checked)}
+                                    className="accent-[var(--gold)] w-4 h-4 rounded border-gray-300"
+                                />
+                                <span>Make Public (Visible to Community)</span>
+                            </label>
+
                             <div className="flex justify-end gap-2 mt-4">
                                 <Button variant="ghost" onClick={() => setShowSaveDialog(false)}>Cancel</Button>
                                 <Button variant="primary" onClick={handleConfirmSave}>Save</Button>

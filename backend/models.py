@@ -41,6 +41,7 @@ class GestureMapping(Base):
     name = Column(String)  # e.g. "Spike Prime Config 1"
     mapping_data = Column(JSON)  # Store the actual mapping logic/configuration
     is_active = Column(Boolean, default=False) # Whether this is the currently active mapping
+    is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="gesture_mappings")
@@ -54,6 +55,7 @@ class MusicSequence(Base):
     title = Column(String) # e.g. "Piano Session 1"
     sequence_data = Column(JSON)  # Store the sequence of notes/events per class
     is_active = Column(Boolean, default=False)
+    is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="music_sequences")
@@ -110,3 +112,15 @@ class TrainingSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="training_sessions")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

@@ -15,10 +15,10 @@ export default function AboutTab() {
             <div className="about-header">
                 <h2 className="flex items-center gap-2">
                     <CpuChipIcon className="h-6 w-6 text-[var(--gold)]" />
-                    About ML Hand Gesture
+                    About
                 </h2>
                 <p className="text-[var(--fg-muted)] mt-1">
-                    A web application for training and using machine learning models to play
+                    ML Hand Gesture is a web application for training and using machine learning models to play
                     piano notes and control your LEGO Spike Prime motors.
                 </p>
             </div>
@@ -29,11 +29,11 @@ export default function AboutTab() {
                     <CardContent>
                         <h3 className="flex items-center gap-2 text-base font-bold mb-3">
                             <CodeBracketIcon className="h-5 w-5 text-[var(--gold)]" />
-                            Open Source
+                            Open Source & Privacy First
                         </h3>
                         <ul className="about-tech-list">
                             <li>When you train a model, your data never leaves your device.</li>
-                            <li>Learn more <a href="#">here</a></li>
+                            <li>Learn more <a href="https://github.com/pascalcyusa/ml-hand-gesture-backend">here</a></li>
                         </ul>
                     </CardContent>
                 </Card>

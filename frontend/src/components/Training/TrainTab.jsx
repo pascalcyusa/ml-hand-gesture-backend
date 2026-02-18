@@ -41,6 +41,17 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
         showToast('Hand detection ready!', 'success');
     }, [hand, showToast]);
 
+    // ── Handle webcam errors ──
+    useEffect(() => {
+        if (hand.error) {
+            const msg = hand.error.name === 'NotAllowedError'
+                ? 'Camera permissions denied'
+                : `Camera error: ${hand.error.message}`;
+            showToast(msg, 'error');
+            setIsCameraStarted(false);
+        }
+    }, [hand.error, showToast]);
+
     const handleStartCamera = useCallback(() => {
         setIsCameraStarted(true);
     }, []);
@@ -95,7 +106,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     }, [prediction, trainer, cm, showToast]);
 
     // ── Save/Load Logic ──
-    const handleSave = useCallback(async (name) => {
+    const handleSave = useCallback(async (name, isPublic = false) => {
         if (!auth.user) return showToast('Please log in to save', 'info');
         if (!trainer.isTrained) return showToast('Train a model first', 'warning');
 
@@ -105,7 +116,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                 const weightDataB64 = arrayBufferToBase64(artifacts.weightData);
                 const success = await storage.saveModel(
                     name, artifacts.modelTopology, artifacts.weightSpecs, weightDataB64,
-                    cm.classNames, { classes: cm.classes }, false
+                    cm.classNames, { classes: cm.classes }, isPublic
                 );
                 if (success) {
                     showToast(`Model "${name}" saved!`, 'success');
@@ -143,9 +154,11 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                 // Restore Model
                 if (modelData.model_data) {
                     const { modelTopology, weightSpecs, weightData } = modelData.model_data;
-                    const model = await tf.loadLayersModel(tf.io.fromMemory(
-                        modelTopology, weightSpecs, base64ToArrayBuffer(weightData)
-                    ));
+                    const model = await tf.loadLayersModel(tf.io.fromMemory({
+                        modelTopology,
+                        weightSpecs,
+                        weightData: base64ToArrayBuffer(weightData)
+                    }));
                     trainer.setModel(model, modelData.class_names.length);
                     showToast(`Model loaded!`, 'success');
                     prediction.startPredicting();

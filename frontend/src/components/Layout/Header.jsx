@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { to: '/piano', label: 'Piano', icon: MusicalNoteIcon },
     { to: '/motors', label: 'Motors', icon: CogIcon },
     { to: '/devices', label: 'Devices', icon: SignalIcon },
+    { to: '/community', label: 'Community', icon: GlobeAltIcon },
 ];
 
 export default function Header({ user, onSignIn, onLogout }) {
@@ -39,18 +40,37 @@ export default function Header({ user, onSignIn, onLogout }) {
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+    const allNavItems = [
+        ...NAV_ITEMS,
+        ...(user ? [{ to: '/dashboard', label: 'Dashboard', icon: UserCircleIcon }] : [])
+    ];
+
     return (
         <header className="app-header">
             <div className="header-inner">
-                {/* Logo Area */}
-                <Link to="/" className="logo-area">
-                    <img src="/img/logo.png" alt="ML Hand Gesture" className="logo-img" />
-                    <h1 className="app-title">ML Hand Gesture</h1>
-                </Link>
+                {/* Left: Hamburger + Logo */}
+                <div className="flex items-center gap-4">
+                    {/* Hamburger Button (Mobile Only) */}
+                    <button
+                        className="mobile-menu-btn md:hidden"
+                        onClick={toggleMenu}
+                        aria-label="Toggle menu"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
 
-                {/* Main Navigation */}
-                <nav className="main-nav">
-                    {NAV_ITEMS.map((item) => (
+                    {/* Logo Area */}
+                    <Link to="/" className="logo-area">
+                        <img src="/img/logo.png" alt="ML Hand Gesture" className="logo-img" />
+                        <h1 className="app-title hidden sm:block">ML Hand Gesture</h1>
+                    </Link>
+                </div>
+
+                {/* Desktop Navigation */}
+                <nav className="main-nav hidden md:flex">
+                    {allNavItems.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -68,7 +88,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                 <div className="user-area" ref={menuRef}>
                     <button
                         className="user-profile-btn"
-                        onClick={toggleMenu}
+                        onClick={() => setIsMenuOpen(!isMenuOpen)} // Use explicit toggle for user menu if needed, or share logic
                         title={user ? "User Menu" : "Menu"}
                     >
                         {user ? (
@@ -84,19 +104,30 @@ export default function Header({ user, onSignIn, onLogout }) {
                     {/* Dropdown Menu */}
                     {isMenuOpen && (
                         <div className="user-dropdown">
+                            {/* Mobile Nav Links (Visible only in dropdown on mobile) */}
+                            <div className="md:hidden border-b border-[var(--border-dim)] mb-2 pb-2">
+                                {allNavItems.map((item) => (
+                                    <NavLink
+                                        key={item.to}
+                                        to={item.to}
+                                        className={({ isActive }) =>
+                                            `dropdown-item flex items-center gap-2 ${isActive ? 'text-[var(--gold)] bg-[var(--bg1)]' : ''}`
+                                        }
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <item.icon className="h-4 w-4" />
+                                        <span>{item.label}</span>
+                                    </NavLink>
+                                ))}
+                            </div>
+
                             {user ? (
                                 <>
                                     <div className="dropdown-header">
                                         <p className="font-medium">{user.username}</p>
                                         <p className="text-xs text-[var(--fg-muted)]">{user.email}</p>
                                     </div>
-                                    <Link
-                                        to="/dashboard"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Dashboard
-                                    </Link>
+
                                     <button
                                         className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
                                         onClick={() => {
@@ -110,13 +141,6 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         </div>
                                     </button>
                                     <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/community"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Community
-                                    </Link>
                                     <Link
                                         to="/about"
                                         className="dropdown-item"
@@ -138,13 +162,6 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         Log In
                                     </button>
                                     <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/community"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Community
-                                    </Link>
                                     <Link
                                         to="/about"
                                         className="dropdown-item"

@@ -94,6 +94,32 @@ export function useStorageManager() {
         }
     }, []);
 
+    const listCommunityPiano = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_Base}/piano/community`);
+            if (res.ok) {
+                return await res.json();
+            }
+            return [];
+        } catch (err) {
+            console.error("List community piano error:", err);
+            return [];
+        }
+    }, []);
+
+    const listCommunityGestures = useCallback(async () => {
+        try {
+            const res = await fetch(`${API_Base}/gestures/community`);
+            if (res.ok) {
+                return await res.json();
+            }
+            return [];
+        } catch (err) {
+            console.error("List community gestures error:", err);
+            return [];
+        }
+    }, []);
+
     // ── Configurations (Piano / Gestures) ──
 
     const savePianoSequence = useCallback(async (title, sequenceData, isActive = false) => {
@@ -178,39 +204,174 @@ export function useStorageManager() {
         // Load full details including model data
         const fullModel = await loadModel(modelItem.id);
         if (fullModel && fullModel.model_data) {
-            // Convert back to TFJS Artifacts format if needed
-            // our model_data structure matches what TFJS expects for loadLayersModel
+
+            // If we have a dataset with classes, use that (contains samples)
+            if (fullModel.dataset && fullModel.dataset.classes) {
+                return {
+                    model: fullModel.model_data,
+                    classes: fullModel.dataset.classes,
+                    dataset: fullModel.dataset
+                };
+            }
+
+            // Fallback: create class objects from class_names
+            const classes = (fullModel.class_names || []).map(name => ({
+                name,
+                samples: []
+            }));
+
             return {
                 model: fullModel.model_data,
-                classes: fullModel.class_names,
-                dataset: fullModel.dataset
+                classes,
+                dataset: null
             };
         }
         return null;
     }, [loadModel]);
 
 
+    const deleteModel = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/models/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete model error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const updateModelVisibility = useCallback(async (id, isPublic) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+
+            const res = await fetch(`${API_Base}/models/${id}/visibility`, {
+                method: 'PATCH',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_public: isPublic })
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Update visibility error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const deletePianoSequence = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/piano/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete piano error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const deleteGestureMapping = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/gestures/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete gesture error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const updatePianoVisibility = useCallback(async (id, isPublic) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+
+            const res = await fetch(`${API_Base}/piano/${id}/visibility`, {
+                method: 'PATCH',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_public: isPublic })
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Update piano visibility error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const updateGestureVisibility = useCallback(async (id, isPublic) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+
+            const res = await fetch(`${API_Base}/gestures/${id}/visibility`, {
+                method: 'PATCH',
+                headers: {
+                    ...headers,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ is_public: isPublic })
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Update gesture visibility error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
     return useMemo(() => ({
         saveModel,
         listMyModels,
         loadModel,
         listCommunityModels,
+        listCommunityPiano,
+        listCommunityGestures,
+        deleteModel,
         importFromCloud,
         savePianoSequence,
         getPianoSequences,
+        deletePianoSequence,
         saveGestureMapping,
         getGestureMappings,
+        deleteGestureMapping,
         saveTrainingSession,
+        updateModelVisibility,
+        updatePianoVisibility,
+        updateGestureVisibility,
     }), [
         saveModel,
         listMyModels,
         loadModel,
         listCommunityModels,
+        listCommunityPiano,
+        listCommunityGestures,
+        deleteModel,
         importFromCloud,
         savePianoSequence,
         getPianoSequences,
+        deletePianoSequence,
         saveGestureMapping,
         getGestureMappings,
+        deleteGestureMapping,
         saveTrainingSession,
+        updateModelVisibility,
+        updatePianoVisibility,
+        updateGestureVisibility,
     ]);
 }

@@ -61,12 +61,32 @@ export default function App() {
   // Import community model into local training
   const handleImportCommunityModel = useCallback(async (cloudModel) => {
     const result = await storage.importFromCloud(cloudModel);
-    if (result) {
-      trainer.setModel(result.model, result.classes.length);
-      cm.restoreClasses(result.classes);
-      navigate('/train');
-      showToast('Model imported successfully!', 'success');
-      return true;
+    if (result && result.model) {
+      try {
+        const { modelTopology, weightSpecs, weightData } = result.model;
+        const weightBuffer = base64ToArrayBuffer(weightData);
+
+        const model = await tf.loadLayersModel(tf.io.fromMemory({
+          modelTopology,
+          weightSpecs,
+          weightData: weightBuffer
+        }));
+
+        trainer.setModel(model, result.classes.length);
+        cm.restoreClasses(result.classes);
+        navigate('/train');
+
+        if (!result.dataset || !result.dataset.classes || result.dataset.classes.every(c => !c.samples || c.samples.length === 0)) {
+          showToast('Model imported (Pre-trained only). No training samples found.', 'warning');
+        } else {
+          showToast('Model and samples imported successfully!', 'success');
+        }
+        return true;
+      } catch (err) {
+        console.error("Error hydrating imported model:", err);
+        showToast('Failed to reconstruct model', 'error');
+        return false;
+      }
     }
     return false;
   }, [storage, trainer, cm, navigate, showToast]);
@@ -89,11 +109,11 @@ export default function App() {
         const { modelTopology, weightSpecs, weightData } = modelData.model_data;
         const weightBuffer = base64ToArrayBuffer(weightData);
 
-        const model = await tf.loadLayersModel(tf.io.fromMemory(
+        const model = await tf.loadLayersModel(tf.io.fromMemory({
           modelTopology,
           weightSpecs,
-          weightBuffer
-        ));
+          weightData: weightBuffer
+        }));
 
         trainer.setModel(model, modelData.class_names.length);
 
@@ -115,6 +135,9 @@ export default function App() {
         onSignIn={() => setShowAuth(true)}
         onLogout={() => {
           auth.logout();
+          cm.reset();
+          trainer.resetModel();
+          prediction.stopPredicting();
           showToast('Logged out', 'info');
           navigate('/');
         }}
@@ -164,6 +187,16 @@ export default function App() {
             <CommunityTab
               auth={auth}
               onImportModel={handleImportCommunityModel}
+              onImportPiano={async (item) => {
+                const success = await storage.savePianoSequence(item.name_or_title, item.data, false);
+                if (success) showToast('Piano sequence saved to your library!', 'success');
+                else showToast('Failed to save piano sequence', 'error');
+              }}
+              onImportGesture={async (item) => {
+                const success = await storage.saveGestureMapping(item.name_or_title, item.data, false);
+                if (success) showToast('Motor config saved to your library!', 'success');
+                else showToast('Failed to save motor config', 'error');
+              }}
               showToast={showToast}
             />
           } />

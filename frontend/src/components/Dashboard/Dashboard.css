@@ -19,6 +19,12 @@
     margin: 0 auto;
 }
 
+@media (max-width: 768px) {
+    .dashboard-content {
+        padding: var(--space-lg) var(--space-md);
+    }
+}
+
 .dashboard-header-row {
     display: flex;
     justify-content: space-between;

@@ -5,6 +5,7 @@ import {
     CloudArrowUpIcon,
     CloudArrowDownIcon,
     PlayIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
@@ -12,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -31,6 +33,16 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     const [showLoadDialog, setShowLoadDialog] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [savedSequences, setSavedSequences] = useState([]);
+    const [isCameraStarted, setIsCameraStarted] = useState(false);
+
+    const videoReadyRef = useRef(false);
+
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Refs to note sequencer slots for each class
     const sequencerSlotsRef = useRef({});
@@ -44,8 +56,14 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
 
     // Start camera when tab mounts
     const handleVideoReady = useCallback((video, canvas) => {
+        if (videoReadyRef.current) return;
+        videoReadyRef.current = true;
         hand.start(video, canvas);
     }, [hand]);
+
+    const handleStartCamera = useCallback(() => {
+        setIsCameraStarted(true);
+    }, []);
 
     // Play a sequence for a class
     const handlePlaySequence = useCallback(
@@ -158,6 +176,24 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         }
     };
 
+    const handleDelete = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Sequence',
+            message: `Are you sure you want to delete sequence "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deletePianoSequence(id);
+                if (success) {
+                    setSavedSequences(prev => prev.filter(s => s.id !== id));
+                    showToast("Sequence deleted", "success");
+                } else {
+                    showToast("Failed to delete", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
     if (!classNames || classNames.length === 0) {
         return (
             <div className="piano-tab animate-fade-in">
@@ -209,10 +245,19 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                         <div className="overflow-y-auto space-y-2 flex-1">
                             {savedSequences.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No saved sequences.</p> :
                                 savedSequences.map(s => (
-                                    <button key={s.id} onClick={() => handleLoad(s)} className="w-full text-left p-3 rounded bg-[var(--bg3)] hover:bg-[var(--bg2)] flex justify-between">
-                                        <span className="font-medium">{s.name_or_title}</span>
-                                        <span className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</span>
-                                    </button>
+                                    <div key={s.id} className="flex gap-2 items-center w-full p-2 hover:bg-[var(--bg3)] rounded">
+                                        <button onClick={() => handleLoad(s)} className="flex-1 text-left">
+                                            <div className="font-medium">{s.name_or_title}</div>
+                                            <div className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</div>
+                                        </button>
+                                        <button
+                                            className="p-2 text-[var(--fg-muted)] hover:text-[var(--red)] transition-colors"
+                                            onClick={(e) => { e.stopPropagation(); handleDelete(s.id, s.name_or_title); }}
+                                            title="Delete"
+                                        >
+                                            <TrashIcon className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 ))}
                         </div>
                     </Card>
@@ -224,6 +269,8 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                 <WebcamPanel
                     onVideoReady={handleVideoReady}
                     isDetecting={hand.isHandDetected || prediction.isPredicting}
+                    isStarted={isCameraStarted}
+                    onStartCamera={handleStartCamera}
                 />
                 <PredictionBars
                     predictions={prediction.predictions}
@@ -294,6 +341,16 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                     ))}
                 </div>
             </div >
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                title={deleteConfirm.title}
+                message={deleteConfirm.message}
+                onConfirm={deleteConfirm.onConfirm}
+                onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                confirmText="Delete"
+                isDangerous={true}
+            />
         </div >
     );
 }

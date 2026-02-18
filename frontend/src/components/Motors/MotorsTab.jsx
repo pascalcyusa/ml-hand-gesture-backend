@@ -9,6 +9,7 @@ import {
     CloudArrowUpIcon,
     CloudArrowDownIcon,
     PlayIcon,
+    TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { useAuth } from '../../hooks/useAuth.js';
@@ -16,6 +17,7 @@ import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import ModalPortal from '../common/ModalPortal.jsx';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -32,6 +34,15 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [savedConfigs, setSavedConfigs] = useState([]);
     const [configData, setConfigData] = useState({}); // { className: config[] }
     const [isPlaying, setIsPlaying] = useState(false);
+    const [isCameraStarted, setIsCameraStarted] = useState(false);
+    const videoReadyRef = useRef(false);
+
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Store state in a ref to avoid re-renders but have access for saving
     const currentConfigsRef = useRef({});
@@ -42,8 +53,14 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
 
     // Start camera when tab mounts
     const handleVideoReady = useCallback((video, canvas) => {
+        if (videoReadyRef.current) return;
+        videoReadyRef.current = true;
         hand.start(video, canvas);
     }, [hand]);
+
+    const handleStartCamera = useCallback(() => {
+        setIsCameraStarted(true);
+    }, []);
 
     const handleSave = async () => {
         if (!saveName.trim()) return showToast('Enter a name', 'warning');
@@ -69,6 +86,24 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             showToast(`Loaded "${config.name_or_title}"`, 'success');
             setShowLoadDialog(false);
         }
+    };
+
+    const handleDelete = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Configuration',
+            message: `Are you sure you want to delete configuration "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deleteGestureMapping(id);
+                if (success) {
+                    setSavedConfigs(prev => prev.filter(c => c.id !== id));
+                    showToast("Configuration deleted", "success");
+                } else {
+                    showToast("Failed to delete", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     // Play All Logic
@@ -173,10 +208,19 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                             <div className="overflow-y-auto space-y-2 flex-1">
                                 {savedConfigs.length === 0 ? <p className="text-sm text-[var(--fg-muted)]">No saved configs.</p> :
                                     savedConfigs.map(s => (
-                                        <button key={s.id} onClick={() => handleLoad(s)} className="w-full text-left p-3 rounded bg-[var(--bg3)] hover:bg-[var(--bg2)] flex justify-between">
-                                            <span className="font-medium">{s.name_or_title}</span>
-                                            <span className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</span>
-                                        </button>
+                                        <div key={s.id} className="flex gap-2 items-center w-full p-2 hover:bg-[var(--bg3)] rounded">
+                                            <button onClick={() => handleLoad(s)} className="flex-1 text-left">
+                                                <div className="font-medium">{s.name_or_title}</div>
+                                                <div className="text-xs text-[var(--fg-muted)]">{new Date(s.created_at).toLocaleDateString()}</div>
+                                            </button>
+                                            <button
+                                                className="p-2 text-[var(--fg-muted)] hover:text-[var(--red)] transition-colors"
+                                                onClick={(e) => { e.stopPropagation(); handleDelete(s.id, s.name_or_title); }}
+                                                title="Delete"
+                                            >
+                                                <TrashIcon className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     ))}
                             </div>
                         </Card>
@@ -189,6 +233,8 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                 <WebcamPanel
                     onVideoReady={handleVideoReady}
                     isDetecting={hand.isHandDetected || prediction.isPredicting}
+                    isStarted={isCameraStarted}
+                    onStartCamera={handleStartCamera}
                 />
                 <PredictionBars
                     predictions={prediction.predictions}
@@ -243,6 +289,16 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     ))}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                title={deleteConfirm.title}
+                message={deleteConfirm.message}
+                onConfirm={deleteConfirm.onConfirm}
+                onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                confirmText="Delete"
+                isDangerous={true}
+            />
         </div>
     );
 }

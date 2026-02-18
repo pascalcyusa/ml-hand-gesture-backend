@@ -15,6 +15,7 @@ export function useHandDetection() {
     const [isRunning, setIsRunning] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isHandDetected, setIsHandDetected] = useState(false); // Triggers UI updates
+    const [error, setError] = useState(null);
 
     // Store landmarks in a ref to avoid re-rendering on every frame (~60fps).
     const currentLandmarksRef = useRef(null);
@@ -60,8 +61,10 @@ export function useHandDetection() {
             setIsRunning(true);
             lastTimestampRef.current = -1;
             detectLoop();
+            setError(null);
         } catch (err) {
             console.error('Failed to start webcam:', err);
+            setError(err);
         }
     }, [loadModel]);
 
@@ -158,5 +161,6 @@ export function useHandDetection() {
         stop,
         getFeatures,
         loadModel,
-    }), [isModelLoaded, isLoading, isRunning, isHandDetected, start, stop, getFeatures, loadModel]);
+        error,
+    }), [isModelLoaded, isLoading, isRunning, isHandDetected, start, stop, getFeatures, loadModel, error]);
 }

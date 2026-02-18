@@ -7,10 +7,13 @@ import {
     CogIcon,
     ChatBubbleLeftRightIcon,
     UserCircleIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    GlobeAltIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { Button } from '../ui/button.jsx';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import ProfileSettings from './ProfileSettings.jsx';
 import SecuritySettings from './SecuritySettings.jsx';
 import './Dashboard.css';
@@ -23,8 +26,16 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
     // Data States
     const [savedModels, setSavedModels] = useState([]);
     const [savedPiano, setSavedPiano] = useState([]);
+
     const [savedGestures, setSavedGestures] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // UI State
     const [activeTab, setActiveTab] = useState('profile');
@@ -63,13 +74,99 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
         }
     };
 
-    const handlePasswordUpdate = async (current, newPass) => {
-        try {
-            await updatePassword(current, newPass);
-            showToast("Password updated successfully", "success");
-        } catch (err) {
-            showToast("Failed to update password", "error");
-            throw err;
+    const handleDeleteModel = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Model',
+            message: `Are you sure you want to delete model "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deleteModel(id);
+                if (success) {
+                    setSavedModels(prev => prev.filter(m => m.id !== id));
+                    showToast(`Model "${name}" deleted`, "success");
+                } else {
+                    showToast("Failed to delete model", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
+    const handleDeletePiano = (id, title) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Sequence',
+            message: `Are you sure you want to delete piano sequence "${title}"?`,
+            onConfirm: async () => {
+                const success = await storage.deletePianoSequence(id);
+                if (success) {
+                    setSavedPiano(prev => prev.filter(s => s.id !== id));
+                    showToast("Sequence deleted", "success");
+                } else {
+                    showToast("Failed to delete sequence", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
+    const handleDeleteGesture = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Configuration',
+            message: `Are you sure you want to delete motor config "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deleteGestureMapping(id);
+                if (success) {
+                    setSavedGestures(prev => prev.filter(g => g.id !== id));
+                    showToast("Configuration deleted", "success");
+                } else {
+                    showToast("Failed to delete configuration", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
+    };
+
+    const handleVisibilityToggle = async (model) => {
+        const newStatus = !model.is_public;
+        const success = await storage.updateModelVisibility(model.id, newStatus);
+
+        if (success) {
+            setSavedModels(prev => prev.map(m =>
+                m.id === model.id ? { ...m, is_public: newStatus } : m
+            ));
+            showToast(`Model is now ${newStatus ? 'Public' : 'Private'}`, 'success');
+        } else {
+            showToast("Failed to update visibility", "error");
+        }
+    };
+
+    const handlePianoVisibilityToggle = async (seq) => {
+        const newStatus = !seq.is_public;
+        const success = await storage.updatePianoVisibility(seq.id, newStatus);
+
+        if (success) {
+            setSavedPiano(prev => prev.map(s =>
+                s.id === seq.id ? { ...s, is_public: newStatus } : s
+            ));
+            showToast(`Sequence is now ${newStatus ? 'Public' : 'Private'}`, 'success');
+        } else {
+            showToast("Failed to update visibility", "error");
+        }
+    };
+
+    const handleGestureVisibilityToggle = async (config) => {
+        const newStatus = !config.is_public;
+        const success = await storage.updateGestureVisibility(config.id, newStatus);
+
+        if (success) {
+            setSavedGestures(prev => prev.map(c =>
+                c.id === config.id ? { ...c, is_public: newStatus } : c
+            ));
+            showToast(`Configuration is now ${newStatus ? 'Public' : 'Private'}`, 'success');
+        } else {
+            showToast("Failed to update visibility", "error");
         }
     };
 
@@ -77,6 +174,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
 
     return (
         <div className="dashboard-container animate-fade-in">
+            {/* ... rest of the file ... */}
 
             {/* ── Main Content ── */}
             <div className="dashboard-content">
@@ -187,13 +285,29 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No models found.</div>
                                     ) : (
                                         savedModels.map(model => (
-                                            <div key={model.id} className="info-card">
+                                            <div key={model.id} className="info-card relative group">
+                                                <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button
+                                                        className={`p-1.5 rounded-lg transition-all ${model.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        onClick={(e) => { e.stopPropagation(); handleVisibilityToggle(model); }}
+                                                        title={model.is_public ? "Make Private" : "Make Public"}
+                                                    >
+                                                        {model.is_public ? <GlobeAltIcon className="w-4 h-4" /> : <LockClosedIcon className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        className="p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteModel(model.id, model.name); }}
+                                                        title="Delete Model"
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                                 <div className="card-header">
-                                                    <span className="card-label">{model.name}</span>
+                                                    <span className="card-label truncate max-w-[160px]" title={model.name}>{model.name}</span>
                                                     <CubeIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {model.class_names.length} Classes • {model.is_public ? 'Public' : 'Private'}
+                                                    {model.class_names.length} Classes • <span className={model.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{model.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-meta">
                                                     Created: {new Date(model.created_at).toLocaleDateString()}
@@ -222,13 +336,29 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No sequences found.</div>
                                     ) : (
                                         savedPiano.map((seq, idx) => (
-                                            <div key={idx} className="info-card">
+                                            <div key={seq.id || idx} className="info-card relative group">
+                                                <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button
+                                                        className={`p-1.5 rounded-lg transition-all ${seq.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        onClick={(e) => { e.stopPropagation(); handlePianoVisibilityToggle(seq); }}
+                                                        title={seq.is_public ? "Make Private" : "Make Public"}
+                                                    >
+                                                        {seq.is_public ? <GlobeAltIcon className="w-4 h-4" /> : <LockClosedIcon className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        className="p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeletePiano(seq.id, seq.name_or_title); }}
+                                                        title="Delete Sequence"
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                                 <div className="card-header">
-                                                    <span className="card-label">{seq.name || `Sequence ${idx + 1}`}</span>
+                                                    <span className="card-label truncate max-w-[160px]" title={seq.name_or_title}>{seq.name_or_title || `Sequence ${idx + 1}`}</span>
                                                     <MusicalNoteIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {seq.notes?.length || 0} Notes
+                                                    {(seq.data?.notes || []).length} Notes • <span className={seq.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{seq.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/piano')}>
                                                     Load Sequence →
@@ -251,13 +381,29 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No configurations found.</div>
                                     ) : (
                                         savedGestures.map((config, idx) => (
-                                            <div key={idx} className="info-card">
+                                            <div key={config.id || idx} className="info-card relative group">
+                                                <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                                    <button
+                                                        className={`p-1.5 rounded-lg transition-all ${config.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        onClick={(e) => { e.stopPropagation(); handleGestureVisibilityToggle(config); }}
+                                                        title={config.is_public ? "Make Private" : "Make Public"}
+                                                    >
+                                                        {config.is_public ? <GlobeAltIcon className="w-4 h-4" /> : <LockClosedIcon className="w-4 h-4" />}
+                                                    </button>
+                                                    <button
+                                                        className="p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg"
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteGesture(config.id, config.name_or_title); }}
+                                                        title="Delete Config"
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </button>
+                                                </div>
                                                 <div className="card-header">
-                                                    <span className="card-label">{config.name || `Config ${idx + 1}`}</span>
+                                                    <span className="card-label truncate max-w-[160px]" title={config.name_or_title}>{config.name_or_title || `Config ${idx + 1}`}</span>
                                                     <CogIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {Object.keys(config.mappings || {}).length} Mappings
+                                                    {Object.keys(config.data || {}).length} Mappings • <span className={config.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{config.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/motors')}>
                                                     Load Configuration →
@@ -272,6 +418,16 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                     </main>
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                title={deleteConfirm.title}
+                message={deleteConfirm.message}
+                onConfirm={deleteConfirm.onConfirm}
+                onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                confirmText="Delete"
+                isDangerous={true}
+            />
         </div>
     );
 }
