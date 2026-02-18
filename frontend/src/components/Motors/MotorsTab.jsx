@@ -17,6 +17,7 @@ import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import ModalPortal from '../common/ModalPortal.jsx';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -35,6 +36,13 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCameraStarted, setIsCameraStarted] = useState(false);
     const videoReadyRef = useRef(false);
+
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Store state in a ref to avoid re-renders but have access for saving
     const currentConfigsRef = useRef({});
@@ -80,15 +88,22 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         }
     };
 
-    const handleDelete = async (id, name) => {
-        if (!window.confirm(`Delete configuration "${name}"?`)) return;
-        const success = await storage.deleteGestureMapping(id);
-        if (success) {
-            setSavedConfigs(prev => prev.filter(c => c.id !== id));
-            showToast("Configuration deleted", "success");
-        } else {
-            showToast("Failed to delete", "error");
-        }
+    const handleDelete = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Configuration',
+            message: `Are you sure you want to delete configuration "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deleteGestureMapping(id);
+                if (success) {
+                    setSavedConfigs(prev => prev.filter(c => c.id !== id));
+                    showToast("Configuration deleted", "success");
+                } else {
+                    showToast("Failed to delete", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     // Play All Logic
@@ -274,6 +289,16 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     ))}
                 </div>
             </div>
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                title={deleteConfirm.title}
+                message={deleteConfirm.message}
+                onConfirm={deleteConfirm.onConfirm}
+                onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                confirmText="Delete"
+                isDangerous={true}
+            />
         </div>
     );
 }

@@ -13,6 +13,7 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -31,8 +32,17 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     const [showSaveDialog, setShowSaveDialog] = useState(false);
     const [showLoadDialog, setShowLoadDialog] = useState(false);
     const [saveName, setSaveName] = useState('');
+    const [savedSequences, setSavedSequences] = useState([]);
     const [isCameraStarted, setIsCameraStarted] = useState(false);
+
     const videoReadyRef = useRef(false);
+
+    const [deleteConfirm, setDeleteConfirm] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        onConfirm: null
+    });
 
     // Refs to note sequencer slots for each class
     const sequencerSlotsRef = useRef({});
@@ -166,15 +176,22 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         }
     };
 
-    const handleDelete = async (id, name) => {
-        if (!window.confirm(`Delete sequence "${name}"?`)) return;
-        const success = await storage.deletePianoSequence(id);
-        if (success) {
-            setSavedSequences(prev => prev.filter(s => s.id !== id));
-            showToast("Sequence deleted", "success");
-        } else {
-            showToast("Failed to delete", "error");
-        }
+    const handleDelete = (id, name) => {
+        setDeleteConfirm({
+            isOpen: true,
+            title: 'Delete Sequence',
+            message: `Are you sure you want to delete sequence "${name}"?`,
+            onConfirm: async () => {
+                const success = await storage.deletePianoSequence(id);
+                if (success) {
+                    setSavedSequences(prev => prev.filter(s => s.id !== id));
+                    showToast("Sequence deleted", "success");
+                } else {
+                    showToast("Failed to delete", "error");
+                }
+                setDeleteConfirm(prev => ({ ...prev, isOpen: false }));
+            }
+        });
     };
 
     if (!classNames || classNames.length === 0) {
@@ -324,6 +341,16 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                     ))}
                 </div>
             </div >
+
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                title={deleteConfirm.title}
+                message={deleteConfirm.message}
+                onConfirm={deleteConfirm.onConfirm}
+                onCancel={() => setDeleteConfirm(prev => ({ ...prev, isOpen: false }))}
+                confirmText="Delete"
+                isDangerous={true}
+            />
         </div >
     );
 }

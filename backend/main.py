@@ -112,15 +112,17 @@ class GestureMappingSchema(BaseModel):
 
 class MusicSequenceSchema(BaseModel):
     title: str
-    sequence_data: dict
+    sequence_data: Optional[dict] = None
     is_active: bool = False
 
 class ResourceResponse(BaseModel):
     id: int
     name_or_title: str
-    data: dict
+    data: Optional[dict] = None
     is_active: bool
+    is_public: bool = False
     created_at: str
+    author: str
 
 # ══════════════════════════════════════════════════════════
 # Health Check
@@ -383,9 +385,24 @@ def delete_model(model_id: int, user: models.User = Depends(require_user), db: S
     if m.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not your model")
 
-    db.delete(m)
     db.commit()
     return {"detail": "Model deleted"}
+
+
+class ModelVisibilityUpdate(BaseModel):
+    is_public: bool
+
+@app.patch("/models/{model_id}/visibility")
+def update_model_visibility(model_id: int, req: ModelVisibilityUpdate, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    m = db.query(models.SavedModel).filter(models.SavedModel.id == model_id).first()
+    if not m:
+        raise HTTPException(status_code=404, detail="Model not found")
+    if m.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your model")
+    
+    m.is_public = req.is_public
+    db.commit()
+    return {"detail": "Visibility updated", "is_public": m.is_public}
 
 
 # ══════════════════════════════════════════════════════════
@@ -401,7 +418,9 @@ def get_gestures(user: models.User = Depends(require_user), db: Session = Depend
             name_or_title=g.name,
             data=g.mapping_data,
             is_active=g.is_active,
-            created_at=g.created_at.isoformat()
+            is_public=g.is_public,
+            created_at=g.created_at.isoformat(),
+            author=user.username
         )
         for g in results
     ]
@@ -450,8 +469,23 @@ def save_gesture(req: GestureMappingSchema, user: models.User = Depends(require_
         name_or_title=g.name,
         data=g.mapping_data,
         is_active=g.is_active,
-        created_at=g.created_at.isoformat()
+        is_public=g.is_public,
+        created_at=g.created_at.isoformat(),
+        author=user.username
     )
+
+
+@app.patch("/gestures/{map_id}/visibility")
+def update_gesture_visibility(map_id: int, req: ModelVisibilityUpdate, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    g = db.query(models.GestureMapping).filter(models.GestureMapping.id == map_id).first()
+    if not g:
+        raise HTTPException(status_code=404, detail="Mapping not found")
+    if g.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your mapping")
+    
+    g.is_public = req.is_public
+    db.commit()
+    return {"detail": "Visibility updated", "is_public": g.is_public}
 
 
 @app.get("/piano", response_model=List[ResourceResponse])
@@ -463,10 +497,23 @@ def get_piano_sequences(user: models.User = Depends(require_user), db: Session =
             name_or_title=s.title,
             data=s.sequence_data,
             is_active=s.is_active,
+            is_public=s.is_public, # Added field
             created_at=s.created_at.isoformat()
         )
         for s in results
     ]
+
+@app.patch("/piano/{seq_id}/visibility")
+def update_piano_visibility(seq_id: int, req: ModelVisibilityUpdate, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    s = db.query(models.MusicSequence).filter(models.MusicSequence.id == seq_id).first()
+    if not s:
+        raise HTTPException(status_code=404, detail="Sequence not found")
+    if s.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not your sequence")
+    
+    s.is_public = req.is_public
+    db.commit()
+    return {"detail": "Visibility updated", "is_public": s.is_public}
 
 @app.delete("/piano/{seq_id}")
 def delete_piano_sequence(seq_id: int, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
@@ -510,7 +557,9 @@ def save_piano_sequence(req: MusicSequenceSchema, user: models.User = Depends(re
         name_or_title=s.title,
         data=s.sequence_data,
         is_active=s.is_active,
-        created_at=s.created_at.isoformat()
+        is_public=s.is_public,
+        created_at=s.created_at.isoformat(),
+        author=user.username
     )
 
 
@@ -558,6 +607,65 @@ def get_training_sessions(user: models.User = Depends(require_user), db: Session
             id=s.id,
             class_names=s.class_names,
             created_at=s.created_at.isoformat()
+        )
+        for s in results
+    ]
+@app.get("/gestures/community", response_model=List[ResourceResponse])
+def list_community_gestures(
+    search: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(models.GestureMapping)
+        .join(models.User)
+        .filter(models.GestureMapping.is_public == True)
+    )
+    if search:
+        query = query.filter(models.GestureMapping.name.ilike(f"%{search}%"))
+
+    results = query.order_by(models.GestureMapping.created_at.desc()).offset(offset).limit(limit).all()
+
+    return [
+        ResourceResponse(
+            id=g.id,
+            name_or_title=g.name,
+            data=g.mapping_data,
+            is_active=False, # Shared ones aren't active for viewer
+            created_at=g.created_at.isoformat(),
+            author=g.user.username
+        )
+        for g in results
+    ]
+
+
+@app.get("/piano/community", response_model=List[ResourceResponse])
+def list_community_piano(
+    search: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(models.MusicSequence)
+        .join(models.User)
+        .filter(models.MusicSequence.is_public == True)
+    )
+    if search:
+        query = query.filter(models.MusicSequence.title.ilike(f"%{search}%"))
+
+    results = query.order_by(models.MusicSequence.created_at.desc()).offset(offset).limit(limit).all()
+
+    return [
+        ResourceResponse(
+            id=s.id,
+            name_or_title=s.title,
+            data=s.sequence_data,
+            is_active=False,
+            is_public=True,
+            created_at=s.created_at.isoformat(),
+            author=s.user.username
         )
         for s in results
     ]

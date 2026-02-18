@@ -18,6 +18,7 @@ const NAV_ITEMS = [
     { to: '/piano', label: 'Piano', icon: MusicalNoteIcon },
     { to: '/motors', label: 'Motors', icon: CogIcon },
     { to: '/devices', label: 'Devices', icon: SignalIcon },
+    { to: '/community', label: 'Community', icon: GlobeAltIcon },
 ];
 
 export default function Header({ user, onSignIn, onLogout }) {
@@ -38,6 +39,11 @@ export default function Header({ user, onSignIn, onLogout }) {
     }, [menuRef]);
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    const allNavItems = [
+        ...NAV_ITEMS,
+        ...(user ? [{ to: '/dashboard', label: 'Dashboard', icon: UserCircleIcon }] : [])
+    ];
 
     return (
         <header className="app-header">
@@ -64,7 +70,7 @@ export default function Header({ user, onSignIn, onLogout }) {
 
                 {/* Desktop Navigation */}
                 <nav className="main-nav hidden md:flex">
-                    {NAV_ITEMS.map((item) => (
+                    {allNavItems.map((item) => (
                         <NavLink
                             key={item.to}
                             to={item.to}
@@ -100,7 +106,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                         <div className="user-dropdown">
                             {/* Mobile Nav Links (Visible only in dropdown on mobile) */}
                             <div className="md:hidden border-b border-[var(--border-dim)] mb-2 pb-2">
-                                {NAV_ITEMS.map((item) => (
+                                {allNavItems.map((item) => (
                                     <NavLink
                                         key={item.to}
                                         to={item.to}
@@ -121,13 +127,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         <p className="font-medium">{user.username}</p>
                                         <p className="text-xs text-[var(--fg-muted)]">{user.email}</p>
                                     </div>
-                                    <Link
-                                        to="/dashboard"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Dashboard
-                                    </Link>
+
                                     <button
                                         className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
                                         onClick={() => {
@@ -141,13 +141,6 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         </div>
                                     </button>
                                     <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/community"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Community
-                                    </Link>
                                     <Link
                                         to="/about"
                                         className="dropdown-item"
@@ -169,13 +162,6 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         Log In
                                     </button>
                                     <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/community"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        Community
-                                    </Link>
                                     <Link
                                         to="/about"
                                         className="dropdown-item"

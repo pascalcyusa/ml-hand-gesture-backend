@@ -15,10 +15,10 @@ export default function AboutTab() {
             <div className="about-header">
                 <h2 className="flex items-center gap-2">
                     <CpuChipIcon className="h-6 w-6 text-[var(--gold)]" />
-                    About ML Hand Gesture
+                    About
                 </h2>
                 <p className="text-[var(--fg-muted)] mt-1">
-                    A web application for training and using machine learning models to play
+                    ML Hand Gesture is a web application for training and using machine learning models to play
                     piano notes and control your LEGO Spike Prime motors.
                 </p>
             </div>
