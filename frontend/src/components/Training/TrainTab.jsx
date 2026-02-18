@@ -176,6 +176,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                         isDetecting={hand.isRunning}
                         isStarted={isCameraStarted}
                         onStartCamera={handleStartCamera}
+                        error={hand.error}
                     />
                     <TrainingControls
                         onAddClass={cm.addClass}
