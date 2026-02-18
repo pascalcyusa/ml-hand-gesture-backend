@@ -110,3 +110,15 @@ class TrainingSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="training_sessions")
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    token = Column(String, unique=True, index=True)
+    expires_at = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")

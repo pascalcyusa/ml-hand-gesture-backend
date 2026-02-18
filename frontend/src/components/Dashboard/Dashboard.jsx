@@ -7,7 +7,8 @@ import {
     CogIcon,
     ChatBubbleLeftRightIcon,
     UserCircleIcon,
-    LockClosedIcon
+    LockClosedIcon,
+    TrashIcon
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
 import { Button } from '../ui/button.jsx';
@@ -63,13 +64,36 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
         }
     };
 
-    const handlePasswordUpdate = async (current, newPass) => {
-        try {
-            await updatePassword(current, newPass);
-            showToast("Password updated successfully", "success");
-        } catch (err) {
-            showToast("Failed to update password", "error");
-            throw err;
+    const handleDeleteModel = async (id, name) => {
+        if (!window.confirm(`Are you sure you want to delete model "${name}"?`)) return;
+        const success = await storage.deleteModel(id);
+        if (success) {
+            setSavedModels(prev => prev.filter(m => m.id !== id));
+            showToast(`Model "${name}" deleted`, "success");
+        } else {
+            showToast("Failed to delete model", "error");
+        }
+    };
+
+    const handleDeletePiano = async (id, title) => {
+        if (!window.confirm(`Delete piano sequence "${title}"?`)) return;
+        const success = await storage.deletePianoSequence(id);
+        if (success) {
+            setSavedPiano(prev => prev.filter(s => s.id !== id));
+            showToast("Sequence deleted", "success");
+        } else {
+            showToast("Failed to delete sequence", "error");
+        }
+    };
+
+    const handleDeleteGesture = async (id, name) => {
+        if (!window.confirm(`Delete motor config "${name}"?`)) return;
+        const success = await storage.deleteGestureMapping(id);
+        if (success) {
+            setSavedGestures(prev => prev.filter(g => g.id !== id));
+            showToast("Configuration deleted", "success");
+        } else {
+            showToast("Failed to delete configuration", "error");
         }
     };
 
@@ -187,7 +211,14 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No models found.</div>
                                     ) : (
                                         savedModels.map(model => (
-                                            <div key={model.id} className="info-card">
+                                            <div key={model.id} className="info-card relative group">
+                                                <button
+                                                    className="absolute top-2 right-2 p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteModel(model.id, model.name); }}
+                                                    title="Delete Model"
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </button>
                                                 <div className="card-header">
                                                     <span className="card-label">{model.name}</span>
                                                     <CubeIcon className="card-icon" />
@@ -222,13 +253,20 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No sequences found.</div>
                                     ) : (
                                         savedPiano.map((seq, idx) => (
-                                            <div key={idx} className="info-card">
+                                            <div key={seq.id || idx} className="info-card relative group">
+                                                <button
+                                                    className="absolute top-2 right-2 p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeletePiano(seq.id, seq.name_or_title); }}
+                                                    title="Delete Sequence"
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </button>
                                                 <div className="card-header">
-                                                    <span className="card-label">{seq.name || `Sequence ${idx + 1}`}</span>
+                                                    <span className="card-label">{seq.name_or_title || `Sequence ${idx + 1}`}</span>
                                                     <MusicalNoteIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {seq.notes?.length || 0} Notes
+                                                    {(seq.data?.notes || []).length} Notes
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/piano')}>
                                                     Load Sequence →
@@ -251,13 +289,20 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                         <div className="col-span-full text-[var(--fg-muted)] italic">No configurations found.</div>
                                     ) : (
                                         savedGestures.map((config, idx) => (
-                                            <div key={idx} className="info-card">
+                                            <div key={config.id || idx} className="info-card relative group">
+                                                <button
+                                                    className="absolute top-2 right-2 p-1.5 text-[var(--fg-muted)] hover:text-[var(--red)] hover:bg-[var(--bg3)] rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                    onClick={(e) => { e.stopPropagation(); handleDeleteGesture(config.id, config.name_or_title); }}
+                                                    title="Delete Config"
+                                                >
+                                                    <TrashIcon className="w-4 h-4" />
+                                                </button>
                                                 <div className="card-header">
-                                                    <span className="card-label">{config.name || `Config ${idx + 1}`}</span>
+                                                    <span className="card-label">{config.name_or_title || `Config ${idx + 1}`}</span>
                                                     <CogIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {Object.keys(config.mappings || {}).length} Mappings
+                                                    {Object.keys(config.data || {}).length} Mappings
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/motors')}>
                                                     Load Configuration →

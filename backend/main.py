@@ -176,7 +176,74 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(user: models.User = Depends(require_user)):
     return user
+    return user
 
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+@app.post("/auth/forgot-password")
+def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == req.email).first()
+    if not user:
+        # Don't reveal if user exists
+        return {"detail": "If that email exists, a reset link has been sent."}
+
+    # Generate token
+    import uuid
+    from datetime import datetime, timedelta
+    
+    token = str(uuid.uuid4())
+    expires = datetime.utcnow() + timedelta(hours=1)
+    
+    reset_token = models.PasswordResetToken(
+        user_id=user.id,
+        token=token,
+        expires_at=expires
+    )
+    db.add(reset_token)
+    db.commit()
+
+    # In a real app, send email here.
+    # For this demo/local setup, we'll log it to console so the user can see it.
+    print(f"\n==========================================")
+    print(f"PASSWORD RESET LINK (Simulated):")
+    print(f"Token: {token}")
+    print(f"==========================================\n")
+
+    return {"detail": "If that email exists, a reset link has been sent."}
+
+
+@app.post("/auth/reset-password")
+def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+    from datetime import datetime
+    
+    reset_token = db.query(models.PasswordResetToken).filter(
+        models.PasswordResetToken.token == req.token
+    ).first()
+
+    if not reset_token:
+        raise HTTPException(status_code=400, detail="Invalid token")
+
+    if reset_token.expires_at < datetime.utcnow():
+        raise HTTPException(status_code=400, detail="Token expired")
+
+    user = db.query(models.User).filter(models.User.id == reset_token.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Update password
+    user.hashed_password = hash_password(req.new_password)
+    
+    # Delete usage of this token (consume it)
+    db.delete(reset_token)
+    db.commit()
+
+    return {"detail": "Password updated successfully"}
 
 # ══════════════════════════════════════════════════════════
 # Model Endpoints
@@ -339,6 +406,19 @@ def get_gestures(user: models.User = Depends(require_user), db: Session = Depend
         for g in results
     ]
 
+@app.delete("/gestures/{map_id}")
+def delete_gesture_mapping(map_id: int, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    mapping = db.query(models.GestureMapping).filter(
+        models.GestureMapping.id == map_id,
+        models.GestureMapping.user_id == user.id
+    ).first()
+    if not mapping:
+        raise HTTPException(status_code=404, detail="Mapping not found")
+    
+    db.delete(mapping)
+    db.commit()
+    return {"detail": "Deleted successfully"}
+
 @app.post("/gestures", response_model=ResourceResponse)
 def save_gesture(req: GestureMappingSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
     # Deactivate others if this one is active
@@ -387,6 +467,19 @@ def get_piano_sequences(user: models.User = Depends(require_user), db: Session =
         )
         for s in results
     ]
+
+@app.delete("/piano/{seq_id}")
+def delete_piano_sequence(seq_id: int, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    seq = db.query(models.MusicSequence).filter(
+        models.MusicSequence.id == seq_id,
+        models.MusicSequence.user_id == user.id
+    ).first()
+    if not seq:
+        raise HTTPException(status_code=404, detail="Sequence not found")
+    
+    db.delete(seq)
+    db.commit()
+    return {"detail": "Deleted successfully"}
 
 @app.post("/piano", response_model=ResourceResponse)
 def save_piano_sequence(req: MusicSequenceSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):

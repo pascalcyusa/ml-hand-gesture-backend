@@ -190,27 +190,78 @@ export function useStorageManager() {
     }, [loadModel]);
 
 
+    const deleteModel = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/models/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete model error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const deletePianoSequence = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/piano/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete piano error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
+    const deleteGestureMapping = useCallback(async (id) => {
+        try {
+            const headers = getHeaders();
+            if (!headers.Authorization) return false;
+            const res = await fetch(`${API_Base}/gestures/${id}`, {
+                method: 'DELETE',
+                headers
+            });
+            return res.ok;
+        } catch (err) {
+            console.error("Delete gesture error:", err);
+            return false;
+        }
+    }, [getHeaders]);
+
     return useMemo(() => ({
         saveModel,
         listMyModels,
         loadModel,
         listCommunityModels,
+        deleteModel,
         importFromCloud,
         savePianoSequence,
         getPianoSequences,
+        deletePianoSequence,
         saveGestureMapping,
         getGestureMappings,
+        deleteGestureMapping,
         saveTrainingSession,
     }), [
         saveModel,
         listMyModels,
         loadModel,
         listCommunityModels,
+        deleteModel,
         importFromCloud,
         savePianoSequence,
         getPianoSequences,
+        deletePianoSequence,
         saveGestureMapping,
         getGestureMappings,
+        deleteGestureMapping,
         saveTrainingSession,
     ]);
 }

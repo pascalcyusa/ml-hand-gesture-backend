@@ -106,7 +106,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     }, [prediction, trainer, cm, showToast]);
 
     // ── Save/Load Logic ──
-    const handleSave = useCallback(async (name) => {
+    const handleSave = useCallback(async (name, isPublic = false) => {
         if (!auth.user) return showToast('Please log in to save', 'info');
         if (!trainer.isTrained) return showToast('Train a model first', 'warning');
 
@@ -116,7 +116,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                 const weightDataB64 = arrayBufferToBase64(artifacts.weightData);
                 const success = await storage.saveModel(
                     name, artifacts.modelTopology, artifacts.weightSpecs, weightDataB64,
-                    cm.classNames, { classes: cm.classes }, false
+                    cm.classNames, { classes: cm.classes }, isPublic
                 );
                 if (success) {
                     showToast(`Model "${name}" saved!`, 'success');
