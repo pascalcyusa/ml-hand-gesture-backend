@@ -7,7 +7,7 @@
 import { useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
 
-const API_Base = 'http://localhost:8000';
+const API_Base = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export function useStorageManager() {
     const { getHeaders } = useAuth();
