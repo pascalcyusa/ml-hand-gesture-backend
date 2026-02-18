@@ -86,7 +86,7 @@ Choose ONE of the following options. **Sevalla** is recommended for the easiest 
 2.  **Add New Site** -> **Import from Git**.
 3.  **Configure Build**:
     - **Base directory**: `frontend`
-    - **Build command**: `npm run build`
+    - **Build command**: `bun run build`
     - **Publish directory**: `dist`
 4.  **Environment Variables**:
     - Click **"Show advanced"** or go to **Site Settings -> Environment variables** after import.
