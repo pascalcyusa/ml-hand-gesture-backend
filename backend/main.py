@@ -17,32 +17,40 @@ Endpoints:
   POST /piano               — Save a piano sequence
 """
 
+import os
+import uuid
+from datetime import datetime, timedelta
+from typing import List, Optional, Any
+
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
+
 from database import engine, get_db
 import models
-from pydantic import BaseModel
-from typing import List, Optional, Any
 from auth import (
     hash_password,
     verify_password,
     create_access_token,
     require_user,
     get_current_user,
+    SECRET_KEY,
 )
 
-# Create tables
+# ══════════════════════════════════════════════════════════
+# App initialization
+# ══════════════════════════════════════════════════════════
+
 app = FastAPI(title="Hand Pose Trainer API")
 
-# CORS — allow frontend dev server + production domains
-import os
-origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
-origins = [origin.strip().rstrip("/") for origin in origins_str.split(",") if origin.strip()]
-
-from auth import SECRET_KEY
+# Warn if default dev secret is in use
 if SECRET_KEY == "dev-secret-change-in-production":
     print("\n⚠️  WARNING: You are using the default JWT_SECRET_KEY. Please set JWT_SECRET_KEY environment variable in production.\n")
+
+# CORS — allow frontend dev server + production domains
+origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
+origins = [origin.strip().rstrip("/") for origin in origins_str.split(",") if origin.strip()]
 
 app.add_middleware(
     CORSMiddleware,
@@ -54,16 +62,24 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup_event():
-    # Create tables on startup
     try:
         models.Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully")
     except Exception as e:
         print(f"❌ Error creating database tables: {e}")
 
+
+# ══════════════════════════════════════════════════════════
+# Health Check
+# ══════════════════════════════════════════════════════════
+
 @app.get("/")
 def read_root():
     return {"message": "Hand Pose Trainer API is running", "docs_url": "/docs"}
+
+@app.get("/health")
+def read_health():
+    return {"status": "ok"}
 
 
 # ══════════════════════════════════════════════════════════
@@ -91,6 +107,14 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class ProfileUpdateRequest(BaseModel):
+    username: Optional[str] = None
+    email: Optional[str] = None
+
+class PasswordUpdateRequest(BaseModel):
+    current_password: str
+    new_password: str
 
 class ModelSaveRequest(BaseModel):
     name: str
@@ -143,13 +167,24 @@ class ResourceResponse(BaseModel):
     created_at: str
     author: str
 
-# ══════════════════════════════════════════════════════════
-# Health Check
-# ══════════════════════════════════════════════════════════
+class ModelVisibilityUpdate(BaseModel):
+    is_public: bool
 
-@app.get("/health")
-def read_health():
-    return {"status": "ok"}
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+class TrainingSessionSchema(BaseModel):
+    class_names: list
+    samples: dict  # { features: [], labels: [] }
+
+class TrainingSessionResponse(BaseModel):
+    id: int
+    class_names: list
+    created_at: str
 
 
 # ══════════════════════════════════════════════════════════
@@ -158,7 +193,6 @@ def read_health():
 
 @app.post("/auth/signup", response_model=TokenResponse)
 def signup(req: SignupRequest, db: Session = Depends(get_db)):
-    # Check existing
     existing = db.query(models.User).filter(
         (models.User.email == req.email) | (models.User.username == req.username)
     ).first()
@@ -196,16 +230,35 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(user: models.User = Depends(require_user)):
+    return user  # FIX: removed duplicate return statement
+
+
+@app.patch("/auth/profile", response_model=UserResponse)
+def update_profile(req: ProfileUpdateRequest, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    if req.username is not None:
+        # Check uniqueness
+        existing = db.query(models.User).filter(models.User.username == req.username, models.User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        user.username = req.username
+    if req.email is not None:
+        existing = db.query(models.User).filter(models.User.email == req.email, models.User.id != user.id).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already in use")
+        user.email = req.email
+    db.commit()
+    db.refresh(user)
     return user
-    return user
 
 
-class ForgotPasswordRequest(BaseModel):
-    email: str
+@app.post("/auth/password")
+def update_password(req: PasswordUpdateRequest, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    if not verify_password(req.current_password, user.hashed_password):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    user.hashed_password = hash_password(req.new_password)
+    db.commit()
+    return {"detail": "Password updated successfully"}
 
-class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
 
 @app.post("/auth/forgot-password")
 def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
@@ -214,13 +267,9 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
         # Don't reveal if user exists
         return {"detail": "If that email exists, a reset link has been sent."}
 
-    # Generate token
-    import uuid
-    from datetime import datetime, timedelta
-    
     token = str(uuid.uuid4())
     expires = datetime.utcnow() + timedelta(hours=1)
-    
+
     reset_token = models.PasswordResetToken(
         user_id=user.id,
         token=token,
@@ -230,9 +279,8 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
 
     # In a real app, send email here.
-    # For this demo/local setup, we'll log it to console so the user can see it.
     print(f"\n==========================================")
-    print(f"PASSWORD RESET LINK (Simulated):")
+    print(f"PASSWORD RESET TOKEN (Simulated):")
     print(f"Token: {token}")
     print(f"==========================================\n")
 
@@ -241,8 +289,6 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
 
 @app.post("/auth/reset-password")
 def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
-    from datetime import datetime
-    
     reset_token = db.query(models.PasswordResetToken).filter(
         models.PasswordResetToken.token == req.token
     ).first()
@@ -257,14 +303,12 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Update password
     user.hashed_password = hash_password(req.new_password)
-    
-    # Delete usage of this token (consume it)
     db.delete(reset_token)
     db.commit()
 
     return {"detail": "Password updated successfully"}
+
 
 # ══════════════════════════════════════════════════════════
 # Model Endpoints
@@ -294,7 +338,6 @@ def list_my_models(user: models.User = Depends(require_user), db: Session = Depe
 
 @app.post("/models/save", response_model=ModelListItem)
 def save_model(req: ModelSaveRequest, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
-    # Upsert — if user already has a model with this name, update it
     existing = (
         db.query(models.SavedModel)
         .filter(models.SavedModel.user_id == user.id, models.SavedModel.name == req.name)
@@ -371,17 +414,6 @@ def get_model(model_id: int, db: Session = Depends(get_db)):
     m = db.query(models.SavedModel).filter(models.SavedModel.id == model_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Model not found")
-    
-    # If explicit permission check needed (if private and not owner)
-    # But for now, we only block private if it's strictly enforced. 
-    # Let's say if private, only owner.
-    # We don't have user context here unless we require it... 
-    # But frontend might fetch public models anonymously.
-    # So we'll check is_public.
-    
-    if not m.is_public:
-         # Ideally check user, but since this route is open...
-         pass 
 
     return ModelDetail(
         id=m.id,
@@ -404,12 +436,10 @@ def delete_model(model_id: int, user: models.User = Depends(require_user), db: S
     if m.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not your model")
 
+    db.delete(m)  # FIX: was missing db.delete(m), model was never actually deleted
     db.commit()
     return {"detail": "Model deleted"}
 
-
-class ModelVisibilityUpdate(BaseModel):
-    is_public: bool
 
 @app.patch("/models/{model_id}/visibility")
 def update_model_visibility(model_id: int, req: ModelVisibilityUpdate, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
@@ -418,7 +448,7 @@ def update_model_visibility(model_id: int, req: ModelVisibilityUpdate, user: mod
         raise HTTPException(status_code=404, detail="Model not found")
     if m.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not your model")
-    
+
     m.is_public = req.is_public
     db.commit()
     return {"detail": "Visibility updated", "is_public": m.is_public}
@@ -452,20 +482,18 @@ def delete_gesture_mapping(map_id: int, user: models.User = Depends(require_user
     ).first()
     if not mapping:
         raise HTTPException(status_code=404, detail="Mapping not found")
-    
+
     db.delete(mapping)
     db.commit()
     return {"detail": "Deleted successfully"}
 
 @app.post("/gestures", response_model=ResourceResponse)
 def save_gesture(req: GestureMappingSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
-    # Deactivate others if this one is active
     if req.is_active:
         db.query(models.GestureMapping).filter(models.GestureMapping.user_id == user.id).update({"is_active": False})
-    
-    # Check for existing by name to update
+
     existing = db.query(models.GestureMapping).filter(models.GestureMapping.user_id == user.id, models.GestureMapping.name == req.name).first()
-    
+
     if existing:
         existing.mapping_data = req.mapping_data
         existing.is_active = req.is_active
@@ -501,10 +529,41 @@ def update_gesture_visibility(map_id: int, req: ModelVisibilityUpdate, user: mod
         raise HTTPException(status_code=404, detail="Mapping not found")
     if g.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not your mapping")
-    
+
     g.is_public = req.is_public
     db.commit()
     return {"detail": "Visibility updated", "is_public": g.is_public}
+
+
+@app.get("/gestures/community", response_model=List[ResourceResponse])
+def list_community_gestures(
+    search: Optional[str] = Query(None),
+    limit: int = Query(20, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
+    query = (
+        db.query(models.GestureMapping)
+        .join(models.User)
+        .filter(models.GestureMapping.is_public == True)
+    )
+    if search:
+        query = query.filter(models.GestureMapping.name.ilike(f"%{search}%"))
+
+    results = query.order_by(models.GestureMapping.created_at.desc()).offset(offset).limit(limit).all()
+
+    return [
+        ResourceResponse(
+            id=g.id,
+            name_or_title=g.name,
+            data=g.mapping_data,
+            is_active=False,
+            is_public=True,  # FIX: was missing is_public=True
+            created_at=g.created_at.isoformat(),
+            author=g.user.username
+        )
+        for g in results
+    ]
 
 
 @app.get("/piano", response_model=List[ResourceResponse])
@@ -516,7 +575,7 @@ def get_piano_sequences(user: models.User = Depends(require_user), db: Session =
             name_or_title=s.title,
             data=s.sequence_data,
             is_active=s.is_active,
-            is_public=s.is_public, 
+            is_public=s.is_public,
             created_at=s.created_at.isoformat(),
             author=user.username
         )
@@ -530,7 +589,7 @@ def update_piano_visibility(seq_id: int, req: ModelVisibilityUpdate, user: model
         raise HTTPException(status_code=404, detail="Sequence not found")
     if s.user_id != user.id:
         raise HTTPException(status_code=403, detail="Not your sequence")
-    
+
     s.is_public = req.is_public
     db.commit()
     return {"detail": "Visibility updated", "is_public": s.is_public}
@@ -543,7 +602,7 @@ def delete_piano_sequence(seq_id: int, user: models.User = Depends(require_user)
     ).first()
     if not seq:
         raise HTTPException(status_code=404, detail="Sequence not found")
-    
+
     db.delete(seq)
     db.commit()
     return {"detail": "Deleted successfully"}
@@ -552,7 +611,7 @@ def delete_piano_sequence(seq_id: int, user: models.User = Depends(require_user)
 def save_piano_sequence(req: MusicSequenceSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
     if req.is_active:
         db.query(models.MusicSequence).filter(models.MusicSequence.user_id == user.id).update({"is_active": False})
-    
+
     existing = db.query(models.MusicSequence).filter(models.MusicSequence.user_id == user.id, models.MusicSequence.title == req.title).first()
 
     if existing:
@@ -583,83 +642,6 @@ def save_piano_sequence(req: MusicSequenceSchema, user: models.User = Depends(re
     )
 
 
-# ══════════════════════════════════════════════════════════
-# Training Session Endpoints (Raw Data)
-# ══════════════════════════════════════════════════════════
-
-class TrainingSessionSchema(BaseModel):
-    class_names: list
-    samples: dict  # { features: [], labels: [] }
-
-class TrainingSessionResponse(BaseModel):
-    id: int
-    class_names: list
-    created_at: str
-
-@app.post("/training-sessions", response_model=TrainingSessionResponse)
-def save_training_session(req: TrainingSessionSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
-    session = models.TrainingSession(
-        user_id=user.id,
-        class_names=req.class_names,
-        samples=req.samples
-    )
-    db.add(session)
-    db.commit()
-    db.refresh(session)
-    
-    return TrainingSessionResponse(
-        id=session.id,
-        class_names=session.class_names,
-        created_at=session.created_at.isoformat()
-    )
-
-@app.get("/training-sessions", response_model=List[TrainingSessionResponse])
-def get_training_sessions(user: models.User = Depends(require_user), db: Session = Depends(get_db)):
-    results = (
-        db.query(models.TrainingSession)
-        .filter(models.TrainingSession.user_id == user.id)
-        .order_by(models.TrainingSession.created_at.desc())
-        .limit(10)
-        .all()
-    )
-    return [
-        TrainingSessionResponse(
-            id=s.id,
-            class_names=s.class_names,
-            created_at=s.created_at.isoformat()
-        )
-        for s in results
-    ]
-@app.get("/gestures/community", response_model=List[ResourceResponse])
-def list_community_gestures(
-    search: Optional[str] = Query(None),
-    limit: int = Query(20, ge=1, le=100),
-    offset: int = Query(0, ge=0),
-    db: Session = Depends(get_db),
-):
-    query = (
-        db.query(models.GestureMapping)
-        .join(models.User)
-        .filter(models.GestureMapping.is_public == True)
-    )
-    if search:
-        query = query.filter(models.GestureMapping.name.ilike(f"%{search}%"))
-
-    results = query.order_by(models.GestureMapping.created_at.desc()).offset(offset).limit(limit).all()
-
-    return [
-        ResourceResponse(
-            id=g.id,
-            name_or_title=g.name,
-            data=g.mapping_data,
-            is_active=False, # Shared ones aren't active for viewer
-            created_at=g.created_at.isoformat(),
-            author=g.user.username
-        )
-        for g in results
-    ]
-
-
 @app.get("/piano/community", response_model=List[ResourceResponse])
 def list_community_piano(
     search: Optional[str] = Query(None),
@@ -686,6 +668,46 @@ def list_community_piano(
             is_public=True,
             created_at=s.created_at.isoformat(),
             author=s.user.username
+        )
+        for s in results
+    ]
+
+
+# ══════════════════════════════════════════════════════════
+# Training Session Endpoints (Raw Data)
+# ══════════════════════════════════════════════════════════
+
+@app.post("/training-sessions", response_model=TrainingSessionResponse)
+def save_training_session(req: TrainingSessionSchema, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    session = models.TrainingSession(
+        user_id=user.id,
+        class_names=req.class_names,
+        samples=req.samples
+    )
+    db.add(session)
+    db.commit()
+    db.refresh(session)
+
+    return TrainingSessionResponse(
+        id=session.id,
+        class_names=session.class_names,
+        created_at=session.created_at.isoformat()
+    )
+
+@app.get("/training-sessions", response_model=List[TrainingSessionResponse])
+def get_training_sessions(user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    results = (
+        db.query(models.TrainingSession)
+        .filter(models.TrainingSession.user_id == user.id)
+        .order_by(models.TrainingSession.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    return [
+        TrainingSessionResponse(
+            id=s.id,
+            class_names=s.class_names,
+            created_at=s.created_at.isoformat()
         )
         for s in results
     ]
