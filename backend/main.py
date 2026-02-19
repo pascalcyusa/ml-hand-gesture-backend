@@ -19,6 +19,7 @@ Endpoints:
 
 import os
 import uuid
+from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import List, Optional, Any
 
@@ -42,7 +43,18 @@ from auth import (
 # App initialization
 # ══════════════════════════════════════════════════════════
 
-app = FastAPI(title="Hand Pose Trainer API")
+@asynccontextmanager
+async def lifespan(app_instance):
+    # Startup
+    try:
+        models.Base.metadata.create_all(bind=engine)
+        print("✅ Database tables created successfully")
+    except Exception as e:
+        print(f"❌ Error creating database tables: {e}")
+    yield
+    # Shutdown (nothing to clean up)
+
+app = FastAPI(title="Hand Pose Trainer API", lifespan=lifespan)
 
 # Warn if default dev secret is in use
 if SECRET_KEY == "dev-secret-change-in-production":
@@ -59,14 +71,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-@app.on_event("startup")
-def startup_event():
-    try:
-        models.Base.metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully")
-    except Exception as e:
-        print(f"❌ Error creating database tables: {e}")
 
 
 # ══════════════════════════════════════════════════════════
