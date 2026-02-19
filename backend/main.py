@@ -33,6 +33,8 @@ from auth import (
 )
 
 # Create tables
+app = FastAPI(title="Hand Pose Trainer API")
+
 # CORS — allow frontend dev server + production domains
 import os
 origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
