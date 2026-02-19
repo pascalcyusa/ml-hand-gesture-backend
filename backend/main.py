@@ -34,6 +34,7 @@ from auth import (
 
 # Create tables
 # CORS — allow frontend dev server + production domains
+import os
 origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000")
 origins = [origin.strip().rstrip("/") for origin in origins_str.split(",") if origin.strip()]
 
