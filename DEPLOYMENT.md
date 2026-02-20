@@ -1,128 +1,124 @@
-# Deployment Guide
+# Google Cloud + Netlify Deployment Guide
 
-This guide covers how to deploy the **Hand Pose Trainer** application. The stack consists of:
-- **Frontend:** React + Vite (deployed as static site)
-- **Backend:** FastAPI (Python) (deployed as a Docker container)
-- **Database:** PostgreSQL (managed service or container)
+This guide details how to deploy your full-stack application using **Google Cloud Run** for the backend (FastAPI) and **Netlify** for the frontend (React). This architecture is scalable, cost-effective, and robust.
 
 ## Prerequisites
 
-- [Docker](https://www.docker.com/) installed.
-- [Git](https://git-scm.com/) installed.
-- Accounts for your chosen providers (e.g., Netlify, Sevalla, AWS, Google Cloud).
+1.  **Google Cloud Platform (GCP) Account:** Ensure you have a project created and billing enabled.
+2.  **Netlify Account:** For hosting the frontend.
+3.  **Google Cloud SDK (gcloud CLI):** [Installed and initialized](https://cloud.google.com/sdk/docs/install).
+4.  **Docker:** [Installed](https://www.docker.com/get-started) for building images locally.
+5.  **Git:** Installed.
 
 ---
 
-## 1. Frontend Deployment (Netlify)
+## Part 1: Database Setup (PostgreSQL)
 
-Netlify is excellent for static sites like this React app.
+Since Google Cloud Run is **stateless** (containers can be restarted anytime, losing local data), you **cannot** run a persistent database *inside* the same container. You must use an external database service.
 
-1.  **Push your code to GitHub/GitLab/Bitbucket.**
-2.  **Log in to [Netlify](https://www.netlify.com/).**
-3.  Click **"Add new site"** -> **"Import from existing project"**.
+### Option A: Use a Free Managed Database (Recommended)
+Services like **Neon**, **Supabase**, or **CockroachDB Serverless** offer excellent free tiers for PostgreSQL.
+
+1.  **Sign up** for [Neon](https://neon.tech/) or [Supabase](https://supabase.com/).
+2.  **Create a new project.**
+3.  **Get the Connection String:** Look for a URL like:
+    ```
+    postgresql://user:password@ep-shiny-hill-123456.us-east-2.aws.neon.tech/neondb
+    ```
+    *(Note: If it starts with `postgres://`, change it to `postgresql://` for Python compatibility.)*
+
+### Option B: Google Cloud SQL (Paid)
+GCP offers a managed Cloud SQL service, but it can be expensive (~$10-50/mo minimum).
+
+1.  Go to the **Cloud SQL** section in GCP Console.
+2.  **Create Instance** -> Choose **PostgreSQL**.
+3.  Set a password for the `postgres` user.
+4.  Once created, note the **Connection Name** and **Public IP**.
+
+---
+
+## Part 2: Backend Deployment (Google Cloud Run)
+
+We will containerize the FastAPI backend and deploy it to Cloud Run.
+
+### 1. Enable Required APIs
+Run these commands in your terminal:
+```bash
+gcloud services enable run.googleapis.com
+gcloud services enable containerregistry.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+```
+
+### 2. Configure & Deploy
+Navigate to the root of your project in the terminal.
+
+1.  **Submit the Build to Cloud Build:**
+    This builds your Docker image in the cloud and stores it in Google Container Registry (GCR).
+    ```bash
+    cd backend
+    gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/hand-pose-backend
+    ```
+    *(Replace `YOUR_PROJECT_ID` with your actual GCP project ID, visible in the console).*
+
+2.  **Deploy to Cloud Run:**
+    ```bash
+    gcloud run deploy hand-pose-backend \
+      --image gcr.io/YOUR_PROJECT_ID/hand-pose-backend \
+      --platform managed \
+      --region us-central1 \
+      --allow-unauthenticated \
+      --set-env-vars "DATABASE_URL=YOUR_DB_CONNECTION_STRING" \
+      --set-env-vars "SECRET_KEY=CHANGE_THIS_TO_RANDOM_STRING" \
+      --set-env-vars "ALLOWED_ORIGINS=https://YOUR-NETLIFY-SITE.netlify.app"
+    ```
+    -   `--allow-unauthenticated`: Makes the API public so your frontend can reach it.
+    -   `ALLOWED_ORIGINS`: You might not know your Netlify URL yet. You can set it to `*` temporarily or update it later.
+
+3.  **Get the Backend URL:**
+    Once deployed, the command will output a Service URL (e.g., `https://hand-pose-backend-xyz123.a.run.app`). **Copy this URL.**
+
+---
+
+## Part 3: Frontend Deployment (Netlify)
+
+Now we deploy the React frontend and connect it to your running backend.
+
+1.  **Push your code to GitHub/GitLab.**
+2.  **Log in to [Netlify](https://app.netlify.com/).**
+3.  **"Add new site"** -> **"Import from existing project"**.
 4.  Connect your Git provider and select this repository.
 5.  **Build Settings:**
+    -   **Base directory:** `frontend` (Important!)
     -   **Build command:** `npm run build`
     -   **Publish directory:** `dist`
 6.  **Environment Variables:**
-    -   Click "Advanced" or go to "Site configuration" > "Environment variables" after creation.
-    -   Add `VITE_API_URL` and set it to your deployed backend URL (e.g., `https://my-backend-app.sevalla.app` or `https://api.mydomain.com`).
-    -   *Note: You can deploy the frontend first, but it won't work fully until the backend is up. You can come back and update this variable later.*
+    -   Click **"Show advanced"** or go to "Site configuration" > "Environment variables" after creation.
+    -   Add a variable:
+        -   **Key:** `VITE_API_URL`
+        -   **Value:** Your Google Cloud Run URL (e.g., `https://hand-pose-backend-xyz123.a.run.app`)
+            *(Do not add a trailing slash `/`)*
 7.  **Deploy Site.**
 
 ---
 
-## 2. Backend Deployment
+## Part 4: Final Configuration
 
-We recommend using **Docker** to make the backend portable across Sevalla, AWS, and GCP.
+1.  **Update Backend CORS (Crucial):**
+    Once your Netlify site is live (e.g., `https://wonderful-site-123.netlify.app`), go back to Google Cloud Run:
+    -   Go to the **Cloud Run** console -> Click your service (`hand-pose-backend`).
+    -   Click **"Edit & Deploy New Revision"**.
+    -   Go to the **"Variables & Secrets"** tab.
+    -   Update `ALLOWED_ORIGINS` to match your *exact* Netlify URL (no trailing slash).
+        -   Example: `https://wonderful-site-123.netlify.app`
+    -   Click **Deploy**.
 
-### Preparation
-1.  Navigate to the `backend` folder.
-2.  Build the image locally to test:
-    ```bash
-    docker build -t hand-pose-backend .
-    ```
-
-### Option A: Sevalla (Container Hosting)
-
-Sevalla allows you to deploy containers easily.
-
-1.  **Create a PostgreSQL Database:**
-    -   You can use a free Postgres provider like [Supabase](https://supabase.com/), [Neon](https://neon.tech/), or [Render](https://render.com/).
-    -   Get the **Connection String** (e.g., `postgresql://user:pass@host:5432/db`).
-2.  **Deploy Container:**
-    -   If Sevalla supports building from Git:
-        -   Connect your repo.
-        -   Set **Root Directory** to `backend`.
-        -   Set **Dockerfile Path** to `Dockerfile`.
-    -   If Sevalla requires a registry (like Docker Hub):
-        -   Push your image to Docker Hub:
-            ```bash
-            docker tag hand-pose-backend yourusername/hand-pose-backend
-            docker push yourusername/hand-pose-backend
-            ```
-        -   Deploy from that image name.
-3.  **Environment Variables:**
-    -   Set `DATABASE_URL`: The connection string from step 1.
-    -   Set `SECRET_KEY`: A long random string for security.
-    -   Set `ALLOWED_ORIGINS`: The URL of your frontend (e.g., `https://my-site.netlify.app`).
-
-### Option B: AWS (App Runner)
-
-AWS App Runner is the easiest way to run containers on AWS.
-
-1.  **Push to ECR (Elastic Container Registry):**
-    -   Create a repository in AWS ECR.
-    -   Follow the "View push commands" in AWS console to login, build, tag, and push your image.
-2.  **Create App Runner Service:**
-    -   Go to App Runner console -> Create Service.
-    -   Source: Container Registry. Select your image from ECR.
-    -   Deployment settings: Automatic.
-3.  **Configuration:**
-    -   Port: `8000`.
-    -   **Environment variables:**
-        -   `DATABASE_URL`: Your RDS or external Postgres URL.
-        -   `SECRET_KEY`: Random string.
-        -   `ALLOWED_ORIGINS`: Your Netlify URL.
-4.  **Create.** AWS handles load balancing and HTTPS.
-
-### Option C: Google Cloud (Cloud Run)
-
-Cloud Run is a serverless container platform.
-
-1.  **Install Google Cloud SDK** and login (`gcloud auth login`).
-2.  **Deploy:**
-    ```bash
-    cd backend
-    gcloud run deploy hand-pose-backend --source .
-    ```
-    -   It will ask for region (e.g., `us-central1`).
-    -   It will ask to allow unauthenticated invocations -> **Yes** (so your frontend can reach it).
-3.  **Environment Variables:**
-    -   Go to Cloud Run console -> Select service -> Edit & Deploy New Revision.
-    -   Variables tab: Add `DATABASE_URL`, `SECRET_KEY`, `ALLOWED_ORIGINS`.
-    -   Deploy.
+2.  **Test the App:**
+    Open your Netlify URL. The frontend should load, and network requests (Inspect -> Network) should successfully hit your Google Cloud Run backend.
 
 ---
 
-## 3. Database Setup
+## Troubleshooting
 
-Since the app requires PostgreSQL:
-
--   **Development:** Use the `docker-compose.yml` included in the repo to run a local DB.
--   **Production:** Use a managed service.
-    -   **Supabase / Neon / Railway:** Offer generous free tiers for Postgres.
-    -   **AWS RDS:** Robust but costs money (Free Tier available for 12 months).
-    -   **Google Cloud SQL:** Robust, costs money.
-
-**Important:** When getting your `DATABASE_URL`, ensure it starts with `postgresql://`. If it starts with `postgres://`, SQLAlchemy might complain. You can simply rename it to `postgresql://`.
-
----
-
-## 4. Final Connection
-
-1.  Once Backend is live, copy its URL (e.g., `https://hand-pose-backend-xyz.run.app`).
-2.  Go back to **Netlify** (Frontend).
-3.  Update the `VITE_API_URL` environment variable with this Backend URL.
-4.  Trigger a new deployment/build on Netlify.
-5.  Your app is now live and connected!
+-   **CORS Errors:** Check the Browser Console. If you see "CORS error", verify that the `ALLOWED_ORIGINS` env var on Cloud Run matches the URL in your browser address bar exactly.
+-   **Database Connection Fail:** Check Cloud Run logs (Logs tab). Ensure your database connection string is correct and starts with `postgresql://`. If using Cloud SQL, ensure your instance has a Public IP or you are using the Cloud SQL Auth Proxy (the external provider option like Neon is often simpler for starters).
+-   **500 Errors:** Check Cloud Run logs. It usually means an unhandled exception in the Python code or a database issue.
