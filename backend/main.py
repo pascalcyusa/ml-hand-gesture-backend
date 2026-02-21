@@ -21,6 +21,7 @@ from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import engine, get_db
+import os
 import models
 from pydantic import BaseModel
 from typing import List, Optional, Any
@@ -38,9 +39,15 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(title="Hand Pose Trainer API")
 
 # CORS — allow frontend dev server
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS")
+if allowed_origins_env:
+    allow_origins = allowed_origins_env.split(",")
+else:
+    allow_origins = ["http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:3000", "http://localhost:5174", "http://localhost:5175", "http://localhost:5176", "http://localhost:5177"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
