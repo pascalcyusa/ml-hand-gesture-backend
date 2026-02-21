@@ -6,8 +6,7 @@
 
 import { useCallback, useMemo } from 'react';
 import { useAuth } from './useAuth';
-
-const API_Base = 'http://localhost:8000';
+import { API_BASE_URL as API_Base } from '../config';
 
 export function useStorageManager() {
     const { getHeaders } = useAuth();

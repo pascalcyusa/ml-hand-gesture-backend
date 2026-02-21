@@ -6,8 +6,7 @@
  */
 
 import { useState, useCallback, useEffect } from 'react';
-
-const API_Base = 'http://localhost:8000';
+import { API_BASE_URL as API_Base } from '../config';
 
 export function useAuth() {
     const [user, setUser] = useState(null); // { id, username, email }
