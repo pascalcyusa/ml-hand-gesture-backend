@@ -5,7 +5,7 @@
  * Stores token in localStorage and provides user state to the app.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { API_BASE_URL } from '../config';
 
 const API_Base = API_BASE_URL;
@@ -149,7 +149,7 @@ export function useAuth() {
         setUser(null);
     }, []);
 
-    return {
+    return useMemo(() => ({
         user,
         loading,
         login,
@@ -158,5 +158,5 @@ export function useAuth() {
         updateProfile,
         updatePassword,
         getHeaders,
-    };
+    }), [user, loading, login, signup, logout, updateProfile, updatePassword, getHeaders]);
 }

@@ -27,6 +27,8 @@ export function useHandDetection() {
     const streamRef = useRef(null);
     const animFrameRef = useRef(null);
     const lastTimestampRef = useRef(-1);
+    const debounceTimeoutRef = useRef(null);
+    const lastDetectionStateRef = useRef(false);
 
     // Load the MediaPipe model
     const loadModel = useCallback(async () => {
@@ -115,11 +117,16 @@ export function useHandDetection() {
                 const hasHands = landmarks && landmarks.length > 0;
                 currentLandmarksRef.current = hasHands ? landmarks : null;
 
-                // Only update state if changed (debounce UI updates)
-                setIsHandDetected(prev => {
-                    if (prev !== hasHands) return hasHands;
-                    return prev;
-                });
+                // Debounce UI updates to prevent "Maximum update depth exceeded" React errors
+                if (hasHands !== lastDetectionStateRef.current) {
+                    lastDetectionStateRef.current = hasHands;
+                    if (debounceTimeoutRef.current) {
+                        clearTimeout(debounceTimeoutRef.current);
+                    }
+                    debounceTimeoutRef.current = setTimeout(() => {
+                        setIsHandDetected(hasHands);
+                    }, 50); // 50ms stable state required
+                }
 
             } catch (err) {
                 // Silently handle detection errors (frame timing issues)
