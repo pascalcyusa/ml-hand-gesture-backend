@@ -82,11 +82,17 @@
 }
 
 /* User Area */
-.user-area {
-    position: relative;
+.header-right {
     display: flex;
     align-items: center;
     gap: var(--space-md);
+}
+
+.nav-menu-area,
+.user-profile-area {
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .user-profile-btn {
@@ -129,8 +135,6 @@
     padding: 0.5rem;
     border-radius: var(--radius-sm);
     transition: background 0.2s;
-    display: none;
-    /* Hidden by default (desktop) */
 }
 
 .mobile-menu-btn:hover {
@@ -138,10 +142,6 @@
 }
 
 @media (max-width: 768px) {
-    .mobile-menu-btn {
-        display: block;
-    }
-
     .header-inner {
         padding: 0 var(--space-md);
         height: 80px;
