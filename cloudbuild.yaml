@@ -8,6 +8,8 @@ steps:
     args: ['push', 'gcr.io/$PROJECT_ID/hand-pose-backend:$COMMIT_SHA']
 
   # Deploy container image to Cloud Run
+  # Note: Environment variables are preserved automatically by Cloud Run 
+  # across deployments. Do not add --clear-env-vars here.
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
     args:
@@ -17,7 +19,7 @@ steps:
       - '--image'
       - 'gcr.io/$PROJECT_ID/hand-pose-backend:$COMMIT_SHA'
       - '--region'
-      - 'us-central1'
+      - 'us-east1'
       - '--allow-unauthenticated'
 
 images:
