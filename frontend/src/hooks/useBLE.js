@@ -5,7 +5,7 @@
  * Simplifies API to connect/disconnect a single hub.
  */
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 
 export function useBLE() {
     const [device, setDevice] = useState(null); // { id, name, connected, connecting, error }
@@ -119,12 +119,12 @@ export function useBLE() {
         notificationCallbackRef.current = callback;
     }, []);
 
-    return {
+    return useMemo(() => ({
         device,
         isSupported,
         connect,
         write,
         disconnect,
         onNotify,
-    };
+    }), [device, isSupported, connect, write, disconnect, onNotify]);
 }

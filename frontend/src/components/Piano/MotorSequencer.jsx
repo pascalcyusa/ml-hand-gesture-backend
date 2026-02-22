@@ -4,7 +4,7 @@
  * Modified to support initialConfig prop AND onConfigChange callback for parent state tracking.
  */
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 // ... imports unchanged
 import {
     CogIcon,
@@ -48,15 +48,14 @@ export default function MotorSequencer({
     const [motors, setMotors] = useState(() => initialConfig || createDefaultMotorConfig());
     const [collapsed, setCollapsed] = useState(true);
 
-    // Update motors if initialConfig changes
+    // Notify parent on change, but skip the initial mount to avoid
+    // triggering a setConfigData → re-render → effect loop (Maximum update depth exceeded).
+    const isMountedRef = useRef(false);
     useEffect(() => {
-        if (initialConfig) {
-            setMotors(initialConfig);
+        if (!isMountedRef.current) {
+            isMountedRef.current = true;
+            return; // skip initial mount
         }
-    }, [initialConfig]);
-
-    // Notify parent on change
-    useEffect(() => {
         if (onConfigChange) {
             onConfigChange(motors);
         }

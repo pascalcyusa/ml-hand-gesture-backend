@@ -12,6 +12,7 @@ import {
     TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
+import { useSessionStorage } from '../../hooks/useSessionStorage.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
@@ -24,7 +25,7 @@ import PredictionBars from '../Training/PredictionBars.jsx';
 import { generateMotorCommand, encodeCommand } from '../../utils/spikeProtocol.js';
 import './MotorsTab.css';
 
-export default function MotorsTab({ classNames, showToast, hand, prediction, ble }) {
+export default function MotorsTab({ classNames, showToast, hand, prediction, ble, trainer }) {
     const storage = useStorageManager();
     const { user } = useAuth();
 
@@ -32,7 +33,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [showLoadDialog, setShowLoadDialog] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [savedConfigs, setSavedConfigs] = useState([]);
-    const [configData, setConfigData] = useState({}); // { className: config[] }
+    const [configData, setConfigData] = useSessionStorage('motors_draft', {}); // { className: config[] }
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
     const videoReadyRef = useRef(false);
@@ -44,12 +45,12 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         onConfirm: null
     });
 
-    // Store state in a ref to avoid re-renders but have access for saving
-    const currentConfigsRef = useRef({});
-
     const handleConfigChange = useCallback((className, config) => {
-        currentConfigsRef.current[className] = config;
-    }, []);
+        setConfigData(prev => ({
+            ...prev,
+            [className]: config
+        }));
+    }, [setConfigData]);
 
     // Start camera when tab mounts
     const handleVideoReady = useCallback((video, canvas) => {
@@ -65,7 +66,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const handleSave = async () => {
         if (!saveName.trim()) return showToast('Enter a name', 'warning');
 
-        const success = await storage.saveGestureMapping(saveName, currentConfigsRef.current, true);
+        const success = await storage.saveGestureMapping(saveName, configData, true);
         if (success) {
             showToast('Configuration saved!', 'success');
             setShowSaveDialog(false);
@@ -118,8 +119,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         try {
             for (const name of classNames) {
                 // Get config for this class. 
-                // Prioritize ref (current edits), fallback to configData (loaded)
-                const config = currentConfigsRef.current[name] || configData[name];
+                const config = configData[name];
 
                 if (config && Array.isArray(config)) {
                     await showToast(`Executing ${name}...`, 'info', 1000);
@@ -153,7 +153,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         }
     }, [classNames, ble, isPlaying, configData, showToast]);
 
-    if (!classNames || classNames.length === 0) {
+    if (!classNames || classNames.length === 0 || !trainer?.isTrained) {
         return (
             <div className="motors-tab animate-fade-in">
                 <div className="motors-header">
@@ -165,7 +165,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
 
                 <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
                     <CogIcon className="h-16 w-16 text-[var(--fg-muted)] opacity-20" />
-                    <h2 className="text-xl font-bold text-[var(--fg-dim)]">No Model Loaded</h2>
+                    <h2 className="text-xl font-bold text-[var(--fg-dim)]">Model Not Trained</h2>
                     <p className="text-[var(--fg-muted)] max-w-[400px]">
                         Train gesture classes in the Train tab, or load a pre-trained model to configure motor actions.
                     </p>

@@ -4,13 +4,24 @@
  * Ported from: js/classManager.js
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { extractFeatures } from '../utils/mediapipe.js';
+import { useSessionStorage } from './useSessionStorage.js';
 
 let nextClassId = 1;
 
 export function useClassManager() {
-    const [classes, setClasses] = useState([]);
+    const [classes, setClasses] = useSessionStorage('classes_draft', []);
+
+    // Sync nextClassId with the highest loaded ID to prevent collisions
+    useEffect(() => {
+        if (classes.length > 0) {
+            const maxId = Math.max(...classes.map(c => c.id || 0));
+            if (maxId >= nextClassId) {
+                nextClassId = maxId + 1;
+            }
+        }
+    }, [classes]);
 
     // Add a new gesture class
     const addClass = useCallback((name) => {
@@ -96,11 +107,13 @@ export function useClassManager() {
         setClasses(restored);
     }, []);
 
-    // Derived state
-    const classNames = classes.map((c) => c.name);
-    const totalSamples = classes.reduce((sum, c) => sum + c.samples.length, 0);
-    const hasEnoughData =
-        classes.length >= 2 && classes.every((c) => c.samples.length >= 1);
+    // Derived state — memoized to avoid creating new array references on every render,
+    // which would cause usePredictionManager's useEffect to re-fire unnecessarily.
+    const classNames = useMemo(() => classes.map((c) => c.name), [classes]);
+    const totalSamples = useMemo(() => classes.reduce((sum, c) => sum + c.samples.length, 0), [classes]);
+    const hasEnoughData = useMemo(() =>
+        classes.length >= 2 && classes.every((c) => c.samples.length >= 1)
+        , [classes]);
 
     // Get training data (features + labels)
     const getTrainingData = useCallback(() => {
@@ -115,7 +128,7 @@ export function useClassManager() {
         return { features, labels, numClasses: classes.length };
     }, [classes]);
 
-    return {
+    return useMemo(() => ({
         classes,
         classNames,
         totalSamples,
@@ -129,5 +142,5 @@ export function useClassManager() {
         restoreClasses,
         getTrainingData,
         setClasses,
-    };
+    }), [classes, classNames, totalSamples, hasEnoughData, addClass, renameClass, deleteClass, collectSample, deleteSample, reset, restoreClasses, getTrainingData, setClasses]);
 }

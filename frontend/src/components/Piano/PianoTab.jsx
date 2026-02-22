@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAudioEngine } from '../../hooks/useAudioEngine.js';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
+import { useSessionStorage } from '../../hooks/useSessionStorage.js';
 import { useAuth } from '../../hooks/useAuth.js';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
@@ -19,7 +20,7 @@ import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
 import './PianoTab.css';
 
-export default function PianoTab({ classNames, topPrediction, showToast, hand, prediction }) {
+export default function PianoTab({ classNames, topPrediction, showToast, hand, prediction, trainer }) {
     const audio = useAudioEngine();
     const storage = useStorageManager();
     const { user } = useAuth();
@@ -44,15 +45,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         onConfirm: null
     });
 
-    // Refs to note sequencer slots for each class
-    const sequencerSlotsRef = useRef({});
-
-    // Register slots from each NoteSequencer
-    const registerSlots = useCallback((className, getSlots) => {
-        sequencerSlotsRef.current[className] = getSlots;
-    }, []);
-
-    const [sequencerData, setSequencerData] = useState({}); // { className: slots[] }
+    const [sequencerData, setSequencerData] = useSessionStorage('piano_draft', {}); // { className: slots[] }
 
     // Start camera when tab mounts
     const handleVideoReady = useCallback((video, canvas) => {
@@ -99,9 +92,8 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         setIsPlaying(true);
         try {
             for (const name of classNames) {
-                const getSlots = sequencerSlotsRef.current[name];
-                if (getSlots) {
-                    const slots = getSlots();
+                const slots = sequencerData[name];
+                if (slots) {
                     // Optional: Highlight the class currently playing or show a toast
                     await showToast(`Playing ${name}...`, 'info', 1000);
 
@@ -122,6 +114,10 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     // Handle prediction-triggered playback
     const lastPredRef = useRef(null);
     const lastTimeRef = useRef(0);
+    const sequencerDataRef = useRef(sequencerData);
+    useEffect(() => {
+        sequencerDataRef.current = sequencerData;
+    }, [sequencerData]);
 
     useEffect(() => {
         if (!pianoEnabled || !topPrediction || isPlaying) {
@@ -141,25 +137,28 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         lastPredRef.current = topPrediction.className;
         lastTimeRef.current = now;
 
-        // Get slots for this class's sequencer
-        const getSlots = sequencerSlotsRef.current[topPrediction.className];
-        if (getSlots) {
-            handlePlaySequence(getSlots(), null);
+        // Get slots for this class's sequencer from sequencerData ref
+        const slots = sequencerDataRef.current[topPrediction.className];
+        if (slots) {
+            handlePlaySequence(slots, null);
         }
     }, [topPrediction, pianoEnabled, isPlaying, handlePlaySequence]);
 
+    const handleSlotsChange = useCallback((className, newSlots) => {
+        setSequencerData((prev) => ({
+            ...prev,
+            [className]: newSlots
+        }));
+    }, [setSequencerData]);
+
+    // ── Session State Persistence ──
+    // Live save is now handled by handleSlotsChange below
     // ── Persistence Handlers ──
 
     const handleSave = async () => {
         if (!saveName.trim()) return showToast('Enter a name', 'warning');
 
-        // Gather all current slots
-        const currentData = {};
-        classNames.forEach(name => {
-            if (sequencerSlotsRef.current[name]) {
-                currentData[name] = sequencerSlotsRef.current[name]();
-            }
-        });
+        const currentData = sequencerData;
 
         const success = await storage.savePianoSequence(saveName, currentData, true); // Active by default
         if (success) {
@@ -202,7 +201,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         });
     };
 
-    if (!classNames || classNames.length === 0) {
+    if (!classNames || classNames.length === 0 || !trainer?.isTrained) {
         return (
             <div className="piano-tab animate-fade-in">
                 <div className="piano-header">
@@ -213,7 +212,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                 </div>
                 <Card className="flex flex-col items-center justify-center gap-4 py-12 text-center">
                     <MusicalNoteIcon className="h-16 w-16 text-[var(--gold)] opacity-20" />
-                    <h2 className="text-xl font-bold text-[var(--fg-dim)]">No Model Loaded</h2>
+                    <h2 className="text-xl font-bold text-[var(--fg-dim)]">Model Not Trained</h2>
                     <p className="text-[var(--fg-muted)] max-w-[400px]">
                         Train gesture classes in the Train tab, or load a pre-trained model to start playing music.
                     </p>
@@ -345,7 +344,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                             notes={audio.NOTES}
                             durations={audio.DURATIONS}
                             isPlaying={isPlaying}
-                            registerSlots={registerSlots}
+                            onSlotsChange={handleSlotsChange}
                             initialSlots={sequencerData[name]}
                         />
                     ))}
@@ -366,7 +365,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
 }
 
 /**
- * Wrapper to expose NoteSequencer's getSlots via registerSlots callback
+ * Wrapper to expose NoteSequencer's changes
  */
 function NoteSequencerWithRef({
     className: seqClassName,
@@ -376,22 +375,20 @@ function NoteSequencerWithRef({
     notes,
     durations,
     isPlaying,
-    registerSlots,
+    onSlotsChange,
     initialSlots,
 }) {
-    const slotsRef = useRef(NoteSequencer.getDefaultSlots());
-
-    // Re-register whenever slots might change
-    useEffect(() => {
-        registerSlots(seqClassName, () => slotsRef.current);
-    }, [seqClassName, registerSlots]);
+    // Also need to push live edits from NoteSequencer to the parent
+    const handleSlotsChange = useCallback((newSlots) => {
+        onSlotsChange(seqClassName, newSlots);
+    }, [seqClassName, onSlotsChange]);
 
     const handlePlaySequence = useCallback(
         (slots, onSlotPlay) => {
-            slotsRef.current = slots;
+            handleSlotsChange(slots); // Ensure parent has latest
             onPlaySequence(slots, onSlotPlay);
         },
-        [onPlaySequence]
+        [onPlaySequence, handleSlotsChange]
     );
 
     return (
@@ -404,6 +401,7 @@ function NoteSequencerWithRef({
             durations={durations}
             isPlaying={isPlaying}
             initialSlots={initialSlots} // Pass down
+            onChange={handleSlotsChange}
         />
     );
 }

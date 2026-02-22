@@ -4,7 +4,7 @@
  * Modified to support interactive virtual piano for note selection.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import {
     MusicalNoteIcon,
     ChevronRightIcon,
@@ -40,13 +40,29 @@ export default function NoteSequencer({
     notes,      // still passed but used less directly
     durations,
     isPlaying,
+    initialSlots = null,
+    onChange = null,
 }) {
     const [slots, setSlots] = useState(() =>
-        Array.from({ length: DEFAULT_SLOT_COUNT }, (_, i) => createDefaultSlot(i))
+        initialSlots || Array.from({ length: DEFAULT_SLOT_COUNT }, (_, i) => createDefaultSlot(i))
     );
     const [collapsed, setCollapsed] = useState(false);
     const [playingSlot, setPlayingSlot] = useState(-1);
     const [editingSlotIndex, setEditingSlotIndex] = useState(null); // The index of the slot being edited via piano
+
+    // Bubble state changes up to parent so it can persist without requiring a "Play" action.
+    // We skip the very first render to avoid calling onChange with the initial/hydrated value,
+    // which would cause a setSequencerData → re-render → effect loop (Maximum update depth exceeded).
+    const isMountedRef = useRef(false);
+    useEffect(() => {
+        if (!isMountedRef.current) {
+            isMountedRef.current = true;
+            return; // skip initial mount
+        }
+        if (onChange) {
+            onChange(slots);
+        }
+    }, [slots, onChange]);
 
     // Update a slot
     const updateSlot = useCallback((slotId, field, value) => {

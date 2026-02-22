@@ -24,7 +24,8 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
         } else {
             setSavedModels([]);
         }
-    }, [auth, storage]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [auth.user, storage]);
 
     useEffect(() => {
         refreshModels();

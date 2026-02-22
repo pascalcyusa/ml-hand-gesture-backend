@@ -6,7 +6,7 @@
  * Creates a dense neural network: 63 → 64 → 32 → numClasses
  */
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import * as tf from '@tensorflow/tfjs';
 
 export function useModelTrainer() {
@@ -133,22 +133,84 @@ export function useModelTrainer() {
         setIsTrained(false);
         setIsTraining(false);
         setTrainingProgress(null);
+
+        // Clear session storage
+        window.sessionStorage.removeItem('model_isTrained');
+        window.sessionStorage.removeItem('model_numClasses');
+        tf.io.removeModel('localstorage://session_current_model').catch(() => { });
     }, []);
 
     // Get model reference (for save/export)
     const getModel = useCallback(() => modelRef.current, []);
 
     // Set a loaded model
-    const setModel = useCallback((model, numClasses) => {
+    const setModel = useCallback((model, numClasses, isTrainedFlag = true) => {
         if (modelRef.current) {
             modelRef.current.dispose();
         }
         modelRef.current = model;
         numClassesRef.current = numClasses;
-        setIsTrained(true);
+        setIsTrained(isTrainedFlag);
     }, []);
 
-    return {
+    // ── Session State Persistence ──
+    const [isRestoring, setIsRestoring] = useState(true);
+
+    useEffect(() => {
+        // Hydrate from session storage
+        const restoreFromSession = async () => {
+            try {
+                const storedIsTrained = window.sessionStorage.getItem('model_isTrained');
+                const storedNumClasses = window.sessionStorage.getItem('model_numClasses');
+
+                if (storedIsTrained === 'true' && storedNumClasses) {
+                    try {
+                        const loadedModel = await tf.loadLayersModel('localstorage://session_current_model');
+                        modelRef.current = loadedModel;
+                        numClassesRef.current = parseInt(storedNumClasses, 10);
+                        setIsTrained(true);
+                    } catch (e) {
+                        console.warn("Could not load model from local storage:", e);
+                    }
+                }
+            } catch (e) {
+                console.error("Session restore error:", e);
+            } finally {
+                setIsRestoring(false);
+            }
+        };
+
+        restoreFromSession();
+    }, []);
+
+    useEffect(() => {
+        // Save to local storage whenever state changes
+        if (isRestoring) return;
+
+        window.sessionStorage.setItem('model_isTrained', isTrained);
+        window.sessionStorage.setItem('model_numClasses', numClassesRef.current);
+
+        const saveToSession = async () => {
+            if (modelRef.current && isTrained) {
+                try {
+                    await modelRef.current.save('localstorage://session_current_model');
+                } catch (e) {
+                    console.error("Could not save model to session storage:", e);
+                }
+            } else if (!isTrained) {
+                try {
+                    await tf.io.removeModel('localstorage://session_current_model');
+                } catch (e) {
+                    // Ignore errors if model doesn't exist
+                }
+            }
+        };
+
+        // Fire and forget
+        saveToSession();
+    }, [isTrained, isRestoring]);
+
+    return useMemo(() => ({
         isTraining,
         isTrained,
         trainingProgress,
@@ -157,5 +219,5 @@ export function useModelTrainer() {
         resetModel,
         getModel,
         setModel,
-    };
+    }), [isTraining, isTrained, trainingProgress, train, predict, resetModel, getModel, setModel]);
 }

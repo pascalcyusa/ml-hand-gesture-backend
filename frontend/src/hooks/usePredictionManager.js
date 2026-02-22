@@ -7,19 +7,21 @@
  * exposing per-class confidence values.
  */
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 const PREDICTION_INTERVAL = 100; // ms
 const CONFIDENCE_THRESHOLD = 0.75;
+const EMPTY_PREDICTIONS = []; // Stable reference for "no predictions"
 
 export function usePredictionManager({ getFeatures, predict, classNames }) {
     const [isPredicting, setIsPredicting] = useState(false);
-    const [predictions, setPredictions] = useState([]); // { className, confidence }[]
+    const [predictions, setPredictions] = useState(EMPTY_PREDICTIONS); // { className, confidence }[]
     const [topPrediction, setTopPrediction] = useState(null); // { className, confidence } | null
 
     const intervalRef = useRef(null);
     const onPredictionCallbackRef = useRef(null);
     const classNamesRef = useRef(classNames);
+    const prevTopClassRef = useRef(null); // Track the previous top prediction class name
 
     // Keep classNames ref in sync
     useEffect(() => {
@@ -39,8 +41,10 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
         intervalRef.current = setInterval(() => {
             const features = getFeatures();
             if (!features) {
-                setPredictions([]);
-                setTopPrediction(null);
+                // Only update state if it was previously non-empty
+                setPredictions(prev => prev.length === 0 ? prev : EMPTY_PREDICTIONS);
+                setTopPrediction(prev => prev === null ? prev : null);
+                prevTopClassRef.current = null;
                 return;
             }
 
@@ -52,7 +56,19 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
                 confidence: r.confidence,
             }));
 
-            setPredictions(mapped);
+            // Only update predictions if values actually changed
+            setPredictions(prev => {
+                // Quick check: if lengths differ, definitely changed
+                if (prev.length !== mapped.length) return mapped;
+                // Compare confidences (fast enough for small arrays)
+                for (let i = 0; i < mapped.length; i++) {
+                    if (prev[i]?.className !== mapped[i].className ||
+                        Math.abs((prev[i]?.confidence || 0) - mapped[i].confidence) > 0.01) {
+                        return mapped;
+                    }
+                }
+                return prev; // No meaningful change, keep same reference
+            });
 
             // Find top prediction
             const top = mapped.reduce((best, curr) =>
@@ -60,12 +76,19 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
             );
 
             if (top.confidence >= CONFIDENCE_THRESHOLD) {
-                setTopPrediction(top);
-                if (onPredictionCallbackRef.current) {
-                    onPredictionCallbackRef.current(top);
+                // Only update if the top class changed
+                if (prevTopClassRef.current !== top.className) {
+                    prevTopClassRef.current = top.className;
+                    setTopPrediction(top);
+                    if (onPredictionCallbackRef.current) {
+                        onPredictionCallbackRef.current(top);
+                    }
                 }
             } else {
-                setTopPrediction(null);
+                if (prevTopClassRef.current !== null) {
+                    prevTopClassRef.current = null;
+                    setTopPrediction(null);
+                }
             }
         }, PREDICTION_INTERVAL);
     }, [getFeatures, predict]); // Removed classNames dependency as we use ref
@@ -77,8 +100,9 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
             intervalRef.current = null;
         }
         setIsPredicting(false);
-        setPredictions([]);
+        setPredictions(EMPTY_PREDICTIONS);
         setTopPrediction(null);
+        prevTopClassRef.current = null;
     }, []);
 
     // Cleanup on unmount
@@ -90,7 +114,7 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
         };
     }, []);
 
-    return {
+    return useMemo(() => ({
         isPredicting,
         predictions,
         topPrediction,
@@ -98,5 +122,5 @@ export function usePredictionManager({ getFeatures, predict, classNames }) {
         stopPredicting,
         onPrediction,
         confidenceThreshold: CONFIDENCE_THRESHOLD,
-    };
+    }), [isPredicting, predictions, topPrediction, startPredicting, stopPredicting, onPrediction]);
 }

@@ -81,11 +81,12 @@ export default function App() {
           weightData: weightBuffer
         }));
 
-        trainer.setModel(model, result.classes.length);
+        const hasSamples = result.dataset && result.dataset.classes && !result.dataset.classes.every(c => !c.samples || c.samples.length === 0);
+        trainer.setModel(model, result.classes.length, hasSamples);
         cm.restoreClasses(result.classes);
         navigate('/train');
 
-        if (!result.dataset || !result.dataset.classes || result.dataset.classes.every(c => !c.samples || c.samples.length === 0)) {
+        if (!hasSamples) {
           showToast('Model imported (Pre-trained only). No training samples found.', 'warning');
         } else {
           showToast('Model and samples imported successfully!', 'success');
@@ -124,7 +125,8 @@ export default function App() {
           weightData: weightBuffer
         }));
 
-        trainer.setModel(model, modelData.class_names.length);
+        const hasSamples = modelData.dataset && modelData.dataset.classes && !modelData.dataset.classes.every(c => !c.samples || c.samples.length === 0);
+        trainer.setModel(model, modelData.class_names.length, hasSamples);
 
         navigate('/train');
         showToast(`Loaded model: ${modelData.name}`, 'success');
@@ -175,6 +177,7 @@ export default function App() {
               showToast={showToast}
               hand={hand}
               prediction={prediction}
+              trainer={trainer}
             />
           } />
 
@@ -185,6 +188,7 @@ export default function App() {
               hand={hand}
               prediction={prediction}
               ble={ble}
+              trainer={trainer}
             />
           } />
 
