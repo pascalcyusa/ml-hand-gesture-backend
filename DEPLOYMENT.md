@@ -56,14 +56,13 @@ Navigate to the root of your project in the terminal.
     This builds your Docker image in the cloud and stores it in Google Container Registry (GCR).
     ```bash
     cd backend
-    gcloud builds submit --tag gcr.io/YOUR_PROJECT_ID/hand-pose-backend
+    gcloud builds submit --tag gcr.io/ml-hand-gesture/hand-pose-backend
     ```
-    *(Replace `YOUR_PROJECT_ID` with your actual GCP project ID, visible in the console).*
 
 2.  **Deploy to Cloud Run:**
     ```bash
     gcloud run deploy hand-pose-backend \
-      --image gcr.io/YOUR_PROJECT_ID/hand-pose-backend \
+      --image gcr.io/ml-hand-gesture/hand-pose-backend \
       --platform managed \
       --region us-central1 \
       --allow-unauthenticated \
