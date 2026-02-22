@@ -9,15 +9,15 @@ import {
 import './AuthModal.css';
 import { API_BASE_URL } from '../../config';
 
-export default function AuthModal({ onClose, onLogin, onSignup }) {
-    const [view, setView] = useState('login'); // login | signup | forgot | reset
+export default function AuthModal({ onClose, onLogin, onSignup, initialView = 'login', initialToken = '' }) {
+    const [view, setView] = useState(initialView); // login | signup | forgot | reset
     const [message, setMessage] = useState(null);
     const [formData, setFormData] = useState({
         username: '',
         email: '',
         password: '',
         confirmPassword: '',
-        resetToken: '',
+        resetToken: initialToken,
         newPassword: ''
     });
 
