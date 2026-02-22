@@ -141,6 +141,12 @@
     background: var(--bg1);
 }
 
+@media (min-width: 769px) {
+    .nav-menu-area {
+        display: none;
+    }
+}
+
 @media (max-width: 768px) {
     .header-inner {
         padding: 0 var(--space-md);
