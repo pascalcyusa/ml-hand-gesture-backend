@@ -58,5 +58,7 @@ jobs:
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
             cd ~/ml-hand-gesture
+            git fetch origin
+            git checkout deployment-prep-aws-5827474666849277538
             git pull origin deployment-prep-aws-5827474666849277538
             docker compose -f docker-compose.prod.yml up -d --build --force-recreate backend
