@@ -7,6 +7,7 @@ import {
     UserIcon
 } from '@heroicons/react/24/outline';
 import './AuthModal.css';
+import { API_BASE_URL } from '../../config';
 
 export default function AuthModal({ onClose, onLogin, onSignup }) {
     const [view, setView] = useState('login'); // login | signup | forgot | reset
@@ -38,7 +39,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
             onLogin(formData.email, formData.password);
         } else if (view === 'forgot') {
             try {
-                const res = await fetch('http://localhost:8000/auth/forgot-password', {
+                const res = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: formData.email })
@@ -51,7 +52,7 @@ export default function AuthModal({ onClose, onLogin, onSignup }) {
             }
         } else if (view === 'reset') {
             try {
-                const res = await fetch('http://localhost:8000/auth/reset-password', {
+                const res = await fetch(`${API_BASE_URL}/auth/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ token: formData.resetToken, new_password: formData.newPassword })

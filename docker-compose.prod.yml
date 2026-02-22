@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # PROD BACKEND
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hand_pose_backend_prod
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ml_hand_gesture_db
+      - SECRET_KEY=changeme_in_production
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  # PROD DATABASE
+  db:
+    image: postgres:15-alpine
+    container_name: hand_pose_db_prod
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ml_hand_gesture_db
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+volumes:
+  postgres_data_prod:

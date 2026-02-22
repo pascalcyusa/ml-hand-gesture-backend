@@ -13,6 +13,7 @@ import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import { Badge } from '../ui/badge.jsx';
 import './CommunityTab.css';
+import { API_BASE_URL } from '../../config';
 
 export default function CommunityTab({ auth, onImportModel, onImportPiano, onImportGesture, showToast }) {
     const [models, setModels] = useState([]);
@@ -44,9 +45,9 @@ export default function CommunityTab({ auth, onImportModel, onImportPiano, onImp
             const queryString = params.toString();
 
             const [modelsRes, pianoRes, gesturesRes] = await Promise.all([
-                fetch(`/api/models/community?${queryString}`),
-                fetch(`/api/piano/community?${queryString}`),
-                fetch(`/api/gestures/community?${queryString}`)
+                fetch(`${API_BASE_URL}/models/community?${queryString}`),
+                fetch(`${API_BASE_URL}/piano/community?${queryString}`),
+                fetch(`${API_BASE_URL}/gestures/community?${queryString}`)
             ]);
 
             if (modelsRes.ok) setModels(await modelsRes.json());
@@ -68,7 +69,7 @@ export default function CommunityTab({ auth, onImportModel, onImportPiano, onImp
         setImporting(id);
         try {
             if (type === 'model') {
-                const res = await fetch(`/api/models/${id}`);
+                const res = await fetch(`${API_BASE_URL}/models/${id}`);
                 if (!res.ok) throw new Error('Failed to fetch model');
                 const data = await res.json();
                 if (onImportModel) await onImportModel(data);
