@@ -18,26 +18,37 @@ Endpoints:
 """
 
 import os
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 from sqlalchemy.orm import Session
 from database import engine, get_db
 import models
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import List, Optional, Any
 from auth import (
     hash_password,
     verify_password,
+    validate_password,
     create_access_token,
     require_user,
     get_current_user,
 )
 from email_utils import send_reset_email, send_password_changed_email, send_username_changed_email
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
 
+# ── Rate Limiter ───────────────────────────────────────
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="Hand Pose Trainer API")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — allow frontend dev server and production domains
 origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177").split(",")
@@ -52,18 +63,31 @@ app.add_middleware(
 )
 
 
+# ── Security Headers Middleware ────────────────────────
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response: Response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+
 # ══════════════════════════════════════════════════════════
 # Pydantic Schemas
 # ══════════════════════════════════════════════════════════
 
 class SignupRequest(BaseModel):
-    username: str
-    email: str
-    password: str
+    username: str = Field(..., min_length=1, max_length=50)
+    email: str = Field(..., min_length=3, max_length=255)
+    password: str = Field(..., min_length=8, max_length=128)
 
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(..., max_length=255)
+    password: str = Field(..., max_length=128)
 
 class TokenResponse(BaseModel):
     access_token: str
@@ -79,9 +103,9 @@ class UserResponse(BaseModel):
         from_attributes = True
 
 class ModelSaveRequest(BaseModel):
-    name: str
-    description: Optional[str] = None
-    class_names: list
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    class_names: list = Field(..., max_length=50)
     model_data: dict   # { modelTopology, weightSpecs, weightData }
     dataset: Optional[dict] = None # { features: [], labels: [] }
     is_public: bool = False
@@ -111,12 +135,12 @@ class ModelDetail(ModelListItem):
     }
 
 class GestureMappingSchema(BaseModel):
-    name: str
+    name: str = Field(..., min_length=1, max_length=100)
     mapping_data: dict
     is_active: bool = False
 
 class MusicSequenceSchema(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=100)
     sequence_data: Optional[dict] = None
     is_active: bool = False
 
@@ -143,7 +167,14 @@ def read_health():
 # ══════════════════════════════════════════════════════════
 
 @app.post("/auth/signup", response_model=TokenResponse)
-def signup(req: SignupRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def signup(request: Request, req: SignupRequest, db: Session = Depends(get_db)):
+    # Enforce password strength
+    try:
+        validate_password(req.password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
     # Check existing
     existing = db.query(models.User).filter(
         (models.User.email == req.email) | (models.User.username == req.username)
@@ -168,7 +199,8 @@ def signup(req: SignupRequest, db: Session = Depends(get_db)):
 
 
 @app.post("/auth/login", response_model=TokenResponse)
-def login(req: LoginRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def login(request: Request, req: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user or not user.hashed_password or not verify_password(req.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -186,11 +218,11 @@ def get_me(user: models.User = Depends(require_user)):
 
 
 class UpdateProfileRequest(BaseModel):
-    username: Optional[str] = None
+    username: Optional[str] = Field(None, max_length=50)
 
 class UpdatePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str
+    current_password: str = Field(..., max_length=128)
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 
 @app.patch("/auth/profile", response_model=UserResponse)
@@ -228,8 +260,11 @@ async def update_password(req: UpdatePasswordRequest, user: models.User = Depend
     if not verify_password(req.current_password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Current password is incorrect")
 
-    if len(req.new_password) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    # Enforce password strength
+    try:
+        validate_password(req.new_password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     user.hashed_password = hash_password(req.new_password)
     db.commit()
@@ -244,14 +279,15 @@ async def update_password(req: UpdatePasswordRequest, user: models.User = Depend
 
 
 class ForgotPasswordRequest(BaseModel):
-    email: str
+    email: str = Field(..., max_length=255)
 
 class ResetPasswordRequest(BaseModel):
-    token: str
-    new_password: str
+    token: str = Field(..., max_length=255)
+    new_password: str = Field(..., min_length=8, max_length=128)
 
 @app.post("/auth/forgot-password")
-async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+async def forgot_password(request: Request, req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user:
         # Don't reveal if user exists
@@ -279,7 +315,8 @@ async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_
 
 
 @app.post("/auth/reset-password")
-def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/minute")
+def reset_password(request: Request, req: ResetPasswordRequest, db: Session = Depends(get_db)):
     from datetime import datetime
     
     reset_token = db.query(models.PasswordResetToken).filter(
@@ -295,6 +332,12 @@ def reset_password(req: ResetPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == reset_token.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+
+    # Enforce password strength
+    try:
+        validate_password(req.new_password)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
     # Update password
     user.hashed_password = hash_password(req.new_password)
@@ -406,21 +449,19 @@ def list_community_models(
 
 
 @app.get("/models/{model_id}", response_model=ModelDetail)
-def get_model(model_id: int, db: Session = Depends(get_db)):
+def get_model(
+    model_id: int,
+    db: Session = Depends(get_db),
+    current_user: Optional[models.User] = Depends(get_current_user),
+):
     m = db.query(models.SavedModel).filter(models.SavedModel.id == model_id).first()
     if not m:
         raise HTTPException(status_code=404, detail="Model not found")
-    
-    # If explicit permission check needed (if private and not owner)
-    # But for now, we only block private if it's strictly enforced. 
-    # Let's say if private, only owner.
-    # We don't have user context here unless we require it... 
-    # But frontend might fetch public models anonymously.
-    # So we'll check is_public.
-    
+
+    # Private models are only accessible by their owner
     if not m.is_public:
-         # Ideally check user, but since this route is open...
-         pass 
+        if not current_user or current_user.id != m.user_id:
+            raise HTTPException(status_code=403, detail="Access denied: this model is private")
 
     return ModelDetail(
         id=m.id,

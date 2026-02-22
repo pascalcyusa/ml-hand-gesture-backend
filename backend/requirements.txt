@@ -10,3 +10,4 @@ python-multipart==0.0.9
 bcrypt==4.0.1
 fastapi-mail>=1.4.1
 python-dotenv
+slowapi>=0.1.9
