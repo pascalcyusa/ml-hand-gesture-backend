@@ -3,7 +3,7 @@ name: Deploy to AWS
 on:
   push:
     branches:
-      - main  # Change this to your deploy branch
+      - deployment-prep-aws-5827474666849277538
 
 jobs:
   # ─────────────────────────────────────────────
