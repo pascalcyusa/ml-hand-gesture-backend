@@ -13,8 +13,8 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     profile = relationship("Profile", back_populates="user", uselist=False)
-    gesture_mappings = relationship("GestureMapping", back_populates="user")
-    music_sequences = relationship("MusicSequence", back_populates="user")
+    motor_configs = relationship("GestureMapping", back_populates="user")
+    piano_sequences = relationship("MusicSequence", back_populates="user")
     high_scores = relationship("HighScore", back_populates="user")
     logs = relationship("Log", back_populates="user")
     saved_models = relationship("SavedModel", back_populates="user")
@@ -34,7 +34,7 @@ class Profile(Base):
 
 
 class GestureMapping(Base):
-    __tablename__ = "gesture_mappings"
+    __tablename__ = "motor_configs"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -44,11 +44,11 @@ class GestureMapping(Base):
     is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="gesture_mappings")
+    user = relationship("User", back_populates="motor_configs")
 
 
 class MusicSequence(Base):
-    __tablename__ = "music_sequences"
+    __tablename__ = "piano_sequences"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
@@ -58,7 +58,7 @@ class MusicSequence(Base):
     is_public = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    user = relationship("User", back_populates="music_sequences")
+    user = relationship("User", back_populates="piano_sequences")
 
 
 class HighScore(Base):
