@@ -74,6 +74,16 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
         }
     };
 
+    const handlePasswordUpdate = async (currentPassword, newPassword) => {
+        try {
+            await updatePassword(currentPassword, newPassword);
+            showToast("Password updated successfully", "success");
+        } catch (err) {
+            showToast("Failed to update password", "error");
+            throw err;
+        }
+    };
+
     const handleDeleteModel = (id, name) => {
         setDeleteConfirm({
             isOpen: true,

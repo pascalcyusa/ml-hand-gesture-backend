@@ -33,7 +33,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     const [showLoadDialog, setShowLoadDialog] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [savedSequences, setSavedSequences] = useState([]);
-    const [isCameraStarted, setIsCameraStarted] = useState(false);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
 
     const videoReadyRef = useRef(false);
 
@@ -121,23 +121,31 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
 
     // Handle prediction-triggered playback
     const lastPredRef = useRef(null);
+    const lastTimeRef = useRef(0);
+
     useEffect(() => {
-        if (!pianoEnabled || !topPrediction || isPlaying) return;
-        if (topPrediction.className === lastPredRef.current) return;
+        if (!pianoEnabled || !topPrediction || isPlaying) {
+            if (!topPrediction) {
+                // Reset last prediction when hand is hidden/no gesture
+                lastPredRef.current = null;
+            }
+            return;
+        }
+
+        const now = Date.now();
+        // Prevent re-triggering the same class within 1 second of it starting
+        if (topPrediction.className === lastPredRef.current && now - lastTimeRef.current < 1000) {
+            return;
+        }
 
         lastPredRef.current = topPrediction.className;
+        lastTimeRef.current = now;
 
         // Get slots for this class's sequencer
         const getSlots = sequencerSlotsRef.current[topPrediction.className];
         if (getSlots) {
-            const slots = getSlots();
-            handlePlaySequence(slots, null);
+            handlePlaySequence(getSlots(), null);
         }
-
-        const timer = setTimeout(() => {
-            lastPredRef.current = null;
-        }, 1000);
-        return () => clearTimeout(timer);
     }, [topPrediction, pianoEnabled, isPlaying, handlePlaySequence]);
 
     // ── Persistence Handlers ──
@@ -271,6 +279,8 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                     isDetecting={hand.isHandDetected || prediction.isPredicting}
                     isStarted={isCameraStarted}
                     onStartCamera={handleStartCamera}
+                    showVideo={hand.showVideo}
+                    onToggleVideo={hand.setShowVideo}
                 />
                 <PredictionBars
                     predictions={prediction.predictions}
