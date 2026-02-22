@@ -32,6 +32,7 @@ from auth import (
     require_user,
     get_current_user,
 )
+from email_utils import send_reset_email
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -40,6 +41,7 @@ app = FastAPI(title="Hand Pose Trainer API")
 
 # CORS — allow frontend dev server and production domains
 origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://localhost:3000,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177").split(",")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
 app.add_middleware(
     CORSMiddleware,
@@ -192,7 +194,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 @app.post("/auth/forgot-password")
-def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
+async def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == req.email).first()
     if not user:
         # Don't reveal if user exists
@@ -213,12 +215,8 @@ def forgot_password(req: ForgotPasswordRequest, db: Session = Depends(get_db)):
     db.add(reset_token)
     db.commit()
 
-    # In a real app, send email here.
-    # For this demo/local setup, we'll log it to console so the user can see it.
-    print(f"\n==========================================")
-    print(f"PASSWORD RESET LINK (Simulated):")
-    print(f"Token: {token}")
-    print(f"==========================================\n")
+    reset_link = f"{FRONTEND_URL}/reset-password?token={token}"
+    await send_reset_email(req.email, reset_link)
 
     return {"detail": "If that email exists, a reset link has been sent."}
 
