@@ -22,8 +22,8 @@ services:
       - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@db:5432/ml_hand_gesture_db
-      # Set this to your CloudFront URL in the .env file or environment
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      # Set this to your Frontend CloudFront URL
+      - ALLOWED_ORIGINS=https://d27yp1mh60ro4l.cloudfront.net
     depends_on:
       - db
     restart: always
