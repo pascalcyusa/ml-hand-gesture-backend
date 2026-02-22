@@ -7,6 +7,8 @@ and a FastAPI dependency to extract the current user from a Bearer token.
 
 import hashlib
 import os
+import re
+import sys
 from datetime import datetime, timedelta
 from typing import Optional
 
@@ -23,6 +25,41 @@ import models
 SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-change-in-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_EXPIRE_MINUTES", "1440"))  # 24h default
+
+# ── Secure Secret Management ───────────────────────────
+_DEFAULT_SECRET = "dev-secret-change-in-production"
+_environment = os.getenv("ENVIRONMENT", os.getenv("ENV", "development")).lower()
+
+if SECRET_KEY == _DEFAULT_SECRET:
+    if _environment == "production":
+        raise RuntimeError(
+            "FATAL: JWT_SECRET_KEY is set to the default value in a production environment. "
+            "Set a strong, unique JWT_SECRET_KEY environment variable before starting."
+        )
+    else:
+        print(
+            "⚠️  WARNING: JWT_SECRET_KEY is using the default dev secret. "
+            "Set a strong JWT_SECRET_KEY before deploying to production.",
+            file=sys.stderr,
+        )
+
+# ── Password strength validation ───────────────────────
+def validate_password(password: str) -> None:
+    """
+    Enforce password strength requirements.
+    Raises ValueError with a descriptive message if the password is too weak.
+    """
+    errors: list[str] = []
+    if len(password) < 8:
+        errors.append("at least 8 characters")
+    if not re.search(r"[A-Z]", password):
+        errors.append("at least one uppercase letter")
+    if not re.search(r"[a-z]", password):
+        errors.append("at least one lowercase letter")
+    if not re.search(r"\d", password):
+        errors.append("at least one digit")
+    if errors:
+        raise ValueError(f"Password must contain: {', '.join(errors)}")
 
 # ── Password hashing ───────────────────────────────────
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
