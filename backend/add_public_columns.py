@@ -42,18 +42,18 @@ def run_migration():
         # Check if column exists or just try adding it (Postgres will error if exists, catch it)
         
         try:
-            print("Adding is_public to music_sequences...")
-            connection.execute(text("ALTER TABLE music_sequences ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;"))
+            print("Adding is_public to piano_sequences...")
+            connection.execute(text("ALTER TABLE piano_sequences ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;"))
             print("Success.")
         except Exception as e:
-            print(f"Error updating music_sequences: {e}")
+            print(f"Error updating piano_sequences: {e}")
 
         try:
-            print("Adding is_public to gesture_mappings...")
-            connection.execute(text("ALTER TABLE gesture_mappings ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;"))
+            print("Adding is_public to motor_configs...")
+            connection.execute(text("ALTER TABLE motor_configs ADD COLUMN IF NOT EXISTS is_public BOOLEAN DEFAULT FALSE;"))
             print("Success.")
         except Exception as e:
-            print(f"Error updating gesture_mappings: {e}")
+            print(f"Error updating motor_configs: {e}")
             
         # Commit if needed, though DDL often auto-commits or requires it
         connection.commit()
