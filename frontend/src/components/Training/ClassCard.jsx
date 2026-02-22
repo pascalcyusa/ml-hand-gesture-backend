@@ -46,7 +46,7 @@ export default function ClassCard({
                     </button>
 
                     {/* 2. Title with Ellipsis */}
-                    <h4 className="class-card-name" title={name}>{name}</h4>
+                    <h3 className="class-card-name" title={name}>{name}</h3>
                 </div>
 
                 <div className="class-card-actions">

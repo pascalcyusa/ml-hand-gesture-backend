@@ -76,10 +76,10 @@ export default function TrainingControls({
 
                 {/* Header */}
                 <div className="panel-header">
-                    <div className="panel-title">
+                    <h2 className="panel-title">
                         <AdjustmentsHorizontalIcon className="h-5 w-5 text-[var(--fg-muted)]" />
                         <span>Control Center</span>
-                    </div>
+                    </h2>
                     <div className={`status-indicator ${isTrained ? 'ready' : ''}`} title={isTrained ? "Model Ready" : "Untrained"} />
                 </div>
 

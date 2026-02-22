@@ -29,7 +29,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--space-lg);
-    color: var(--fg-muted);
+    color: var(--fg-dim);
     font-size: 0.85rem;
     border: 1px dashed var(--bg3);
     border-radius: var(--radius-md);

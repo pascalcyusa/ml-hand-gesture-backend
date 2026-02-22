@@ -63,7 +63,7 @@ export default function Header({ user, onSignIn, onLogout }) {
 
                     {/* Logo Area */}
                     <Link to="/" className="logo-area">
-                        <img src="/img/logo.png" alt="ML Hand Gesture" className="logo-img" />
+                        <img src="/img/logo.png" alt="ML Hand Gesture" className="logo-img" width="100" height="100" />
                         <h1 className="app-title hidden sm:block">ML Hand Gesture</h1>
                     </Link>
                 </div>

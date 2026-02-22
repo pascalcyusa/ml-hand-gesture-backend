@@ -193,7 +193,7 @@
     border: none;
     border-radius: 9999px;
     /* Full Pill Shape */
-    color: var(--fg-dim);
+    color: var(--fg);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
