@@ -48,19 +48,8 @@ export default function Header({ user, onSignIn, onLogout }) {
     return (
         <header className="app-header">
             <div className="header-inner">
-                {/* Left: Hamburger + Logo */}
+                {/* Left: Logo */}
                 <div className="flex items-center gap-4">
-                    {/* Hamburger Button (Mobile Only) */}
-                    <button
-                        className="mobile-menu-btn md:hidden"
-                        onClick={toggleMenu}
-                        aria-label="Toggle menu"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                    </button>
-
                     {/* Logo Area */}
                     <Link to="/" className="logo-area">
                         <img src="/img/logo.png" alt="ML Hand Gesture" className="logo-img" />
@@ -84,11 +73,23 @@ export default function Header({ user, onSignIn, onLogout }) {
                     ))}
                 </nav>
 
-                {/* User Area */}
+                {/* Right: Hamburger (mobile) + User Area */}
                 <div className="user-area" ref={menuRef}>
+                    {/* Hamburger Button (Mobile Only) */}
                     <button
-                        className="user-profile-btn"
-                        onClick={() => setIsMenuOpen(!isMenuOpen)} // Use explicit toggle for user menu if needed, or share logic
+                        className="mobile-menu-btn md:hidden"
+                        onClick={toggleMenu}
+                        aria-label="Toggle menu"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                        </svg>
+                    </button>
+
+                    {/* User Profile Button (Desktop Only) */}
+                    <button
+                        className="user-profile-btn hidden md:flex"
+                        onClick={toggleMenu}
                         title={user ? "User Menu" : "Menu"}
                     >
                         {user ? (
