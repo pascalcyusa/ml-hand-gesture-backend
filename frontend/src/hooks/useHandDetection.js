@@ -15,6 +15,7 @@ export function useHandDetection() {
     const [isRunning, setIsRunning] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [isHandDetected, setIsHandDetected] = useState(false); // Triggers UI updates
+    const [showVideo, setShowVideo] = useState(false); // Shared video visibility (defaults off)
     const [error, setError] = useState(null);
 
     // Store landmarks in a ref to avoid re-rendering on every frame (~60fps).
@@ -51,10 +52,17 @@ export function useHandDetection() {
         }
 
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({
-                video: { width: 640, height: 480, facingMode: 'user' },
-            });
-            streamRef.current = stream;
+            let stream = streamRef.current;
+            if (!stream) {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: 640, height: 480, facingMode: 'user' },
+                });
+                streamRef.current = stream;
+            } else {
+                if (animFrameRef.current) {
+                    cancelAnimationFrame(animFrameRef.current);
+                }
+            }
             videoElement.srcObject = stream;
             await videoElement.play();
 
@@ -155,6 +163,8 @@ export function useHandDetection() {
         isModelLoaded,
         isLoading,
         isRunning,
+        showVideo,
+        setShowVideo,
         isHandDetected,
         get currentLandmarks() { return currentLandmarksRef.current; },
         start,
@@ -162,5 +172,5 @@ export function useHandDetection() {
         getFeatures,
         loadModel,
         error,
-    }), [isModelLoaded, isLoading, isRunning, isHandDetected, start, stop, getFeatures, loadModel, error]);
+    }), [isModelLoaded, isLoading, isRunning, showVideo, isHandDetected, start, stop, getFeatures, loadModel, error]);
 }

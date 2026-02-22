@@ -34,7 +34,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [savedConfigs, setSavedConfigs] = useState([]);
     const [configData, setConfigData] = useState({}); // { className: config[] }
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isCameraStarted, setIsCameraStarted] = useState(false);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
     const videoReadyRef = useRef(false);
 
     const [deleteConfirm, setDeleteConfirm] = useState({
@@ -235,6 +235,8 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     isDetecting={hand.isHandDetected || prediction.isPredicting}
                     isStarted={isCameraStarted}
                     onStartCamera={handleStartCamera}
+                    showVideo={hand.showVideo}
+                    onToggleVideo={hand.setShowVideo}
                 />
                 <PredictionBars
                     predictions={prediction.predictions}

@@ -2,10 +2,9 @@ import { useRef, useEffect, useState } from 'react';
 import { VideoCameraIcon } from '@heroicons/react/24/outline';
 import './WebcamPanel.css';
 
-export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera }) {
+export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera, showVideo, onToggleVideo }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
-    const [videoBlurred, setVideoBlurred] = useState(false);
 
     useEffect(() => {
         if (isStarted && videoRef.current && canvasRef.current && onVideoReady) {
@@ -20,12 +19,12 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
                     <span className="webcam-dot" data-active={isDetecting} />
                     Camera
                 </h3>
-                {isStarted && (
+                {isStarted && onToggleVideo && (
                     <label className="toggle-switch">
                         <input
                             type="checkbox"
-                            checked={!videoBlurred}
-                            onChange={(e) => setVideoBlurred(!e.target.checked)}
+                            checked={showVideo}
+                            onChange={(e) => onToggleVideo(e.target.checked)}
                         />
                         <span className="toggle-slider" />
                         <span className="toggle-label">Show Video</span>
@@ -38,7 +37,7 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
                     <>
                         <video
                             ref={videoRef}
-                            className={`webcam-video ${videoBlurred ? 'blurred' : ''}`}
+                            className={`webcam-video ${!showVideo ? 'blurred' : ''}`}
                             playsInline
                             muted
                             autoPlay

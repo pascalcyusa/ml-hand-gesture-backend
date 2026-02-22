@@ -13,7 +13,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [savedModels, setSavedModels] = useState([]);
-    const [isCameraStarted, setIsCameraStarted] = useState(false);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
     const videoReadyRef = useRef(false);
 
     // ── Fetch saved models on mount ──
@@ -189,6 +189,8 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                         isDetecting={hand.isRunning}
                         isStarted={isCameraStarted}
                         onStartCamera={handleStartCamera}
+                        showVideo={hand.showVideo}
+                        onToggleVideo={hand.setShowVideo}
                     />
                     <TrainingControls
                         onAddClass={cm.addClass}
