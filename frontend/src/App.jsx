@@ -18,6 +18,7 @@ import CommunityTab from './components/Community/CommunityTab.jsx';
 import AboutTab from './components/About/AboutTab.jsx';
 import Dashboard from './components/Dashboard/Dashboard.jsx';
 import AuthModal from './components/common/AuthModal.jsx';
+import ResetPasswordHandler from './components/common/ResetPasswordHandler.jsx';
 import Toast from './components/common/Toast.jsx';
 
 import { useAuth } from './hooks/useAuth.js';
@@ -34,10 +35,18 @@ export default function App() {
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
   const [showAuth, setShowAuth] = useState(false);
+  const [authView, setAuthView] = useState('login');
+  const [resetToken, setResetToken] = useState('');
 
   const showToast = useCallback((message, type = 'info', duration = 3000) => {
     setToast({ message, type });
     setTimeout(() => setToast(null), duration);
+  }, []);
+
+  const handleOpenReset = useCallback((token) => {
+    setAuthView('reset');
+    setResetToken(token);
+    setShowAuth(true);
   }, []);
 
   // ── Auth ──
@@ -212,6 +221,10 @@ export default function App() {
             />
           } />
 
+          <Route path="/reset-password" element={
+            <ResetPasswordHandler onOpenReset={handleOpenReset} />
+          } />
+
           {/* Fallback for unknown routes */}
           <Route path="*" element={<Navigate to="/train" replace />} />
         </Routes>
@@ -221,7 +234,13 @@ export default function App() {
 
       {showAuth && (
         <AuthModal
-          onClose={() => setShowAuth(false)}
+          initialView={authView}
+          initialToken={resetToken}
+          onClose={() => {
+            setShowAuth(false);
+            setAuthView('login');
+            setResetToken('');
+          }}
           onLogin={async (email, pw) => {
             try {
               const user = await auth.login(email, pw);
