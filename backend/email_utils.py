@@ -76,3 +76,76 @@ async def send_reset_email(to_email: str, reset_link: str):
         print(f"Subject: {subject}")
         print(f"Link: {reset_link}")
         print(f"==========================================\n")
+
+
+async def send_password_changed_email(to_email: str, username: str):
+    """Notifies the user that their password was changed."""
+    subject = "Your Password Was Changed"
+
+    html = f"""
+    <html>
+        <body>
+            <p>Hello {username},</p>
+            <p>Your password for your ML Hand Gesture account was just changed.</p>
+            <p>If you made this change, no further action is needed.</p>
+            <p>If you did <strong>not</strong> make this change, please reset your password immediately or contact support.</p>
+            <br>
+            <p>— ML Hand Gesture Team</p>
+        </body>
+    </html>
+    """
+
+    if USE_EMAIL_SERVICE and conf:
+        message = MessageSchema(
+            subject=subject,
+            recipients=[to_email],
+            body=html,
+            subtype=MessageType.html
+        )
+        fm = FastMail(conf)
+        await fm.send_message(message)
+        print(f"Password changed email sent to {to_email}")
+    else:
+        print(f"\n==========================================")
+        print(f"EMAIL SERVICE NOT CONFIGURED (Simulated):")
+        print(f"To: {to_email}")
+        print(f"Subject: {subject}")
+        print(f"==========================================\n")
+
+
+async def send_username_changed_email(to_email: str, old_username: str, new_username: str):
+    """Notifies the user that their username was changed."""
+    subject = "Your Username Was Changed"
+
+    html = f"""
+    <html>
+        <body>
+            <p>Hello,</p>
+            <p>Your username for your ML Hand Gesture account was just changed.</p>
+            <p><strong>Old username:</strong> {old_username}</p>
+            <p><strong>New username:</strong> {new_username}</p>
+            <p>If you made this change, no further action is needed.</p>
+            <p>If you did <strong>not</strong> make this change, please secure your account immediately.</p>
+            <br>
+            <p>— ML Hand Gesture Team</p>
+        </body>
+    </html>
+    """
+
+    if USE_EMAIL_SERVICE and conf:
+        message = MessageSchema(
+            subject=subject,
+            recipients=[to_email],
+            body=html,
+            subtype=MessageType.html
+        )
+        fm = FastMail(conf)
+        await fm.send_message(message)
+        print(f"Username changed email sent to {to_email}")
+    else:
+        print(f"\n==========================================")
+        print(f"EMAIL SERVICE NOT CONFIGURED (Simulated):")
+        print(f"To: {to_email}")
+        print(f"Subject: {subject}")
+        print(f"Old: {old_username} → New: {new_username}")
+        print(f"==========================================\n")

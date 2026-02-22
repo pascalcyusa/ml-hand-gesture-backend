@@ -32,7 +32,7 @@ from auth import (
     require_user,
     get_current_user,
 )
-from email_utils import send_reset_email
+from email_utils import send_reset_email, send_password_changed_email, send_username_changed_email
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -183,7 +183,64 @@ def login(req: LoginRequest, db: Session = Depends(get_db)):
 @app.get("/auth/me", response_model=UserResponse)
 def get_me(user: models.User = Depends(require_user)):
     return user
+
+
+class UpdateProfileRequest(BaseModel):
+    username: Optional[str] = None
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@app.patch("/auth/profile", response_model=UserResponse)
+async def update_profile(req: UpdateProfileRequest, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    old_username = user.username
+    if req.username is not None:
+        trimmed = req.username.strip()
+        if not trimmed:
+            raise HTTPException(status_code=400, detail="Username cannot be empty")
+        # Check uniqueness
+        existing = db.query(models.User).filter(
+            models.User.username == trimmed,
+            models.User.id != user.id,
+        ).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        user.username = trimmed
+
+    db.commit()
+    db.refresh(user)
+
+    # Send notification email if username actually changed
+    if req.username is not None and old_username != user.username:
+        try:
+            await send_username_changed_email(user.email, old_username, user.username)
+        except Exception as e:
+            print(f"Failed to send username change email: {e}")
+
     return user
+
+
+@app.post("/auth/password")
+async def update_password(req: UpdatePasswordRequest, user: models.User = Depends(require_user), db: Session = Depends(get_db)):
+    # Verify current password
+    if not verify_password(req.current_password, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+
+    if len(req.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+
+    user.hashed_password = hash_password(req.new_password)
+    db.commit()
+
+    # Send notification email
+    try:
+        await send_password_changed_email(user.email, user.username)
+    except Exception as e:
+        print(f"Failed to send password change email: {e}")
+
+    return {"detail": "Password updated successfully"}
 
 
 class ForgotPasswordRequest(BaseModel):
