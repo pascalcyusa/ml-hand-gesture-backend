@@ -27,8 +27,8 @@ export default function SecuritySettings({ onUpdatePassword }) {
             return;
         }
 
-        if (formData.newPassword.length < 6) {
-            setError("Password must be at least 6 characters.");
+        if (formData.newPassword.length < 4) {
+            setError("Password must be at least 4 characters.");
             return;
         }
 
