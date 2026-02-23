@@ -90,7 +90,6 @@
 }
 
 .user-profile-btn {
-    display: flex;
     align-items: center;
     gap: 0.5rem;
     background: transparent;
@@ -130,7 +129,7 @@
     border-radius: var(--radius-sm);
     transition: background 0.2s;
     display: none;
-    /* Hidden by default (desktop) */
+    /* Hidden by default, shown on mobile via media query and Tailwind md:hidden */
 }
 
 .mobile-menu-btn:hover {
