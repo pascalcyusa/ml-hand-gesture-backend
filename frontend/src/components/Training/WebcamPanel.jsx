@@ -15,10 +15,10 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
     return (
         <div className="webcam-panel card">
             <div className="webcam-header">
-                <h3 className="webcam-title">
+                <h2 className="webcam-title">
                     <span className="webcam-dot" data-active={isDetecting} />
                     Camera
-                </h3>
+                </h2>
                 {isStarted && onToggleVideo && (
                     <label className="toggle-switch">
                         <input

@@ -3,6 +3,9 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  build: {
+    sourcemap: true,
+  },
   server: {
     // Proxy is no longer needed as we use VITE_API_URL for direct backend calls
     // Ensure your backend has CORS configured to allow the frontend origin

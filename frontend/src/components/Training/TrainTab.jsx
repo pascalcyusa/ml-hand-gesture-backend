@@ -212,9 +212,9 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                 {/* Right Panel */}
                 <div className="train-right">
                     <div className="train-classes">
-                        <h3 className="train-section-title">
+                        <h2 className="train-section-title">
                             Gesture Classes
-                        </h3>
+                        </h2>
                         <div className="train-classes-list">
                             {cm.classes.map((cls, index) => (
                                 <ClassCard
