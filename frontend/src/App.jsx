@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import './components/Layout/Header.css';
@@ -11,12 +11,12 @@ import Header from './components/Layout/Header.jsx';
 import Footer from './components/Layout/Footer.jsx';
 
 import TrainTab from './components/Training/TrainTab.jsx';
-import PianoTab from './components/Piano/PianoTab.jsx';
-import MotorsTab from './components/Motors/MotorsTab.jsx';
-import DevicesTab from './components/Devices/DevicesTab.jsx';
-import CommunityTab from './components/Community/CommunityTab.jsx';
-import AboutTab from './components/About/AboutTab.jsx';
-import Dashboard from './components/Dashboard/Dashboard.jsx';
+const PianoTab = lazy(() => import('./components/Piano/PianoTab.jsx'));
+const MotorsTab = lazy(() => import('./components/Motors/MotorsTab.jsx'));
+const DevicesTab = lazy(() => import('./components/Devices/DevicesTab.jsx'));
+const CommunityTab = lazy(() => import('./components/Community/CommunityTab.jsx'));
+const AboutTab = lazy(() => import('./components/About/AboutTab.jsx'));
+const Dashboard = lazy(() => import('./components/Dashboard/Dashboard.jsx'));
 import AuthModal from './components/common/AuthModal.jsx';
 import ResetPasswordHandler from './components/common/ResetPasswordHandler.jsx';
 import Toast from './components/common/Toast.jsx';
@@ -155,83 +155,85 @@ export default function App() {
       />
 
       <main className="app-content flex-grow">
-        <Routes>
-          <Route path="/" element={<Navigate to="/train" replace />} />
+        <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
+          <Routes>
+            <Route path="/" element={<Navigate to="/train" replace />} />
 
-          <Route path="/train" element={
-            <TrainTab
-              showToast={showToast}
-              hand={hand}
-              cm={cm}
-              trainer={trainer}
-              prediction={prediction}
-              storage={storage}
-              auth={auth}
-            />
-          } />
+            <Route path="/train" element={
+              <TrainTab
+                showToast={showToast}
+                hand={hand}
+                cm={cm}
+                trainer={trainer}
+                prediction={prediction}
+                storage={storage}
+                auth={auth}
+              />
+            } />
 
-          <Route path="/piano" element={
-            <PianoTab
-              classNames={cm.classNames}
-              topPrediction={prediction.topPrediction}
-              showToast={showToast}
-              hand={hand}
-              prediction={prediction}
-              trainer={trainer}
-            />
-          } />
+            <Route path="/piano" element={
+              <PianoTab
+                classNames={cm.classNames}
+                topPrediction={prediction.topPrediction}
+                showToast={showToast}
+                hand={hand}
+                prediction={prediction}
+                trainer={trainer}
+              />
+            } />
 
-          <Route path="/motors" element={
-            <MotorsTab
-              classNames={cm.classNames}
-              showToast={showToast}
-              hand={hand}
-              prediction={prediction}
-              ble={ble}
-              trainer={trainer}
-            />
-          } />
+            <Route path="/motors" element={
+              <MotorsTab
+                classNames={cm.classNames}
+                showToast={showToast}
+                hand={hand}
+                prediction={prediction}
+                ble={ble}
+                trainer={trainer}
+              />
+            } />
 
-          <Route path="/devices" element={
-            <DevicesTab showToast={showToast} ble={ble} />
-          } />
+            <Route path="/devices" element={
+              <DevicesTab showToast={showToast} ble={ble} />
+            } />
 
-          <Route path="/community" element={
-            <CommunityTab
-              auth={auth}
-              onImportModel={handleImportCommunityModel}
-              onImportPiano={async (item) => {
-                const success = await storage.savePianoSequence(item.name_or_title, item.data, false);
-                if (success) showToast('Piano sequence saved to your library!', 'success');
-                else showToast('Failed to save piano sequence', 'error');
-              }}
-              onImportGesture={async (item) => {
-                const success = await storage.saveGestureMapping(item.name_or_title, item.data, false);
-                if (success) showToast('Motor config saved to your library!', 'success');
-                else showToast('Failed to save motor config', 'error');
-              }}
-              showToast={showToast}
-            />
-          } />
+            <Route path="/community" element={
+              <CommunityTab
+                auth={auth}
+                onImportModel={handleImportCommunityModel}
+                onImportPiano={async (item) => {
+                  const success = await storage.savePianoSequence(item.name_or_title, item.data, false);
+                  if (success) showToast('Piano sequence saved to your library!', 'success');
+                  else showToast('Failed to save piano sequence', 'error');
+                }}
+                onImportGesture={async (item) => {
+                  const success = await storage.saveGestureMapping(item.name_or_title, item.data, false);
+                  if (success) showToast('Motor config saved to your library!', 'success');
+                  else showToast('Failed to save motor config', 'error');
+                }}
+                showToast={showToast}
+              />
+            } />
 
-          <Route path="/about" element={<AboutTab />} />
+            <Route path="/about" element={<AboutTab />} />
 
-          <Route path="/dashboard" element={
-            <Dashboard
-              showToast={showToast}
-              onBack={() => navigate('/')}
-              onLoadModel={handleLoadModel}
-              auth={auth}
-            />
-          } />
+            <Route path="/dashboard" element={
+              <Dashboard
+                showToast={showToast}
+                onBack={() => navigate('/')}
+                onLoadModel={handleLoadModel}
+                auth={auth}
+              />
+            } />
 
-          <Route path="/reset-password" element={
-            <ResetPasswordHandler onOpenReset={handleOpenReset} />
-          } />
+            <Route path="/reset-password" element={
+              <ResetPasswordHandler onOpenReset={handleOpenReset} />
+            } />
 
-          {/* Fallback for unknown routes */}
-          <Route path="*" element={<Navigate to="/train" replace />} />
-        </Routes>
+            {/* Fallback for unknown routes */}
+            <Route path="*" element={<Navigate to="/train" replace />} />
+          </Routes>
+        </Suspense>
       </main>
 
       <Footer />
