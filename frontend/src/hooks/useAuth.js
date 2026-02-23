@@ -86,7 +86,15 @@ export function useAuth() {
 
             if (!res.ok) {
                 const body = await res.json().catch(() => null);
-                throw new Error(body?.detail || 'Signup failed');
+                let message = 'Signup failed';
+                if (body?.detail) {
+                    if (typeof body.detail === 'string') {
+                        message = body.detail;
+                    } else if (Array.isArray(body.detail)) {
+                        message = body.detail.map(e => e.msg || 'Validation error').join(', ');
+                    }
+                }
+                throw new Error(message);
             }
 
             const data = await res.json();
