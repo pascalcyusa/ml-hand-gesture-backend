@@ -22,23 +22,26 @@ const NAV_ITEMS = [
 ];
 
 export default function Header({ user, onSignIn, onLogout }) {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const menuRef = useRef(null);
+    const [isNavOpen, setIsNavOpen] = useState(false);
+    const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+    const navRef = useRef(null);
+    const userMenuRef = useRef(null);
 
-    // Close menu when clicking outside
+    // Close menus when clicking outside
     useEffect(() => {
         function handleClickOutside(event) {
-            if (menuRef.current && !menuRef.current.contains(event.target)) {
-                setIsMenuOpen(false);
+            if (navRef.current && !navRef.current.contains(event.target)) {
+                setIsNavOpen(false);
+            }
+            if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+                setIsUserMenuOpen(false);
             }
         }
         document.addEventListener("mousedown", handleClickOutside);
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [menuRef]);
-
-    const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+    }, []);
 
     const allNavItems = [
         ...NAV_ITEMS,
@@ -73,40 +76,22 @@ export default function Header({ user, onSignIn, onLogout }) {
                     ))}
                 </nav>
 
-                {/* Right: Hamburger (mobile) + User Area */}
-                <div className="user-area" ref={menuRef}>
-                    {/* Hamburger Button (Mobile Only) */}
-                    <button
-                        className="mobile-menu-btn md:hidden"
-                        onClick={toggleMenu}
-                        aria-label="Toggle menu"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                        </svg>
-                    </button>
+                {/* Right: Hamburger (mobile) + User Profile */}
+                <div className="header-right">
+                    {/* Hamburger Nav (Mobile Only) */}
+                    <div className="nav-menu-area md:hidden" ref={navRef}>
+                        <button
+                            className="mobile-menu-btn"
+                            onClick={() => { setIsNavOpen(!isNavOpen); setIsUserMenuOpen(false); }}
+                            aria-label="Toggle menu"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </button>
 
-                    {/* User Profile Button (Desktop Only) */}
-                    <button
-                        className="user-profile-btn hidden md:flex"
-                        onClick={toggleMenu}
-                        title={user ? "User Menu" : "Menu"}
-                    >
-                        {user ? (
-                            <div className="user-avatar">
-                                {user.username.charAt(0).toUpperCase()}
-                            </div>
-                        ) : (
-                            <UserCircleIcon className="h-6 w-6 text-[var(--fg-dim)]" />
-                        )}
-                        <ChevronDownIcon className="h-3 w-3 text-[var(--fg-muted)]" />
-                    </button>
-
-                    {/* Dropdown Menu */}
-                    {isMenuOpen && (
-                        <div className="user-dropdown">
-                            {/* Mobile Nav Links (Visible only in dropdown on mobile) */}
-                            <div className="md:hidden border-b border-[var(--border-dim)] mb-2 pb-2">
+                        {isNavOpen && (
+                            <div className="user-dropdown">
                                 {allNavItems.map((item) => (
                                     <NavLink
                                         key={item.to}
@@ -114,66 +99,88 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         className={({ isActive }) =>
                                             `dropdown-item flex items-center gap-2 ${isActive ? 'text-[var(--gold)] bg-[var(--bg1)]' : ''}`
                                         }
-                                        onClick={() => setIsMenuOpen(false)}
+                                        onClick={() => setIsNavOpen(false)}
                                     >
                                         <item.icon className="h-4 w-4" />
                                         <span>{item.label}</span>
                                     </NavLink>
                                 ))}
                             </div>
+                        )}
+                    </div>
 
+                    {/* User Profile (All Screens) */}
+                    <div className="user-profile-area" ref={userMenuRef}>
+                        <button
+                            className="user-profile-btn"
+                            onClick={() => { setIsUserMenuOpen(!isUserMenuOpen); setIsNavOpen(false); }}
+                            title={user ? "User Menu" : "Menu"}
+                        >
                             {user ? (
-                                <>
-                                    <div className="dropdown-header">
-                                        <p className="font-medium">{user.username}</p>
-                                        <p className="text-xs text-[var(--fg-muted)]">{user.email}</p>
-                                    </div>
-
-                                    <button
-                                        className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
-                                        onClick={() => {
-                                            onLogout();
-                                            setIsMenuOpen(false);
-                                        }}
-                                    >
-                                        <div className="flex items-center gap-2 w-full">
-                                            <ArrowRightOnRectangleIcon className="h-4 w-4" />
-                                            <span>Sign Out</span>
-                                        </div>
-                                    </button>
-                                    <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/about"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        About
-                                    </Link>
-                                    <div className="dropdown-divider"></div>
-                                </>
+                                <div className="user-avatar">
+                                    {user.username.charAt(0).toUpperCase()}
+                                </div>
                             ) : (
-                                <>
-                                    <button
-                                        className="dropdown-item"
-                                        onClick={() => {
-                                            onSignIn();
-                                            setIsMenuOpen(false);
-                                        }}
-                                    >
-                                        Log In
-                                    </button>
-                                    <div className="dropdown-divider"></div>
-                                    <Link
-                                        to="/about"
-                                        className="dropdown-item"
-                                        onClick={() => setIsMenuOpen(false)}
-                                    >
-                                        About
-                                    </Link>
-                                </>
+                                <UserCircleIcon className="h-6 w-6 text-[var(--fg-dim)]" />
                             )}
-                        </div>
-                    )}
+                            <ChevronDownIcon className="h-3 w-3 text-[var(--fg-muted)]" />
+                        </button>
+
+                        {isUserMenuOpen && (
+                            <div className="user-dropdown">
+                                {user ? (
+                                    <>
+                                        <div className="dropdown-header">
+                                            <p className="font-medium">{user.username}</p>
+                                            <p className="text-xs text-[var(--fg-muted)]">{user.email}</p>
+                                        </div>
+
+                                        <button
+                                            className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
+                                            onClick={() => {
+                                                onLogout();
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                        >
+                                            <div className="flex items-center gap-2 w-full">
+                                                <ArrowRightOnRectangleIcon className="h-4 w-4" />
+                                                <span>Sign Out</span>
+                                            </div>
+                                        </button>
+                                        <div className="dropdown-divider"></div>
+                                        <Link
+                                            to="/about"
+                                            className="dropdown-item"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            About
+                                        </Link>
+                                        <div className="dropdown-divider"></div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            className="dropdown-item"
+                                            onClick={() => {
+                                                onSignIn();
+                                                setIsUserMenuOpen(false);
+                                            }}
+                                        >
+                                            Log In
+                                        </button>
+                                        <div className="dropdown-divider"></div>
+                                        <Link
+                                            to="/about"
+                                            className="dropdown-item"
+                                            onClick={() => setIsUserMenuOpen(false)}
+                                        >
+                                            About
+                                        </Link>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header >
