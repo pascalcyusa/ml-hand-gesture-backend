@@ -13,7 +13,7 @@ The application is fully deployed across managed, serverless cloud platforms for
 *   **Email Services:** Powered by **SendGrid**.
 
 ### Resource Map
-*   **Google Cloud:** Project `ml-hand-gesture` running the Cloud Run service (`ml-hand-gesture-backend`).
+*   **Google Cloud:** Project `ml-hand-gesture` running the Cloud Run service (`hand-pose-backend`).
 *   **Neon:** Project `ml-hand-gesture-db` providing the `DATABASE_URL`.
 *   **Netlify:** Site `ml-hand-gesture-app` connecting directly to GitHub.
 *   **SendGrid:** Authorized sender providing the `SENDGRID_API_KEY`.
@@ -26,7 +26,7 @@ The application is fully deployed across managed, serverless cloud platforms for
 Netlify connects directly to this repository's `main` branch. 
 1.  **Write code locally.**
 2.  **Commit & Push** your changes to `main`.
-3.  **Netlify Takes Over:** It detects the push, automatically runs `npm run build` (or `bun run build`), and deploys the `dist/` folder globally in seconds.
+3.  **Netlify Takes Over:** It detects the push, automatically runs `bun run build`, and deploys the `dist/` folder globally in seconds.
 
 ### Backend (Google Cloud Run)
 Google Cloud Build is configured to watch your repository using the `cloudbuild.yaml` file.
@@ -53,7 +53,7 @@ If you prefer a desktop app, you can connect DBeaver using the exact same `DATAB
 If the API is throwing errors, you check the logs in Google Cloud:
 1. Go to **console.cloud.google.com**.
 2. Search for **Cloud Run**.
-3. Click your service (`ml-hand-gesture-backend`).
+3. Click your service (`hand-pose-backend`).
 4. Click the **Logs** tab. You'll see real-time output of every request and Python tracebacks.
 
 ### Running Database Migrations
@@ -72,13 +72,13 @@ If you make changes to `models.py` (like adding a table/column), you need to upd
 
 ### 1. Frontend (Netlify Environment Variables)
 Location: Netlify Dashboard → Site configuration → Environment variables
-*   `VITE_API_URL`: Your Google Cloud Run URL (e.g., `https://ml-hand-gesture-backend-xxxxxxxxxx-ue.a.run.app`)
+*   `VITE_API_URL`: Your Google Cloud Run URL (e.g., `https://hand-pose-backend-XXXXXXXXXX-us-east1.run.app`)
 
 ### 2. Backend (Google Cloud Secret Manager / Cloud Run Variables)
 Location: Google Cloud Console → Cloud Run → Service → Edit & Deploy New Revision → Variables & Secrets
 *   `DATABASE_URL`: Your Neon connection string.
 *   `JWT_SECRET`: The strong, random string used for session tokens.
-*   `ALLOWED_ORIGINS`: Your Netlify URL (e.g., `https://your-site.netlify.app`).
+*   `ALLOWED_ORIGINS`: Your Netlify URL (e.g., `https://ml-hand-gesture-app.netlify.app`).
 *   `SENDGRID_API_KEY`: The key from your SendGrid dashboard.
 *   `SENDGRID_FROM_EMAIL`: The verified sender email address.
 
