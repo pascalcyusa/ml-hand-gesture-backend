@@ -143,7 +143,7 @@ export default function NoteSequencer({
         <div className={`note-sequencer ${collapsed ? 'collapsed' : ''}`}>
             <div className="note-seq-header" onClick={() => setCollapsed(!collapsed)}>
                 <div className="note-seq-title">
-                    <MusicalNoteIcon className="h-4 w-4 text-[var(--gold)]" />
+                    <MusicalNoteIcon className="h-4 w-4 text-[var(--primary)]" />
                     <span className="note-seq-name">{className}</span>
                     <span className="note-seq-slot-count">{slots.length} slots</span>
                 </div>

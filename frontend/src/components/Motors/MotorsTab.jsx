@@ -158,7 +158,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             <div className="motors-tab animate-fade-in">
                 <div className="motors-header">
                     <h2 className="flex items-center gap-2">
-                        <CogIcon className="h-6 w-6 text-[var(--gold)]" />
+                        <CogIcon className="h-6 w-6 text-[var(--primary)]" />
                         Motors
                     </h2>
                 </div>
@@ -249,7 +249,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                 <div>
                     <div className="motors-header flex justify-between items-start">
                         <div className="flex items-center gap-2">
-                            <CogIcon className="h-6 w-6 text-[var(--gold)]" />
+                            <CogIcon className="h-6 w-6 text-[var(--primary)]" />
                             <h2>Motors</h2>
                         </div>
 

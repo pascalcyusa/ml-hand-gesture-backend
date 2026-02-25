@@ -97,7 +97,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         key={item.to}
                                         to={item.to}
                                         className={({ isActive }) =>
-                                            `dropdown-item flex items-center gap-2 ${isActive ? 'text-[var(--gold)] bg-[var(--bg1)]' : ''}`
+                                            `dropdown-item flex items-center gap-2 ${isActive ? 'text-[var(--primary)] bg-[var(--bg1)]' : ''}`
                                         }
                                         onClick={() => setIsNavOpen(false)}
                                     >
@@ -136,7 +136,7 @@ export default function Header({ user, onSignIn, onLogout }) {
                                         </div>
 
                                         <button
-                                            className="dropdown-item text-[var(--gold)] hover:text-[var(--gold-light)]"
+                                            className="dropdown-item text-[var(--primary)] hover:text-[var(--primary-light)]"
                                             onClick={() => {
                                                 onLogout();
                                                 setIsUserMenuOpen(false);

@@ -6,22 +6,35 @@ export default {
     ],
     theme: {
         extend: {
-            /* ── Gruvbox Dark Palette ── */
             colors: {
-                gruvbox: {
-                    'bg-hard': '#1d2021',
-                    'bg': '#282828',
-                    'bg-soft': '#32302f',
-                    'bg1': '#3c3836',
-                    'bg2': '#504945',
-                    'bg3': '#665c54',
-                    'bg4': '#7c6f64',
-                    'fg': '#ebdbb2',
-                    'fg-dim': '#a89984',
-                    'fg-muted': '#928374',
-                    'gold': '#D5B664',
-                    'gold-dim': '#B79A5C',
-                },
+                // Semantic Backgrounds
+                'bg-hard': 'var(--bg-hard)',
+                'bg': 'var(--bg)',
+                'bg-soft': 'var(--bg-soft)',
+                'bg1': 'var(--bg1)',
+                'bg2': 'var(--bg2)',
+                'bg3': 'var(--bg3)',
+                'bg4': 'var(--bg4)',
+
+                // Semantic Foreground
+                'fg': 'var(--fg)',
+                'fg-dim': 'var(--fg-dim)',
+                'fg-muted': 'var(--fg-muted)',
+
+                // Brand Colors
+                'primary': 'var(--primary)',
+                'primary-dim': 'var(--primary-dim)',
+                'primary-light': 'var(--primary-light)',
+
+                // Functional Colors
+                'red': 'var(--red)',
+                'red-dim': 'var(--red-dim)',
+                'yellow': 'var(--yellow)',
+                'yellow-dim': 'var(--yellow-dim)',
+                'blue': 'var(--blue)',
+                'blue-dim': 'var(--blue-dim)',
+                'aqua': 'var(--aqua)',
+                'aqua-dim': 'var(--aqua-dim)',
             },
             fontFamily: {
                 ui: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
@@ -37,7 +50,7 @@ export default {
                 sm: '0 1px 3px rgba(0, 0, 0, 0.3)',
                 md: '0 4px 12px rgba(0, 0, 0, 0.4)',
                 lg: '0 8px 24px rgba(0, 0, 0, 0.5)',
-                'glow-gold': '0 0 20px rgba(213, 182, 100, 0.3)',
+                'glow-primary': 'var(--shadow-glow-primary)',
             },
             transitionDuration: {
                 fast: '150ms',

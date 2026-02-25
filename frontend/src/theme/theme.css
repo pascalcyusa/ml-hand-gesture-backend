@@ -1,47 +1,58 @@
 /* ============================================================
-   Gruvbox-Inspired Design System
+   Blue & White Theme Design System
    ============================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-
 :root {
-  /* ── Gruvbox Dark Palette ── */
-  --bg-hard: #1d2021;
-  --bg: #282828;
-  --bg-soft: #32302f;
-  --bg1: #3c3836;
-  --bg2: #504945;
-  --bg3: #665c54;
-  --bg4: #7c6f64;
+  /* ── Palette Definition ── */
+  --deep-space-blue: #173753;
+  --sky-reflection: #6daedb;
+  --white: #ffffff;
+  --sky-blue: #94c9eb;
+  --blue-bell: #2892d7;
+  --baltic-blue: #1c5a7b;
 
-  --fg: #ebdbb2;
-  --fg-dim: #a89984;
-  --fg-muted: #a89984;
-
+  /* ── Functional Colors (inherited from Gruvbox) ── */
   --red: #fb4934;
   --red-dim: #cc241d;
   --yellow: #fabd2f;
   --yellow-dim: #d79921;
-  --blue: #83a598;
+  --blue: #83a598; /* Legacy functional blue */
   --blue-dim: #458588;
   --aqua: #8ec07c;
   --aqua-dim: #689d6a;
 
-  /* ── New Gold Palette ── */
-  --gold: #D5B664;
-  --gold-dim: #B79A5C;
-  --gold-light: #E9D280;
+  /* ── Backgrounds ── */
+  --bg-hard: var(--deep-space-blue); /* App Background */
+  --bg: var(--baltic-blue);          /* Component Background */
+
+  /* Derived Backgrounds for depth */
+  --bg-soft: color-mix(in srgb, var(--baltic-blue), white 5%);
+  --bg1: color-mix(in srgb, var(--baltic-blue), white 10%);
+  --bg2: color-mix(in srgb, var(--baltic-blue), white 15%);
+  --bg3: color-mix(in srgb, var(--baltic-blue), white 20%);
+  --bg4: color-mix(in srgb, var(--baltic-blue), white 25%);
+
+  /* ── Foreground / Text ── */
+  --fg: var(--white);
+  --fg-dim: var(--sky-blue);
+  --fg-muted: color-mix(in srgb, var(--sky-blue), transparent 30%);
+
+  /* ── Primary Brand Colors (Replacing Gold) ── */
+  --primary: var(--blue-bell);        /* Main Action Color */
+  --primary-dim: var(--baltic-blue);  /* Darker/Muted Variant */
+  --primary-light: var(--sky-reflection); /* Lighter/Hover Variant */
 
   /* ── Semantic Tokens ── */
-  --color-primary: var(--gold);
-  --color-primary-dim: var(--gold-dim);
-  --color-danger: var(--gold);
-  --color-danger-dim: var(--gold-dim);
-  --color-warning: var(--gold);
-  --color-info: var(--gold);
-  --color-accent: var(--gold);
-  --color-success: var(--gold);
+  --color-primary: var(--primary);
+  --color-primary-dim: var(--primary-dim);
+  --color-danger: var(--red);
+  --color-danger-dim: var(--red-dim);
+  --color-warning: var(--yellow);
+  --color-info: var(--primary);
+  --color-accent: var(--primary-light);
+  --color-success: var(--aqua);
 
   /* ── Typography ── */
   --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -66,7 +77,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
-  --shadow-glow-gold: 0 0 20px rgba(213, 182, 100, 0.3);
+  --shadow-glow-primary: 0 0 20px rgba(40, 146, 215, 0.3); /* Blue Bell Glow */
 
   /* ── Transitions ── */
   --transition-fast: 150ms ease;
@@ -124,13 +135,13 @@ body {
 
 /* ── Links ── */
 a {
-  color: var(--gold);
+  color: var(--primary);
   text-decoration: none;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--gold-light);
+  color: var(--primary-light);
 }
 
 /* ============================================================
@@ -151,7 +162,7 @@ a:hover {
   border-radius: var(--radius-full);
   cursor: pointer;
   transition: all 200ms ease;
-  background: rgba(80, 73, 69, 0.6);
+  background: rgba(28, 90, 123, 0.6); /* Baltic Blue transparent */
   backdrop-filter: blur(4px);
   color: var(--fg-dim);
   user-select: none;
@@ -173,39 +184,37 @@ a:hover {
 }
 
 .btn-primary {
-  background: var(--gold-dim);
-  color: var(--bg-hard);
-  border-color: rgba(213, 182, 100, 0.3);
+  background: var(--primary);
+  color: var(--white);
+  border-color: rgba(40, 146, 215, 0.3);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--gold);
-  box-shadow: 0 0 24px rgba(213, 182, 100, 0.25);
+  background: var(--primary-light);
+  box-shadow: 0 0 24px rgba(40, 146, 215, 0.25);
 }
 
 .btn-danger {
-  background: rgba(213, 182, 100, 0.2);
-  /* Low opacity gold for danger/reset */
-  color: var(--gold);
-  border-color: rgba(213, 182, 100, 0.25);
+  background: rgba(251, 73, 52, 0.2);
+  color: var(--red);
+  border-color: rgba(251, 73, 52, 0.25);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background: var(--gold);
+  background: var(--red);
   color: var(--bg-hard);
-  box-shadow: 0 0 24px rgba(213, 182, 100, 0.2);
+  box-shadow: 0 0 24px rgba(251, 73, 52, 0.2);
 }
 
 .btn-accent {
-  background: var(--gold-dim);
-  color: var(--bg-hard);
-  border-color: rgba(213, 182, 100, 0.3);
-  /* gold-dim-ish alpha */
+  background: var(--primary-dim);
+  color: var(--white);
+  border-color: rgba(40, 146, 215, 0.3);
 }
 
 .btn-accent:hover:not(:disabled) {
-  background: var(--gold);
-  box-shadow: 0 0 24px rgba(213, 182, 100, 0.25);
+  background: var(--primary);
+  box-shadow: 0 0 24px rgba(40, 146, 215, 0.25);
 }
 
 .btn-lg {
@@ -276,12 +285,12 @@ a:hover {
 }
 
 .toggle-switch input:checked+.toggle-slider {
-  background: var(--gold-dim);
-  border-color: rgba(213, 182, 100, 0.3);
+  background: var(--primary);
+  border-color: rgba(40, 146, 215, 0.3);
 }
 
 .toggle-switch input:checked+.toggle-slider::after {
-  background: var(--gold);
+  background: var(--white);
   transform: translateX(20px);
 }
 
@@ -308,11 +317,11 @@ a:hover {
 }
 
 .prediction-fill.high {
-  background: var(--gold);
+  background: var(--primary);
 }
 
 .prediction-fill.medium {
-  background: var(--gold-dim);
+  background: var(--primary-light);
 }
 
 .prediction-label {
@@ -341,7 +350,7 @@ a:hover {
   align-items: center;
   justify-content: center;
   gap: var(--space-lg);
-  background: rgba(29, 32, 33, 0.92);
+  background: rgba(23, 55, 83, 0.92); /* Deep Space Blue transparent */
   backdrop-filter: blur(8px);
 }
 
@@ -349,7 +358,7 @@ a:hover {
   width: 48px;
   height: 48px;
   border: 4px solid var(--bg3);
-  border-top-color: var(--gold);
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -393,23 +402,23 @@ a:hover {
 }
 
 .toast-success {
-  background: rgba(29, 32, 33, 0.85);
-  border-left: 4px solid var(--gold);
+  background: rgba(23, 55, 83, 0.85);
+  border-left: 4px solid var(--primary);
 }
 
 .toast-error {
-  background: rgba(29, 32, 33, 0.85);
-  border-left: 4px solid var(--gold);
+  background: rgba(23, 55, 83, 0.85);
+  border-left: 4px solid var(--red);
 }
 
 .toast-warning {
-  background: rgba(29, 32, 33, 0.85);
-  border-left: 4px solid var(--gold);
+  background: rgba(23, 55, 83, 0.85);
+  border-left: 4px solid var(--yellow);
 }
 
 .toast-info {
-  background: rgba(29, 32, 33, 0.85);
-  border-left: 4px solid var(--gold);
+  background: rgba(23, 55, 83, 0.85);
+  border-left: 4px solid var(--primary-light);
 }
 
 @keyframes toast-in {
@@ -449,7 +458,7 @@ a:hover {
 }
 
 .sample-thumb:hover {
-  border-color: var(--gold);
+  border-color: var(--primary);
   transform: scale(1.05);
 }
 
@@ -471,21 +480,21 @@ a:hover {
 }
 
 .status-badge-ready {
-  background: rgba(213, 182, 100, 0.1);
-  color: var(--gold);
-  border: 1px solid rgba(213, 182, 100, 0.15);
+  background: rgba(40, 146, 215, 0.1);
+  color: var(--primary);
+  border: 1px solid rgba(40, 146, 215, 0.15);
 }
 
 .status-badge-warning {
-  background: rgba(213, 182, 100, 0.1);
-  color: var(--gold);
-  border: 1px solid rgba(213, 182, 100, 0.15);
+  background: rgba(250, 189, 47, 0.1);
+  color: var(--yellow);
+  border: 1px solid rgba(250, 189, 47, 0.15);
 }
 
 .status-badge-error {
-  background: rgba(213, 182, 100, 0.1);
-  color: var(--gold);
-  border: 1px solid rgba(213, 182, 100, 0.15);
+  background: rgba(251, 73, 52, 0.1);
+  color: var(--red);
+  border: 1px solid rgba(251, 73, 52, 0.15);
 }
 
 /* ── Animations ── */
@@ -497,7 +506,7 @@ a:hover {
   }
 
   50% {
-    box-shadow: 0 0 15px rgba(184, 187, 38, 0.4);
+    box-shadow: 0 0 15px rgba(40, 146, 215, 0.4);
   }
 }
 

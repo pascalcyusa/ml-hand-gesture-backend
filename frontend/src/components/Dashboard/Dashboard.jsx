@@ -197,7 +197,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                             logout();
                             showToast('Logged out', 'info');
                             navigate('/');
-                        }} className="bg-[var(--gold)] text-white hover:bg-[var(--gold-dim)] border-none">
+                        }} className="bg-[var(--primary)] text-white hover:bg-[var(--primary-dim)] border-none">
                             Sign out
                         </Button>
                     </div>
@@ -298,7 +298,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                             <div key={model.id} className="info-card relative group">
                                                 <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                                     <button
-                                                        className={`p-1.5 rounded-lg transition-all ${model.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        className={`p-1.5 rounded-lg transition-all ${model.is_public ? 'text-[var(--primary)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--primary)] hover:bg-[var(--bg3)]'}`}
                                                         onClick={(e) => { e.stopPropagation(); handleVisibilityToggle(model); }}
                                                         title={model.is_public ? "Make Private" : "Make Public"}
                                                     >
@@ -317,7 +317,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                                     <CubeIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {model.class_names.length} Classes • <span className={model.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{model.is_public ? 'Public' : 'Private'}</span>
+                                                    {model.class_names.length} Classes • <span className={model.is_public ? "text-[var(--primary)]" : "text-[var(--fg-muted)]"}>{model.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-meta">
                                                     Created: {new Date(model.created_at).toLocaleDateString()}
@@ -349,7 +349,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                             <div key={seq.id || idx} className="info-card relative group">
                                                 <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                                     <button
-                                                        className={`p-1.5 rounded-lg transition-all ${seq.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        className={`p-1.5 rounded-lg transition-all ${seq.is_public ? 'text-[var(--primary)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--primary)] hover:bg-[var(--bg3)]'}`}
                                                         onClick={(e) => { e.stopPropagation(); handlePianoVisibilityToggle(seq); }}
                                                         title={seq.is_public ? "Make Private" : "Make Public"}
                                                     >
@@ -368,7 +368,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                                     <MusicalNoteIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {(seq.data?.notes || []).length} Notes • <span className={seq.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{seq.is_public ? 'Public' : 'Private'}</span>
+                                                    {(seq.data?.notes || []).length} Notes • <span className={seq.is_public ? "text-[var(--primary)]" : "text-[var(--fg-muted)]"}>{seq.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/piano')}>
                                                     Load Sequence →
@@ -394,7 +394,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                             <div key={config.id || idx} className="info-card relative group">
                                                 <div className="absolute bottom-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                                     <button
-                                                        className={`p-1.5 rounded-lg transition-all ${config.is_public ? 'text-[var(--gold)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--gold)] hover:bg-[var(--bg3)]'}`}
+                                                        className={`p-1.5 rounded-lg transition-all ${config.is_public ? 'text-[var(--primary)] bg-[var(--bg2)]' : 'text-[var(--fg-muted)] hover:text-[var(--primary)] hover:bg-[var(--bg3)]'}`}
                                                         onClick={(e) => { e.stopPropagation(); handleGestureVisibilityToggle(config); }}
                                                         title={config.is_public ? "Make Private" : "Make Public"}
                                                     >
@@ -413,7 +413,7 @@ export default function Dashboard({ showToast, onBack, onLoadModel, auth }) {
                                                     <CogIcon className="card-icon" />
                                                 </div>
                                                 <div className="card-value">
-                                                    {Object.keys(config.data || {}).length} Mappings • <span className={config.is_public ? "text-[var(--gold)]" : "text-[var(--fg-muted)]"}>{config.is_public ? 'Public' : 'Private'}</span>
+                                                    {Object.keys(config.data || {}).length} Mappings • <span className={config.is_public ? "text-[var(--primary)]" : "text-[var(--fg-muted)]"}>{config.is_public ? 'Public' : 'Private'}</span>
                                                 </div>
                                                 <div className="card-action-btn" onClick={() => navigate('/motors')}>
                                                     Load Configuration →

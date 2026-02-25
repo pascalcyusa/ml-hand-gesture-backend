@@ -84,10 +84,10 @@ export default function SecuritySettings({ onUpdatePassword }) {
                 </div>
             </div>
 
-            {error && <p className="text-[var(--gold)] text-sm">{error}</p>}
+            {error && <p className="text-[var(--primary)] text-sm">{error}</p>}
 
             <div className="flex justify-end pt-4">
-                <Button type="submit" variant="accent" className="bg-[var(--gold)] text-white hover:bg-[var(--gold-dim)] border-none" disabled={loading}>
+                <Button type="submit" variant="accent" className="bg-[var(--primary)] text-white hover:bg-[var(--primary-dim)] border-none" disabled={loading}>
                     {loading ? 'Updating...' : 'Update Password'}
                 </Button>
             </div>

@@ -86,7 +86,7 @@
     font-size: 0.8rem;
     font-weight: 700;
     font-family: var(--font-mono);
-    color: var(--gold);
+    color: var(--primary);
     text-align: center;
     padding-bottom: var(--space-xs);
     border-bottom: 1px solid var(--bg2);
@@ -121,12 +121,12 @@
 
 .motor-select:focus {
     outline: none;
-    border-color: var(--gold);
+    border-color: var(--primary);
 }
 
 .motor-slider {
     width: 100%;
-    accent-color: var(--gold);
+    accent-color: var(--primary);
     cursor: pointer;
 }
 
@@ -150,7 +150,7 @@
 
 .motor-input:focus {
     outline: none;
-    border-color: var(--gold);
+    border-color: var(--primary);
 }
 
 /* ── Footer ── */
@@ -199,8 +199,8 @@
 }
 
 .motor-action-btn.active {
-    background: var(--gold-dim);
-    color: var(--gold);
+    background: var(--primary-dim);
+    color: var(--primary);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 

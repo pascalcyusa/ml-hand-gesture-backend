@@ -76,7 +76,7 @@ export default function MotorSequencer({
             {/* Same JSX as before */}
             <div className="motor-seq-header" onClick={() => setCollapsed(!collapsed)}>
                 <div className="motor-seq-title">
-                    <CogIcon className="h-4 w-4 text-[var(--gold)]" />
+                    <CogIcon className="h-4 w-4 text-[var(--primary)]" />
                     <span className="motor-seq-name">{className}</span>
                     {!isConnected && (
                         <Badge variant="secondary">No Device</Badge>

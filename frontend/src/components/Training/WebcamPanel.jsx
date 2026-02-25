@@ -46,7 +46,7 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
                     </>
                 ) : (
                     <div className="webcam-placeholder">
-                        <VideoCameraIcon className="w-16 h-16 text-[var(--gold)] opacity-50 mb-2" />
+                        <VideoCameraIcon className="w-16 h-16 text-[var(--primary)] opacity-50 mb-2" />
                         <button className="start-camera-btn" onClick={onStartCamera}>
                             Start Camera
                         </button>
@@ -55,7 +55,7 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
 
                 {isStarted && !isDetecting && (
                     <div className="webcam-placeholder">
-                        <VideoCameraIcon className="w-16 h-16 text-[var(--gold)] opacity-50 mb-2 animate-pulse" />
+                        <VideoCameraIcon className="w-16 h-16 text-[var(--primary)] opacity-50 mb-2 animate-pulse" />
                         <p>Loading hand detection...</p>
                     </div>
                 )}

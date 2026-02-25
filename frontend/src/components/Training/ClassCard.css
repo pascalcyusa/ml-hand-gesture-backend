@@ -66,7 +66,7 @@
 
 .delete-class-btn:hover {
     background: var(--bg2);
-    color: var(--gold);
+    color: var(--primary);
 }
 
 /* Title Text */
@@ -106,16 +106,16 @@
     background: var(--bg2);
     /* Default dark background */
     border: 1px solid var(--bg3);
-    color: var(--gold);
+    color: var(--primary);
     transition: all var(--transition-fast);
 }
 
 .collect-btn:hover:not(:disabled) {
-    background: var(--gold);
+    background: var(--primary);
     color: var(--bg-hard);
     transform: scale(1.05);
-    box-shadow: 0 0 12px rgba(213, 182, 100, 0.4);
-    border-color: var(--gold);
+    box-shadow: 0 0 12px rgba(40, 146, 215, 0.4);
+    border-color: var(--primary);
 }
 
 .collect-btn:disabled {
@@ -184,7 +184,7 @@
 }
 
 .status-badge.active {
-    color: var(--gold);
+    color: var(--primary);
 }
 
 .status-icon {
@@ -207,7 +207,7 @@
 
 .sample-icon-wrapper:hover {
     transform: scale(1.1);
-    border-color: var(--gold);
+    border-color: var(--primary);
     z-index: 10;
 }
 

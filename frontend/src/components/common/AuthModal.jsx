@@ -97,7 +97,7 @@ export default function AuthModal({ onClose, onLogin, onSignup, initialView = 'l
                     </div>
 
                     {message && (
-                        <div className="p-3 mb-4 text-sm text-center bg-[var(--bg3)] rounded text-[var(--gold)]">
+                        <div className="p-3 mb-4 text-sm text-center bg-[var(--bg3)] rounded text-[var(--primary)]">
                             {message}
                         </div>
                     )}
@@ -139,7 +139,7 @@ export default function AuthModal({ onClose, onLogin, onSignup, initialView = 'l
                                     <label className="input-label">Password</label>
                                     {view === 'login' && (
                                         <span
-                                            className="text-xs text-[var(--gold)] cursor-pointer hover:underline"
+                                            className="text-xs text-[var(--primary)] cursor-pointer hover:underline"
                                             onClick={() => setView('forgot')}
                                         >
                                             Forgot?

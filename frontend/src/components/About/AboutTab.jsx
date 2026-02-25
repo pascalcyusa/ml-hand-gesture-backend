@@ -14,7 +14,7 @@ export default function AboutTab() {
         <div className="about-tab animate-fade-in">
             <div className="about-header">
                 <h2 className="flex items-center gap-2">
-                    <CpuChipIcon className="h-6 w-6 text-[var(--gold)]" />
+                    <CpuChipIcon className="h-6 w-6 text-[var(--primary)]" />
                     About
                 </h2>
                 <p className="text-[var(--fg-muted)] mt-1">
@@ -28,7 +28,7 @@ export default function AboutTab() {
                 <Card>
                     <CardContent>
                         <h3 className="flex items-center gap-2 text-base font-bold mb-3">
-                            <CodeBracketIcon className="h-5 w-5 text-[var(--gold)]" />
+                            <CodeBracketIcon className="h-5 w-5 text-[var(--primary)]" />
                             Open Source & Privacy First
                         </h3>
                         <ul className="about-tech-list">
@@ -40,7 +40,7 @@ export default function AboutTab() {
                 <Card>
                     <CardContent>
                         <h3 className="flex items-center gap-2 text-base font-bold mb-3">
-                            <HeartIcon className="h-5 w-5 text-[var(--gold)]" />
+                            <HeartIcon className="h-5 w-5 text-[var(--primary)]" />
                             Special Thanks
                         </h3>
                         <ul className="about-tech-list">

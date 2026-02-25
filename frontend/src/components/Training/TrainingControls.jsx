@@ -133,7 +133,7 @@ export default function TrainingControls({
                         <span className="stat-value">{totalSamples}</span>
                         <span className="stat-label">Samples</span>
                     </div>
-                    <div className="stat-pill" style={{ color: isTrained ? 'var(--gold)' : 'var(--fg-muted)' }}>
+                    <div className="stat-pill" style={{ color: isTrained ? 'var(--primary)' : 'var(--fg-muted)' }}>
                         <span className="stat-value">
                             {isTrained ? <CheckIcon className="h-6 w-6" /> : '—'}
                         </span>
@@ -228,7 +228,7 @@ export default function TrainingControls({
                                     type="checkbox"
                                     checked={isPublic}
                                     onChange={(e) => setIsPublic(e.target.checked)}
-                                    className="accent-[var(--gold)] w-4 h-4 rounded border-gray-300"
+                                    className="accent-[var(--primary)] w-4 h-4 rounded border-gray-300"
                                 />
                                 <span>Make Public (Visible to Community)</span>
                             </label>

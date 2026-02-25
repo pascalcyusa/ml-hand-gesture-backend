@@ -112,7 +112,7 @@
 }
 
 .sidebar-item.active {
-    color: var(--gold);
+    color: var(--primary);
     font-weight: 600;
     background: var(--bg2);
     border-radius: 8px;
@@ -120,7 +120,7 @@
 }
 
 .sidebar-item:hover {
-    color: var(--gold-light);
+    color: var(--primary-light);
     /* No background or border-radius on hover as requested */
 }
 
@@ -188,7 +188,7 @@
 }
 
 .card-icon {
-    color: var(--gold);
+    color: var(--primary);
     /* Icon color from reference */
     width: 20px;
     height: 20px;

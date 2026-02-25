@@ -122,7 +122,7 @@
     margin-top: var(--space-md);
     padding: var(--space-sm) var(--space-md);
     background: rgba(184, 187, 38, 0.08);
-    border: 1px solid var(--gold-dim);
+    border: 1px solid var(--primary-dim);
     border-radius: var(--radius-md);
     font-size: 0.85rem;
     color: var(--fg);
@@ -132,7 +132,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--gold);
+    background: var(--primary);
     animation: pulse-glow 1s ease-in-out infinite;
 }
 
@@ -140,7 +140,7 @@
     margin-left: auto;
     font-family: var(--font-mono);
     font-size: 0.8rem;
-    color: var(--gold);
+    color: var(--primary);
 }
 
 /* ── Section ── */

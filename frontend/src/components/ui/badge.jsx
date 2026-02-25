@@ -7,12 +7,12 @@ const badgeVariants = cva(
     {
         variants: {
             variant: {
-                default: "bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/15",
+                default: "bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/15",
                 secondary: "bg-white/[0.06] text-[var(--fg-dim)] border border-white/[0.08]",
-                success: "bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/15",
-                warning: "bg-[var(--gold-dim)]/10 text-[var(--gold-dim)] border border-[var(--gold-dim)]/15",
-                danger: "bg-[var(--gold)]/10 text-[var(--gold)] border border-[var(--gold)]/15",
-                info: "bg-[var(--gold-light)]/10 text-[var(--gold-light)] border border-[var(--gold-light)]/15",
+                success: "bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/15",
+                warning: "bg-[var(--primary-dim)]/10 text-[var(--primary-dim)] border border-[var(--primary-dim)]/15",
+                danger: "bg-[var(--primary)]/10 text-[var(--primary)] border border-[var(--primary)]/15",
+                info: "bg-[var(--primary-light)]/10 text-[var(--primary-light)] border border-[var(--primary-light)]/15",
                 outline: "border border-white/[0.1] text-[var(--fg-dim)] bg-transparent",
             },
         },

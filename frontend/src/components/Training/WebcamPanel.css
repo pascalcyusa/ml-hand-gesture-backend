@@ -27,7 +27,7 @@
 }
 
 .webcam-dot[data-active="true"] {
-    background: var(--gold);
+    background: var(--primary);
     box-shadow: 0 0 8px rgba(184, 187, 38, 0.6);
     animation: pulse-glow 1.5s ease-in-out infinite;
 }
@@ -95,7 +95,7 @@
 
 .start-camera-btn {
     padding: 12px 24px;
-    background: var(--gold);
+    background: var(--primary);
     color: var(--bg-hard);
     border: none;
     border-radius: 9999px;
@@ -107,7 +107,7 @@
 }
 
 .start-camera-btn:hover {
-    background: var(--gold-dim);
+    background: var(--primary-dim);
     transform: translateY(-2px);
-    box-shadow: 0 8px 16px -4px var(--gold-dim);
+    box-shadow: 0 8px 16px -4px var(--primary-dim);
 }

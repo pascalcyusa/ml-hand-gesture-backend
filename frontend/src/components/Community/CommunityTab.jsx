@@ -130,7 +130,7 @@ export default function CommunityTab({ auth, onImportModel, onImportPiano, onImp
             <div className="community-header">
                 <div className="community-header-text">
                     <h2 className="flex items-center gap-2">
-                        <GlobeAltIcon className="h-6 w-6 text-[var(--gold)]" />
+                        <GlobeAltIcon className="h-6 w-6 text-[var(--primary)]" />
                         Community
                     </h2>
                     <p className="community-subtitle">
@@ -169,7 +169,7 @@ export default function CommunityTab({ auth, onImportModel, onImportPiano, onImp
                             onClick={() => toggleSection('models')}
                             className="w-full flex items-center justify-between group hover:bg-[var(--bg-surface-hover)] p-2 rounded-lg transition-colors"
                         >
-                            <h3 className="text-xl font-bold flex items-center gap-2 text-[var(--gold)]">
+                            <h3 className="text-xl font-bold flex items-center gap-2 text-[var(--primary)]">
                                 <CubeIcon className="w-5 h-5" /> Models
                                 <span className="text-xs font-mono text-[var(--fg-muted)] ml-2 opacity-50">
                                     ({models.length})

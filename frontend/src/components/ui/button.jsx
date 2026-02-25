@@ -4,18 +4,18 @@ import { cva } from "class-variance-authority";
 import { cn } from "../../lib/utils";
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)]",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap font-medium transition-all duration-200 cursor-pointer select-none disabled:opacity-40 disabled:cursor-not-allowed disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)]/40 focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg)]",
     {
         variants: {
             variant: {
                 default:
                     "bg-[var(--bg2)]/80 text-[var(--fg-dim)] border border-[var(--bg3)]/50 rounded-md backdrop-blur-sm hover:bg-[var(--bg3)] hover:text-[var(--fg)] hover:border-[var(--bg4)]/60 active:scale-[0.97]",
                 primary:
-                    "bg-[var(--gold-dim)] text-[var(--bg-hard)] rounded-md border border-[var(--gold)]/30 hover:bg-[var(--gold)] hover:shadow-[0_0_24px_rgba(213,182,100,0.25)] active:scale-[0.97]",
+                    "bg-[var(--primary-dim)] text-[var(--bg-hard)] rounded-md border border-[var(--primary)]/30 hover:bg-[var(--primary)] hover:shadow-[0_0_24px_rgba(40,146,215,0.25)] active:scale-[0.97]",
                 danger:
-                    "bg-[var(--gold-dim)]/80 text-[var(--gold)] rounded-md border border-[var(--gold)]/25 hover:bg-[var(--gold)] hover:text-[var(--bg-hard)] hover:shadow-[0_0_24px_rgba(213,182,100,0.2)] active:scale-[0.97]",
+                    "bg-[var(--primary-dim)]/80 text-[var(--primary)] rounded-md border border-[var(--primary)]/25 hover:bg-[var(--primary)] hover:text-[var(--bg-hard)] hover:shadow-[0_0_24px_rgba(40,146,215,0.2)] active:scale-[0.97]",
                 accent:
-                    "bg-[var(--gold-dim)] text-[var(--bg-hard)] rounded-md border border-[var(--gold)]/30 hover:bg-[var(--gold)] hover:shadow-[0_0_24px_rgba(213,182,100,0.25)] active:scale-[0.97]",
+                    "bg-[var(--primary-dim)] text-[var(--bg-hard)] rounded-md border border-[var(--primary)]/30 hover:bg-[var(--primary)] hover:shadow-[0_0_24px_rgba(40,146,215,0.25)] active:scale-[0.97]",
                 ghost:
                     "bg-transparent text-[var(--fg-muted)] rounded-md border border-transparent hover:bg-[var(--bg1)]/60 hover:text-[var(--fg)] hover:backdrop-blur-sm active:scale-[0.97]",
                 outline:

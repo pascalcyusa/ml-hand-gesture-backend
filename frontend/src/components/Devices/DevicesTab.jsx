@@ -60,15 +60,15 @@ export default function DevicesTab({ showToast, ble }) {
             <div className="devices-header">
                 <div className="devices-header-text">
                     <h2 className="flex items-center gap-2">
-                        <SignalIcon className="h-6 w-6 text-[var(--gold)]" />
+                        <SignalIcon className="h-6 w-6 text-[var(--primary)]" />
                         Connect LEGO Spike Prime
                     </h2>
                 </div>
             </div>
 
             {!ble.isSupported && (
-                <Card className="flex items-start gap-4 border-[var(--gold-dim)]">
-                    <ExclamationTriangleIcon className="h-6 w-6 text-[var(--gold)] shrink-0 mt-0.5" />
+                <Card className="flex items-start gap-4 border-[var(--primary-dim)]">
+                    <ExclamationTriangleIcon className="h-6 w-6 text-[var(--primary)] shrink-0 mt-0.5" />
                     <div>
                         <strong>Web Bluetooth Not Available</strong>
                         <p className="text-sm text-[var(--fg-dim)] mt-1">
@@ -100,12 +100,12 @@ export default function DevicesTab({ showToast, ble }) {
                 <div className="connection-status">
                     {ble.device?.connected ? (
                         <>
-                            <span className="status-text text-[var(--gold)]">Connected</span>
+                            <span className="status-text text-[var(--primary)]">Connected</span>
                             <span className="device-name">{ble.device.name}</span>
                         </>
                     ) : ble.device?.connecting ? (
                         <>
-                            <span className="status-text text-[var(--gold-dim)]">Searching...</span>
+                            <span className="status-text text-[var(--primary-dim)]">Searching...</span>
                             <span className="text-sm text-[var(--fg-muted)]">Select your Hub in the popup</span>
                         </>
                     ) : (
@@ -143,7 +143,7 @@ export default function DevicesTab({ showToast, ble }) {
                 )}
 
                 {ble.device?.error && (
-                    <p className="text-[var(--gold)] text-sm mt-4 bg-[var(--gold-dim)]/10 px-3 py-1 rounded-full border border-[var(--gold)]/20">
+                    <p className="text-[var(--primary)] text-sm mt-4 bg-[var(--primary-dim)]/10 px-3 py-1 rounded-full border border-[var(--primary)]/20">
                         {ble.device.error}
                     </p>
                 )}

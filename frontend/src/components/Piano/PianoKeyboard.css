@@ -67,8 +67,8 @@
 }
 
 .key-white.active {
-    background: var(--gold);
-    border-color: var(--gold-dim);
+    background: var(--primary);
+    border-color: var(--primary-dim);
     border-width: 2px;
     box-shadow: 0 0 12px rgba(184, 187, 38, 0.4);
 }
@@ -103,8 +103,8 @@
 }
 
 .key-black.active {
-    background: var(--gold-dim);
-    border-color: var(--gold);
+    background: var(--primary-dim);
+    border-color: var(--primary);
     box-shadow: 0 0 12px rgba(184, 187, 38, 0.4);
 }
 
@@ -123,7 +123,7 @@
 
 .key-white.active .key-label {
     color: #1d2021;
-    /* Dark text on gold key */
+    /* Dark text on primary key */
 }
 
 .key-black .key-label {
