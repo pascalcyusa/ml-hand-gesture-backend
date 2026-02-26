@@ -1,6 +1,6 @@
 
 # Project ignores
-.github/
+.github/prompts
 .agent
 .agents
 .DS_Store
