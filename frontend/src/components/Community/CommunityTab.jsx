@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { API_BASE_URL } from "../../config";
 import {
   GlobeAltIcon,
   MagnifyingGlassIcon,
@@ -50,7 +51,6 @@ export default function CommunityTab({
       const queryString = params.toString();
 
       // Use API_BASE_URL for production-safe backend requests
-      import { API_BASE_URL } from "../../config";
       const [modelsRes, pianoRes, gesturesRes] = await Promise.all([
         fetch(`${API_BASE_URL}/models/community?${queryString}`),
         fetch(`${API_BASE_URL}/piano/community?${queryString}`),
