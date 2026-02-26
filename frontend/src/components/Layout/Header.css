@@ -1,230 +1,231 @@
 .app-header {
-    background: rgba(29, 32, 33, 0.95);
-    /* More opaque for sticky */
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-    position: sticky;
-    top: 0;
-    z-index: 50;
-    width: 100%;
+  background: rgba(29, 32, 33, 0.95);
+  /* More opaque for sticky */
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  width: 100%;
 }
 
 .header-inner {
-    max-width: 1400px;
-    /* Slightly wider to fit nav */
-    margin: 0 auto;
-    height: 120px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 var(--space-lg);
+  max-width: 1400px;
+  /* Slightly wider to fit nav */
+  margin: 0 auto;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-lg);
 }
 
 /* Logo */
 .logo-area {
-    display: flex;
-    align-items: center;
-    gap: var(--space-sm);
-    text-decoration: none;
-    color: inherit;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  text-decoration: none;
+  color: inherit;
 }
 
 .logo-img {
-    height: 100px;
-    width: auto;
-    border-radius: var(--radius-sm);
+  height: 100px;
+  width: auto;
+  padding-bottom: 11px;
+  border-radius: var(--radius-sm);
 }
 
 .app-title {
-    font-size: 1.5rem;
-    /* Increased from 1.1rem */
-    font-weight: 700;
-    color: var(--fg);
-    letter-spacing: -0.01em;
+  font-size: 1.5rem;
+  /* Increased from 1.1rem */
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.01em;
 }
 
 /* Navigation */
 .main-nav {
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
 }
 
 /* Replaced by Tailwind utility classes in JSX for hiding, but keeping this for structure or if Tailwind is not fully set up for these specific classes */
 
 .nav-link {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-md);
-    color: var(--fg-muted);
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 500;
-    transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  color: var(--fg-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 
 .nav-link:hover {
-    background: var(--bg1);
-    color: var(--gold-light);
+  background: var(--bg1);
+  color: var(--gold-light);
 }
 
 .nav-link.active {
-    background: var(--bg-card);
-    color: var(--gold);
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background: var(--bg-card);
+  color: var(--gold);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .nav-icon {
-    width: 1.25rem;
-    height: 1.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
 }
 
 /* User Area */
 .header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
 }
 
 .nav-menu-area,
 .user-profile-area {
-    position: relative;
-    display: flex;
-    align-items: center;
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .user-profile-btn {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    background: transparent;
-    border: 1px solid transparent;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: var(--radius-full);
-    transition: background var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-fast);
 }
 
 .user-profile-btn:hover {
-    background: var(--bg1);
-    border-color: var(--border-dim);
+  background: var(--bg1);
+  border-color: var(--border-dim);
 }
 
 .user-avatar {
-    width: 32px;
-    height: 32px;
-    background: var(--gold-dim);
-    border: 1px solid var(--gold);
-    color: var(--fg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 0.9rem;
+  width: 32px;
+  height: 32px;
+  background: var(--gold-dim);
+  border: 1px solid var(--gold);
+  color: var(--fg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 /* Mobile Menu Button */
 .mobile-menu-btn {
-    background: none;
-    border: none;
-    color: var(--fg);
-    cursor: pointer;
-    padding: 0.5rem;
-    border-radius: var(--radius-sm);
-    transition: background 0.2s;
+  background: none;
+  border: none;
+  color: var(--fg);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
 }
 
 .mobile-menu-btn:hover {
-    background: var(--bg1);
+  background: var(--bg1);
 }
 
 @media (min-width: 769px) {
-    .nav-menu-area {
-        display: none;
-    }
+  .nav-menu-area {
+    display: none;
+  }
 }
 
 @media (max-width: 768px) {
-    .header-inner {
-        padding: 0 var(--space-md);
-        height: 80px;
-        /* Smaller header on mobile */
-    }
+  .header-inner {
+    padding: 0 var(--space-md);
+    height: 80px;
+    /* Smaller header on mobile */
+  }
 
-    .logo-img {
-        height: 60px;
-        /* Smaller logo on mobile */
-    }
+  .logo-img {
+    height: 60px;
+    /* Smaller logo on mobile */
+  }
 
-    .app-title {
-        font-size: 1.2rem;
-    }
+  .app-title {
+    font-size: 1.2rem;
+  }
 
-    /* Hide desktop nav */
-    .main-nav {
-        display: none;
-    }
+  /* Hide desktop nav */
+  .main-nav {
+    display: none;
+  }
 }
 
 /* Dropdown */
 .user-dropdown {
-    position: absolute;
-    top: 120%;
-    right: 0;
-    width: 220px;
-    /* Slightly wider for mobile links */
-    background: var(--bg-card);
-    /* Ensure this is opaque in your theme or use a fallback */
-    background-color: #1d2021;
-    /* Fallback for opacity if var is transparent */
-    border: 1px solid var(--border-dim);
-    border-radius: var(--radius-md);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    /* Stronger shadow for floating effect */
-    padding: 0.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    animation: dropdown-fade 0.2s ease-out;
-    z-index: 100;
+  position: absolute;
+  top: 120%;
+  right: 0;
+  width: 220px;
+  /* Slightly wider for mobile links */
+  background: var(--bg-card);
+  /* Ensure this is opaque in your theme or use a fallback */
+  background-color: #1d2021;
+  /* Fallback for opacity if var is transparent */
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  /* Stronger shadow for floating effect */
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  animation: dropdown-fade 0.2s ease-out;
+  z-index: 100;
 }
 
 @keyframes dropdown-fade {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .dropdown-header {
-    padding: 0.5rem 0.75rem;
-    border-bottom: 1px solid var(--border-dim);
-    margin-bottom: 0.25rem;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-dim);
+  margin-bottom: 0.25rem;
 }
 
 .dropdown-item {
-    display: block;
-    width: 100%;
-    text-align: left;
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-sm);
-    color: var(--fg);
-    text-decoration: none;
-    font-size: 0.9rem;
-    transition: background 0.1s;
-    background: none;
-    border: none;
-    cursor: pointer;
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--fg);
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: background 0.1s;
+  background: none;
+  border: none;
+  cursor: pointer;
 }
 
 .dropdown-item:hover {
-    background: var(--bg1);
+  background: var(--bg1);
 }
