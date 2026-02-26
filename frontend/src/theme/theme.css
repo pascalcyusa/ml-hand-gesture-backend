@@ -2,7 +2,7 @@
    Blue & White Theme Design System
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 :root {
   /* ── Palette Definition ── */
@@ -25,7 +25,7 @@
 
   /* ── Backgrounds ── */
   --bg-hard: var(--deep-space-blue); /* App Background */
-  --bg: var(--baltic-blue);          /* Component Background */
+  --bg: var(--baltic-blue); /* Component Background */
 
   /* Derived Backgrounds for depth */
   --bg-soft: color-mix(in srgb, var(--baltic-blue), white 5%);
@@ -39,9 +39,9 @@
   --fg-dim: var(--sky-blue);
   --fg-muted: color-mix(in srgb, var(--sky-blue), transparent 30%);
 
-  /* ── Primary Brand Colors (Replacing Gold) ── */
-  --primary: var(--blue-bell);        /* Main Action Color */
-  --primary-dim: var(--baltic-blue);  /* Darker/Muted Variant */
+  /* ── Primary Brand Colors ── */
+  --primary: var(--blue-bell); /* Main Action Color */
+  --primary-dim: var(--baltic-blue); /* Darker/Muted Variant */
   --primary-light: var(--sky-reflection); /* Lighter/Hover Variant */
 
   /* ── Semantic Tokens ── */
@@ -55,8 +55,8 @@
   --color-success: var(--aqua);
 
   /* ── Typography ── */
-  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   /* ── Spacing ── */
   --space-xs: 4px;
@@ -102,7 +102,7 @@ html {
 
 body {
   font-family: var(--font-ui);
-  background-color: var(--bg-hard);
+  background: rgba(29, 32, 33, 0.95); /* Match header background */
   color: var(--fg);
   line-height: 1.6;
   min-height: 100vh;
@@ -228,10 +228,9 @@ a:hover {
 }
 
 /* ── Cards ── */
+
 .card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: var(--radius-xl);
   padding: var(--space-lg);
@@ -272,7 +271,7 @@ a:hover {
 }
 
 .toggle-slider::after {
-  content: '';
+  content: "";
   position: absolute;
   width: 18px;
   height: 18px;
@@ -280,16 +279,18 @@ a:hover {
   background: var(--fg-dim);
   top: 2px;
   left: 2px;
-  transition: transform 200ms ease, background 200ms ease;
+  transition:
+    transform 200ms ease,
+    background 200ms ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-switch input:checked+.toggle-slider {
+.toggle-switch input:checked + .toggle-slider {
   background: var(--primary);
   border-color: rgba(40, 146, 215, 0.3);
 }
 
-.toggle-switch input:checked+.toggle-slider::after {
+.toggle-switch input:checked + .toggle-slider::after {
   background: var(--white);
   transform: translateX(20px);
 }
@@ -312,7 +313,9 @@ a:hover {
 .prediction-fill {
   height: 100%;
   border-radius: var(--radius-md);
-  transition: width 200ms ease, background-color 200ms ease;
+  transition:
+    width 200ms ease,
+    background-color 200ms ease;
   background: var(--blue-dim);
 }
 
@@ -453,7 +456,9 @@ a:hover {
   border: 1px solid var(--bg3);
   overflow: hidden;
   cursor: pointer;
-  transition: border-color var(--transition-fast), transform var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
   background: var(--bg1);
 }
 
@@ -499,7 +504,6 @@ a:hover {
 
 /* ── Animations ── */
 @keyframes pulse-glow {
-
   0%,
   100% {
     box-shadow: 0 0 0px transparent;

@@ -1,112 +1,113 @@
 /* TrainTab.css */
 .train-tab {
-    animation: fade-in 400ms ease;
-    padding-bottom: 80px;
+  animation: fade-in 400ms ease;
+  padding-bottom: 80px;
 }
 
 .train-layout {
-    display: grid;
-    grid-template-columns: 380px 1fr;
-    gap: var(--space-xl);
-    align-items: start;
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: var(--space-lg);
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  gap: var(--space-xl);
+  align-items: start;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: var(--space-lg);
 }
 
 @media (max-width: 1024px) {
-    .train-layout {
-        grid-template-columns: 1fr;
-        padding: var(--space-md);
-        /* Reduce padding on mobile */
-        gap: var(--space-lg);
-    }
+  .train-layout {
+    grid-template-columns: 1fr;
+    padding: var(--space-md);
+    /* Reduce padding on mobile */
+    gap: var(--space-lg);
+  }
 }
 
 .train-left {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-lg);
-    position: sticky;
-    top: 24px;
-    z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  position: sticky;
+  top: 24px;
+  z-index: 10;
 }
 
 @media (max-width: 1024px) {
-    .train-left {
-        position: static;
-        order: -1;
-        /* Ensure camera stays on top */
-    }
+  .train-left {
+    position: static;
+    order: -1;
+    /* Ensure camera stays on top */
+  }
 }
 
 /* ── Right panel ── */
 .train-right {
-    display: flex;
-    flex-direction: column-reverse;
-    gap: var(--space-xl);
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-xl);
 }
 
 @media (min-width: 1280px) {
-    .train-right {
-        display: grid;
-        grid-template-columns: 1fr 280px;
-        align-items: start;
-        gap: var(--space-lg);
-    }
+  .train-right {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    align-items: start;
+    gap: var(--space-lg);
+  }
 }
 
 .train-section-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: var(--space-md);
-    color: var(--fg);
-    display: flex;
-    align-items: center;
-    gap: var(--space-md);
-    font-family: var(--font-ui);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: var(--space-md);
+  color: var(--fg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  font-family: var(--font-ui);
 }
 
 .train-section-hint {
-    font-size: 0.75rem;
-    color: var(--fg-muted);
-    font-weight: 500;
-    background: var(--bg2);
-    padding: 4px 10px;
-    border-radius: var(--radius-full);
-    font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--fg-muted);
+  font-weight: 500;
+  background: var(--bg2);
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
 }
 
 /* ── Classes List ── */
 .train-classes-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
 }
 
 @media (min-width: 1400px) {
-    .train-classes-list {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: var(--space-lg);
-        align-items: start;
-    }
+  .train-classes-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+    align-items: start;
+  }
 }
 
 /* ── Predictions Sidebar ── */
+
 .train-predictions {
-    background: var(--bg1);
-    padding: var(--space-lg);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--bg2);
-    position: sticky;
-    top: 24px;
-    box-shadow: var(--shadow-md);
+  background: transparent;
+  padding: var(--space-lg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--bg2);
+  position: sticky;
+  top: 24px;
+  box-shadow: var(--shadow-md);
 }
 
 .train-predictions h3 {
-    margin-top: 0;
-    color: var(--fg);
-    font-size: 1rem;
-    margin-bottom: var(--space-md);
+  margin-top: 0;
+  color: var(--fg);
+  font-size: 1rem;
+  margin-bottom: var(--space-md);
 }
