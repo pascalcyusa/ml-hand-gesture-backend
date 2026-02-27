@@ -34,33 +34,18 @@ export function generateMotorCommand(portLabel, action, speed, degrees) {
 
     // Constrain speed -100 to 100
     const spd = Math.max(-100, Math.min(100, speed));
-
-    // START SPEED (0x07) or START SPEED FOR DEGREES (0x09) or SIMILAR?
-    // LWP3 is complex. Let's use a common "Port Output Command" structure.
-    // Opcode 0x81 (Port Output Command), PortID, Startup/Completion (0x11), SubCommand (0x07 - Start Speed)
-
-    // 0x04 (Len), 0x00 (HubID), 0x81 (Cmd), Port, 0x11 (Exec), 0x51 (WriteDirect), 0x00 (Mode/Profile), Speed
-
-    // However, often simpler: sending text commands via REPL if the characteristic supports it (Nordic UART).
-    // The `useBLE` connects to `6e400001` which is Nordic UART Service.
-    // This implies we are sending **string python commands** to the REPL, NOT binary LWP3 packets!
-    // The previous `useBLE` code used `6e40...` UUIDs which are standard for Nordic UART.
-    // So we should send Python code strings!
-
-    // "import hub; hub.port.A.motor.run_at_speed(50)"
-
-    // Let's assume we are talking to the MicroPython REPL on the hub.
+    const pyPort = `port.${portLabel}`;
 
     if (action === 'stop') {
-        return `hub.port.${portLabel}.motor.brake()\r\n`;
+        return `try:\n    motor.stop(${pyPort})\nexcept:\n    pass\n`;
     }
 
     if (action === 'run_forever') {
-        return `hub.port.${portLabel}.motor.run_at_speed(${spd})\r\n`;
+        return `try:\n    motor.run(${pyPort}, ${spd})\nexcept:\n    pass\n`;
     }
 
     if (action === 'run_degrees') {
-        return `hub.port.${portLabel}.motor.run_for_degrees(${degrees}, ${spd})\r\n`;
+        return `try:\n    motor.run_for_degrees(${pyPort}, ${degrees}, ${spd})\nexcept:\n    pass\n`;
     }
 
     return null;

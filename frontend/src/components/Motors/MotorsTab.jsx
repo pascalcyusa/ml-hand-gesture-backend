@@ -9,6 +9,7 @@ import {
     CloudArrowUpIcon,
     CloudArrowDownIcon,
     PlayIcon,
+    StopIcon,
     TrashIcon,
 } from '@heroicons/react/24/outline';
 import { useStorageManager } from '../../hooks/useStorageManager.js';
@@ -37,6 +38,9 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
     const videoReadyRef = useRef(false);
+    const lastPredRef = useRef(null);
+    const lastTimeRef = useRef(0);
+    const playCancelledRef = useRef(false);
 
     const [deleteConfirm, setDeleteConfirm] = useState({
         isOpen: false,
@@ -107,6 +111,76 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         });
     };
 
+    const playSequence = useCallback(async (className) => {
+        const config = configData[className];
+        if (!config || !Array.isArray(config) || config.length === 0) return;
+
+        setIsPlaying(true);
+        try {
+            let combinedCmd = 'import hub\nimport motor\nfrom hub import port\n';
+            for (const motor of config) {
+                if (motor.action === 'stop') {
+                    const cmdString = generateMotorCommand(motor.port, 'stop', 0, 0);
+                    if (cmdString) combinedCmd += cmdString;
+                    continue;
+                }
+
+                const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees);
+                if (cmdString) combinedCmd += cmdString;
+            }
+            
+            if (combinedCmd) {
+                const bytes = encodeCommand(combinedCmd);
+                await ble.write(bytes);
+            }
+        } catch (err) {
+            console.error(`Error playing sequence for ${className}:`, err);
+        } finally {
+            setIsPlaying(false);
+        }
+    }, [configData, ble]);
+
+    // React to ML predictions
+    useEffect(() => {
+        const topPrediction = prediction.topPrediction;
+        
+        if (!topPrediction || isPlaying) {
+            if (!topPrediction) {
+                lastPredRef.current = null;
+            }
+            return;
+        }
+
+        if (!ble.device?.connected) return;
+
+        const now = Date.now();
+        // Debounce: prevent same class from spamming commands constantly
+        if (topPrediction.className === lastPredRef.current && now - lastTimeRef.current < 1000) {
+            return; 
+        }
+
+        lastPredRef.current = topPrediction.className;
+        lastTimeRef.current = now;
+
+        playSequence(topPrediction.className);
+    }, [prediction.topPrediction, isPlaying, playSequence, ble.device?.connected]);
+
+    const handleStopAll = useCallback(async () => {
+        playCancelledRef.current = true;
+        setIsPlaying(false);
+        lastPredRef.current = null;
+        if (!ble.device?.connected) return;
+        try {
+            const stopCmds = 'import hub\nimport motor\nfrom hub import port\n' +
+                ['A', 'B', 'C', 'D', 'E', 'F']
+                    .map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`)
+                    .join('');
+            await ble.write(encodeCommand(stopCmds));
+        } catch (err) {
+            console.error("Stop All Error:", err);
+        }
+    }, [ble]);
+
     // Play All Logic
     const handlePlayAll = useCallback(async () => {
         if (isPlaying) return;
@@ -115,41 +189,57 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             return;
         }
 
+        playCancelledRef.current = false;
         setIsPlaying(true);
         try {
             for (const name of classNames) {
+                if (playCancelledRef.current) break;
                 // Get config for this class. 
                 const config = configData[name];
 
                 if (config && Array.isArray(config)) {
                     await showToast(`Executing ${name}...`, 'info', 1000);
+                    if (playCancelledRef.current) break;
 
+                    let classCmds = 'import hub\nimport motor\nfrom hub import port\n';
                     for (const motor of config) {
                         if (motor.action === 'stop') continue;
 
                         const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees);
-                        if (cmdString) {
-                            const bytes = encodeCommand(cmdString);
-                            await ble.write(bytes);
-                        }
+                        if (cmdString) classCmds += cmdString;
+                    }
+                    
+                    // Only send if it contains more than just the imports
+                    if (classCmds.split('\n').length > 4) {
+                        await ble.write(encodeCommand(classCmds));
                     }
 
                     // Fixed delay between classes 
                     await new Promise(r => setTimeout(r, 2000));
+                    if (playCancelledRef.current) break;
 
                     // Stop motors before next class (safety)
+                    let stopCmds = 'import hub\nimport motor\nfrom hub import port\n';
                     for (const port of ['A', 'B', 'C', 'D', 'E', 'F']) {
                         const stopCmd = generateMotorCommand(port, 'stop', 0, 0);
-                        if (stopCmd) await ble.write(encodeCommand(stopCmd));
+                        if (stopCmd) stopCmds += stopCmd;
+                    }
+                    if (stopCmds.split('\n').length > 4) {
+                        await ble.write(encodeCommand(stopCmds));
                     }
                 }
             }
-            showToast('Done playing all steps', 'success');
+            if (!playCancelledRef.current) {
+                showToast('Done playing all steps', 'success');
+            } else {
+                showToast('Stopped sequence', 'info');
+            }
         } catch (err) {
             console.error("Play All Error:", err);
             showToast("Error executing commands", 'error');
         } finally {
             setIsPlaying(false);
+            playCancelledRef.current = false;
         }
     }, [classNames, ble, isPlaying, configData, showToast]);
 
@@ -274,6 +364,14 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                             >
                                 <PlayIcon className="h-4 w-4 mr-1.5" />
                                 Play All
+                            </Button>
+                            <Button
+                                variant="danger"
+                                size="sm"
+                                onClick={handleStopAll}
+                            >
+                                <StopIcon className="h-4 w-4 mr-1.5" />
+                                Stop
                             </Button>
                         </div>
                     </div>

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useMemo } from 'react';
+import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 
 export function useSerial() {
     const [device, setDevice] = useState(null);
@@ -10,26 +10,16 @@ export function useSerial() {
 
     const isSupported = typeof navigator !== 'undefined' && !!navigator.serial;
 
-    const connect = useCallback(async () => {
-        if (!isSupported) {
-            setDevice({ error: 'Web Serial not supported in this browser', status: 'unsupported' });
-            return { success: false, error: 'Web Serial not supported in this browser' };
-        }
-
-        setDevice({ connecting: true, error: null, status: 'requesting' });
-
+    const setupConnection = useCallback(async (port) => {
         try {
-            const port = await navigator.serial.requestPort();
             portRef.current = port;
 
-            setDevice(prev => ({ ...prev, status: 'connecting_port', name: 'SPIKE Hub (Serial)' }));
+            setDevice(prev => ({ ...prev, status: 'connecting_port', name: 'SPIKE Hub (Serial)', connecting: true }));
             
             await port.open({ baudRate: 115200 });
 
             setDevice(prev => ({ ...prev, status: 'initializing_repl' }));
 
-            // For simplicity in a REPL, raw writing/reading without TextEncoderStream 
-            // is often safer if we are dealing with raw Uint8Arrays
             const writer = port.writable.getWriter();
             writerRef.current = writer;
 
@@ -44,7 +34,7 @@ export function useSerial() {
                         const { value, done } = await readerRef.current.read();
                         if (done) break;
                         if (value && notificationCallbackRef.current) {
-                            notificationCallbackRef.current(value); // already Uint8Array
+                            notificationCallbackRef.current(value);
                         }
                     }
                 } catch (err) {
@@ -58,8 +48,16 @@ export function useSerial() {
             try {
                 const ctrlC = new Uint8Array([0x03, 0x0D, 0x0A]);
                 await writer.write(ctrlC);
+                
+                // wait a tiny bit for REPL to be ready
+                await new Promise(r => setTimeout(r, 100));
+
+                // Import necessary modules for motor control
+                const imports = "import hub\nimport motor\nfrom hub import port\n";
+                const initCmd = new Uint8Array([0x05, ...new TextEncoder().encode(imports), 0x04]);
+                await writer.write(initCmd);
             } catch (err) {
-                console.warn('Could not send init Ctrl-C', err);
+                console.warn('Could not initialize REPL', err);
             }
 
             setDevice({
@@ -89,33 +87,30 @@ export function useSerial() {
             });
             return { success: false, error: isCancellation ? null : errorMessage, isCancellation };
         }
-    }, [isSupported]);
-
-    const write = useCallback(async (data) => {
-        if (!writerRef.current) {
-            console.error('Serial: not connected');
-            return false;
-        }
-        try {
-            // data is expected to be Uint8Array (from encodeCommand)
-            // But we should use the paste mode for MicroPython REPL to ensure 
-            // commands execute reliably
-            const ctrlE = new Uint8Array([0x05]); // Enter Paste Mode
-            const ctrlD = new Uint8Array([0x04]); // Execute Paste Mode
-            
-            // Combine them into one buffer: Ctrl-E + Data + Ctrl-D
-            const combined = new Uint8Array(data.length + 2);
-            combined[0] = ctrlE[0];
-            combined.set(new Uint8Array(data), 1);
-            combined[combined.length - 1] = ctrlD[0];
-
-            await writerRef.current.write(combined);
-            return true;
-        } catch (err) {
-            console.error('Serial write error:', err);
-            return false;
-        }
     }, []);
+
+    const connect = useCallback(async () => {
+        if (!isSupported) {
+            setDevice({ error: 'Web Serial not supported in this browser', status: 'unsupported' });
+            return { success: false, error: 'Web Serial not supported in this browser' };
+        }
+
+        setDevice({ connecting: true, error: null, status: 'requesting' });
+
+        try {
+            const port = await navigator.serial.requestPort();
+            return await setupConnection(port);
+        } catch (err) {
+            console.error('Serial request error:', err);
+            const isCancellation = err.name === 'NotFoundError' || err.message.includes('No port selected');
+            setDevice({
+                connecting: false,
+                error: isCancellation ? null : err.message,
+                status: isCancellation ? 'idle' : 'error'
+            });
+            return { success: false, error: isCancellation ? null : err.message, isCancellation };
+        }
+    }, [isSupported, setupConnection]);
 
     const disconnect = useCallback(async () => {
         keepReadingRef.current = false;
@@ -150,6 +145,62 @@ export function useSerial() {
             name: 'Device',
             status: 'disconnected'
         });
+    }, []);
+
+    // Auto-reconnect on load if ports were previously granted
+    useEffect(() => {
+        if (!isSupported) return;
+
+        const autoConnect = async () => {
+            try {
+                const ports = await navigator.serial.getPorts();
+                if (ports.length > 0) {
+                    console.log('Found previously granted serial ports, attempting auto-reconnect...');
+                    setDevice({ connecting: true, error: null, status: 'requesting' });
+                    // Try to connect to the first available port
+                    await setupConnection(ports[0]);
+                }
+            } catch (err) {
+                console.warn('Auto-reconnect failed', err);
+            }
+        };
+
+        autoConnect();
+
+        // Listen for disconnect events (e.g., USB unplugged or Bluetooth lost)
+        const handleDisconnect = (e) => {
+            if (e.target === portRef.current) {
+                console.log('Serial device disconnected unexpectedly');
+                disconnect();
+            }
+        };
+
+        navigator.serial.addEventListener('disconnect', handleDisconnect);
+        return () => {
+            navigator.serial.removeEventListener('disconnect', handleDisconnect);
+        };
+    }, [isSupported, setupConnection, disconnect]);
+
+    const write = useCallback(async (data) => {
+        if (!writerRef.current) {
+            console.error('Serial: not connected');
+            return false;
+        }
+        try {
+            const ctrlE = new Uint8Array([0x05]); // Enter Paste Mode
+            const ctrlD = new Uint8Array([0x04]); // Execute Paste Mode
+            
+            const combined = new Uint8Array(data.length + 2);
+            combined[0] = ctrlE[0];
+            combined.set(new Uint8Array(data), 1);
+            combined[combined.length - 1] = ctrlD[0];
+
+            await writerRef.current.write(combined);
+            return true;
+        } catch (err) {
+            console.error('Serial write error:', err);
+            return false;
+        }
     }, []);
 
     const onNotify = useCallback((callback) => {
