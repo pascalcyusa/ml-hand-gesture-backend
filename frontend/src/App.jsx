@@ -22,7 +22,7 @@ import ResetPasswordHandler from './components/common/ResetPasswordHandler.jsx';
 import Toast from './components/common/Toast.jsx';
 
 import { useAuth } from './hooks/useAuth.js';
-import { useBLE } from './hooks/useBLE.js';
+import { useSerial } from './hooks/useSerial.js';
 import { useHandDetection } from './hooks/useHandDetection.js';
 import { useClassManager } from './hooks/useClassManager.js';
 import { useModelTrainer } from './hooks/useModelTrainer.js';
@@ -53,7 +53,7 @@ export default function App() {
   const auth = useAuth();
 
   // ── BLE ──
-  const ble = useBLE();
+  const ble = useSerial(); // keep variable name 'ble' to avoid touching too many components right now
 
   // ── Shared hooks ──
   const hand = useHandDetection();

@@ -19,22 +19,17 @@ import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
 import './DevicesTab.css';
 
-// Default SPIKE Prime UUIDs
-const DEFAULT_SERVICE_UUID = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-const DEFAULT_WRITE_UUID = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-const DEFAULT_NOTIFY_UUID = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+// Removed UUIDs as we now use Web Serial
 
 export default function DevicesTab({ showToast, ble }) {
-    // const ble = useBLE(); // Lifted to App.jsx
+    // 'ble' prop is actually the useSerial hook from App.jsx
 
     const handleConnect = useCallback(async () => {
-        const success = await ble.connect(
-            DEFAULT_SERVICE_UUID,
-            DEFAULT_WRITE_UUID,
-            DEFAULT_NOTIFY_UUID
-        );
-        if (success) {
+        const result = await ble.connect();
+        if (result.success) {
             showToast('LEGO Spike Prime connected!', 'success');
+        } else if (!result.isCancellation && result.error) {
+            showToast(`Connection failed: ${result.error}`, 'error');
         }
     }, [ble, showToast]);
 
@@ -42,6 +37,17 @@ export default function DevicesTab({ showToast, ble }) {
         ble.disconnect();
         showToast('Device disconnected', 'info');
     }, [ble, showToast]);
+
+    // Map the internal serial status to user-friendly messages
+    const getStatusMessage = () => {
+        if (!ble.device?.connecting) return 'Select your Hub in the popup';
+        switch (ble.device?.status) {
+            case 'requesting': return 'Waiting for device selection...';
+            case 'connecting_port': return 'Opening Serial Port...';
+            case 'initializing_repl': return 'Initializing Python REPL...';
+            default: return 'Connecting...';
+        }
+    };
 
     // Render the 5x5 pixel grid for the hub illustration
     const renderHubPixels = () => {
@@ -70,10 +76,10 @@ export default function DevicesTab({ showToast, ble }) {
                 <Card className="flex items-start gap-4 border-[var(--gold-dim)]">
                     <ExclamationTriangleIcon className="h-6 w-6 text-[var(--gold)] shrink-0 mt-0.5" />
                     <div>
-                        <strong>Web Bluetooth Not Available</strong>
+                        <strong>Web Serial Not Available</strong>
                         <p className="text-sm text-[var(--fg-dim)] mt-1">
-                            Your browser doesn't support Web Bluetooth. Try Chrome, Edge, or Opera
-                            on desktop, or Chrome on Android.
+                            Your browser doesn't support Web Serial. Try Chrome, Edge, or Opera
+                            on desktop. Note: Safari and Firefox do not support Web Serial.
                         </p>
                     </div>
                 </Card>
@@ -105,8 +111,8 @@ export default function DevicesTab({ showToast, ble }) {
                         </>
                     ) : ble.device?.connecting ? (
                         <>
-                            <span className="status-text text-[var(--gold-dim)]">Searching...</span>
-                            <span className="text-sm text-[var(--fg-muted)]">Select your Hub in the popup</span>
+                            <span className="status-text text-[var(--gold-dim)]">Connecting...</span>
+                            <span className="text-sm text-[var(--fg-muted)]">{getStatusMessage()}</span>
                         </>
                     ) : (
                         <>

@@ -22,24 +22,64 @@ export function useBLE() {
     const isSupported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
 
     // Connect to a device
-    const connect = useCallback(async (serviceUUID, writeUUID, notifyUUID) => {
+    const connect = useCallback(async (defaultServiceUUID, defaultWriteUUID, defaultNotifyUUID) => {
         if (!isSupported) {
-            setDevice({ error: 'Web Bluetooth not supported in this browser' });
-            return false;
+            setDevice({ error: 'Web Bluetooth not supported in this browser', status: 'unsupported' });
+            return { success: false, error: 'Web Bluetooth not supported in this browser' };
         }
 
-        setDevice({ connecting: true, error: null });
+        setDevice({ connecting: true, error: null, status: 'requesting' });
+
+        // A list of known SPIKE Prime / Pybricks BLE profiles
+        const knownProfiles = [
+            { // Provided default (typically Nordic UART)
+                service: defaultServiceUUID,
+                write: defaultWriteUUID,
+                notify: defaultNotifyUUID
+            },
+            { // Pybricks Custom UART Profile
+                service: 'c5f50001-8280-46da-89f4-6d8051e4aeef',
+                write: 'c5f50002-8280-46da-89f4-6d8051e4aeef',
+                notify: 'c5f50003-8280-46da-89f4-6d8051e4aeef'
+            },
+            { // Standard LEGO LWP3
+                service: '00001623-1212-efde-1623-785feabcd123',
+                write: '00001624-1212-efde-1623-785feabcd123',
+                notify: '00001624-1212-efde-1623-785feabcd123'
+            }
+        ];
 
         try {
             const bleDevice = await navigator.bluetooth.requestDevice({
-                filters: [{ services: [serviceUUID] }],
+                acceptAllDevices: true,
+                optionalServices: knownProfiles.map(p => p.service),
             });
 
+            setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: bleDevice.name || 'LEGO Hub' }));
             const server = await bleDevice.gatt.connect();
-            const service = await server.getPrimaryService(serviceUUID);
-            const writeChar = await service.getCharacteristic(writeUUID);
-            const notifyChar = await service.getCharacteristic(notifyUUID);
+            
+            setDevice(prev => ({ ...prev, status: 'discovering_services' }));
+            let service = null;
+            let writeChar = null;
+            let notifyChar = null;
 
+            // Find the correct active profile
+            for (const profile of knownProfiles) {
+                try {
+                    service = await server.getPrimaryService(profile.service);
+                    writeChar = await service.getCharacteristic(profile.write);
+                    notifyChar = await service.getCharacteristic(profile.notify);
+                    break; // Successfully got the characteristics
+                } catch {
+                    service = null; // Try the next one
+                }
+            }
+
+            if (!service) {
+                throw new Error("No compatible LEGO services found on this device. Please check the hub firmware.");
+            }
+
+            setDevice(prev => ({ ...prev, status: 'initializing_repl' }));
             // Start notifications
             await notifyChar.startNotifications();
             notifyChar.addEventListener('characteristicvaluechanged', (event) => {
@@ -49,12 +89,25 @@ export function useBLE() {
                 }
             });
 
+            // Send Ctrl-C to interrupt any running program and enter REPL
+            try {
+                const ctrlC = new Uint8Array([0x03, 0x0D, 0x0A]); // Ctrl-C + CRLF
+                if (writeChar.properties && writeChar.properties.writeWithoutResponse) {
+                    await writeChar.writeValueWithoutResponse(ctrlC);
+                } else {
+                    await writeChar.writeValue(ctrlC);
+                }
+            } catch (err) {
+                console.warn('Could not send init Ctrl-C', err);
+            }
+
             // Handle disconnection
             bleDevice.addEventListener('gattserverdisconnected', () => {
                 setDevice({
                     connected: false,
                     connecting: false,
                     name: bleDevice.name || 'Device',
+                    status: 'disconnected'
                 });
                 deviceRef.current = {
                     device: null, server: null, service: null, writeChar: null, notifyChar: null,
@@ -70,18 +123,26 @@ export function useBLE() {
                 connected: true,
                 connecting: false,
                 error: null,
+                status: 'connected'
             });
 
-            return true;
+            return { success: true };
         } catch (err) {
             console.error('BLE connect error:', err);
+            
+            let errorMessage = err.message;
+            if (err.name === 'NotFoundError') errorMessage = 'Device pairing cancelled or device not found.';
+            else if (err.name === 'SecurityError') errorMessage = 'Bluetooth pairing requires a secure context (HTTPS) or user gesture.';
+            else if (err.name === 'NetworkError') errorMessage = 'Failed to establish a GATT connection to the device.';
+            
+            const isCancellation = err.message === 'User cancelled the requestDevice() chooser.' || err.name === 'NotFoundError';
+
             setDevice({
                 connecting: false,
-                error: err.message === 'User cancelled the requestDevice() chooser.'
-                    ? null  // User just closed the picker — not an error
-                    : err.message,
+                error: isCancellation ? null : errorMessage,
+                status: isCancellation ? 'idle' : 'error'
             });
-            return false;
+            return { success: false, error: isCancellation ? null : errorMessage, isCancellation };
         }
     }, [isSupported]);
 
@@ -94,7 +155,18 @@ export function useBLE() {
         }
         try {
             const bytes = new Uint8Array(data);
-            await ref.writeChar.writeValue(bytes);
+            const CHUNK_SIZE = 20;
+            
+            for (let i = 0; i < bytes.length; i += CHUNK_SIZE) {
+                const chunk = bytes.slice(i, i + CHUNK_SIZE);
+                if (ref.writeChar.properties && ref.writeChar.properties.writeWithoutResponse) {
+                    await ref.writeChar.writeValueWithoutResponse(chunk);
+                } else {
+                    await ref.writeChar.writeValue(chunk);
+                }
+                // small delay between chunks to help the Hub process them
+                await new Promise(r => setTimeout(r, 15)); 
+            }
             return true;
         } catch (err) {
             console.error('BLE write error:', err);
