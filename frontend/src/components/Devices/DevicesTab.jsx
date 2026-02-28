@@ -11,25 +11,32 @@ import {
     ExclamationTriangleIcon,
     LinkIcon,
     SignalSlashIcon,
-    BoltIcon, // Using BoltIcon for power/connection
+    BoltIcon,
+    ComputerDesktopIcon // using standard outline icons available
 } from '@heroicons/react/24/outline';
-// import { useBLE } from '../../hooks/useBLE.js'; // REMOVED
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
 import './DevicesTab.css';
 
-// Removed UUIDs as we now use Web Serial
-
 export default function DevicesTab({ showToast, ble }) {
-    // 'ble' prop is actually the useSerial hook from App.jsx
+    // 'ble' prop is actually the useSpikeDevice hook from App.jsx
 
-    const handleConnect = useCallback(async () => {
-        const result = await ble.connect();
+    const handleConnectUSB = useCallback(async () => {
+        const result = await ble.connectUSB();
         if (result.success) {
-            showToast('LEGO Spike Prime connected!', 'success');
+            showToast('LEGO Spike Prime connected via USB!', 'success');
         } else if (!result.isCancellation && result.error) {
-            showToast(`Connection failed: ${result.error}`, 'error');
+            showToast(`USB Connection failed: ${result.error}`, 'error');
+        }
+    }, [ble, showToast]);
+
+    const handleConnectBLE = useCallback(async () => {
+        const result = await ble.connectBLE();
+        if (result.success) {
+            showToast('LEGO Spike Prime connected via Bluetooth!', 'success');
+        } else if (!result.isCancellation && result.error) {
+            showToast(`Bluetooth Connection failed: ${result.error}`, 'error');
         }
     }, [ble, showToast]);
 
@@ -44,6 +51,8 @@ export default function DevicesTab({ showToast, ble }) {
         switch (ble.device?.status) {
             case 'requesting': return 'Waiting for device selection...';
             case 'connecting_port': return 'Opening Serial Port...';
+            case 'connecting_gatt': return 'Connecting to GATT Server...';
+            case 'discovering_services': return 'Discovering LEGO services...';
             case 'initializing_repl': return 'Initializing Python REPL...';
             default: return 'Connecting...';
         }
@@ -72,14 +81,13 @@ export default function DevicesTab({ showToast, ble }) {
                 </div>
             </div>
 
-            {!ble.isSupported && (
+            {!ble.isSerialSupported && !ble.isBLESupported && (
                 <Card className="flex items-start gap-4 border-[var(--gold-dim)]">
                     <ExclamationTriangleIcon className="h-6 w-6 text-[var(--gold)] shrink-0 mt-0.5" />
                     <div>
-                        <strong>Web Serial Not Available</strong>
+                        <strong>Web Serial & Web Bluetooth Not Available</strong>
                         <p className="text-sm text-[var(--fg-dim)] mt-1">
-                            Your browser doesn't support Web Serial. Try Chrome, Edge, or Opera
-                            on desktop. Note: Safari and Firefox do not support Web Serial.
+                            Your browser doesn't support Web Serial or Web Bluetooth. Try Chrome or Edge on desktop.
                         </p>
                     </div>
                 </Card>
@@ -132,20 +140,28 @@ export default function DevicesTab({ showToast, ble }) {
                         Disconnect
                     </Button>
                 ) : (
-                    <Button
-                        variant="primary"
-                        size="lg"
-                        className="connect-btn-lg"
-                        onClick={handleConnect}
-                        disabled={!ble.isSupported || ble.device?.connecting}
-                    >
-                        {ble.device?.connecting ? (
-                            <BoltIcon className="h-5 w-5 animate-pulse" />
-                        ) : (
-                            <LinkIcon className="h-5 w-5" />
-                        )}
-                        {ble.device?.connecting ? 'Pairing...' : 'Connect to Hub'}
-                    </Button>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="connect-btn-lg flex-1"
+                            onClick={handleConnectUSB}
+                            disabled={!ble.isSerialSupported || ble.device?.connecting}
+                        >
+                            <ComputerDesktopIcon className="h-5 w-5" />
+                            Connect via USB
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="connect-btn-lg flex-1"
+                            onClick={handleConnectBLE}
+                            disabled={!ble.isBLESupported || ble.device?.connecting}
+                        >
+                            <SignalIcon className="h-5 w-5" />
+                            Connect via BLE
+                        </Button>
+                    </div>
                 )}
 
                 {ble.device?.error && (
