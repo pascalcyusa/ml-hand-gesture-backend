@@ -33,19 +33,19 @@ export function generateMotorCommand(portLabel, action, speed, degrees) {
     if (port === undefined) return null;
 
     // Constrain speed -100 to 100
-    const spd = Math.max(-100, Math.min(100, speed));
+    const spd = Math.max(-100, Math.min(100, speed || 0));
     const pyPort = `port.${portLabel}`;
 
     if (action === 'stop') {
-        return `try:\n    motor.stop(${pyPort})\nexcept:\n    pass\n`;
+        return `try:\n    motor.stop(${pyPort})\nexcept:\n    try:\n        from pybricks.pupdevices import Motor\n        from pybricks.parameters import Port\n        _m = Motor(getattr(Port, '${portLabel}'))\n        _m.stop()\n    except:\n        pass\n`;
     }
 
     if (action === 'run_forever') {
-        return `try:\n    motor.run(${pyPort}, ${spd})\nexcept:\n    pass\n`;
+        return `try:\n    motor.run(${pyPort}, ${spd})\nexcept:\n    try:\n        from pybricks.pupdevices import Motor\n        from pybricks.parameters import Port\n        _m = Motor(getattr(Port, '${portLabel}'))\n        _m.run(${spd})\n    except:\n        pass\n`;
     }
 
     if (action === 'run_degrees') {
-        return `try:\n    motor.run_for_degrees(${pyPort}, ${degrees}, ${spd})\nexcept:\n    pass\n`;
+        return `try:\n    motor.run_for_degrees(${pyPort}, ${degrees}, ${spd})\nexcept:\n    try:\n        from pybricks.pupdevices import Motor\n        from pybricks.parameters import Port\n        _m = Motor(getattr(Port, '${portLabel}'))\n        try:\n            _m.run_angle(${spd}, ${degrees})\n        except:\n            try:\n                _m.run_angle(${degrees}, ${spd})\n            except:\n                pass\n    except:\n        pass\n`;
     }
 
     return null;
