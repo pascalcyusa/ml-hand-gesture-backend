@@ -17,6 +17,7 @@ import {
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
+import { generateMotorCommand, encodeCommand } from '../../utils/spikeProtocol.js';
 import './DevicesTab.css';
 
 export default function DevicesTab({ showToast, ble }) {
@@ -43,6 +44,34 @@ export default function DevicesTab({ showToast, ble }) {
     const handleDisconnect = useCallback(() => {
         ble.disconnect();
         showToast('Device disconnected', 'info');
+    }, [ble, showToast]);
+
+    const handleSendReplTest = useCallback(async () => {
+        if (!ble.device?.connected) { showToast('Connect LEGO Hub first!', 'warning'); return; }
+        try {
+            const cmd = 'print("hello")\n';
+            const ok = await ble.write(new TextEncoder().encode(cmd));
+            if (ok) showToast('REPL test sent', 'success');
+            else showToast('Failed to send REPL test', 'error');
+        } catch (err) {
+            console.error('REPL test error:', err);
+            showToast('REPL test error', 'error');
+        }
+    }, [ble, showToast]);
+
+    const handleTestMotorA = useCallback(async () => {
+        if (!ble.device?.connected) { showToast('Connect LEGO Hub first!', 'warning'); return; }
+        try {
+            let cmd = 'import hub\nimport motor\nfrom hub import port\n';
+            cmd += generateMotorCommand('A', 'run_degrees', 50, 90);
+            console.debug('Sending motor test command:', cmd);
+            const ok = await ble.write(encodeCommand(cmd));
+            if (ok) showToast('Motor test sent (A 90°)', 'success');
+            else showToast('Failed to send motor test', 'error');
+        } catch (err) {
+            console.error('Motor test error:', err);
+            showToast('Motor test error', 'error');
+        }
     }, [ble, showToast]);
 
     // Map the internal serial status to user-friendly messages
@@ -163,6 +192,16 @@ export default function DevicesTab({ showToast, ble }) {
                         </Button>
                     </div>
                 )}
+
+                {/* Debug buttons for testing REPL and motor manually */}
+                <div className="mt-3 flex gap-3">
+                    <Button variant="ghost" size="sm" onClick={handleSendReplTest} disabled={!ble.device?.connected}>
+                        Send REPL Test
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={handleTestMotorA} disabled={!ble.device?.connected}>
+                        Test Motor A
+                    </Button>
+                </div>
 
                 {ble.device?.error && (
                     <p className="text-[var(--gold)] text-sm mt-4 bg-[var(--gold-dim)]/10 px-3 py-1 rounded-full border border-[var(--gold)]/20">

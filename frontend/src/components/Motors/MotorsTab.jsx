@@ -130,6 +130,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             }
             
             if (combinedCmd) {
+                console.debug(`PlaySequence command for ${className}:\n${combinedCmd}`);
                 const bytes = encodeCommand(combinedCmd);
                 const ok = await ble.write(bytes);
                 if (!ok) {
@@ -218,6 +219,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     
                     // Only send if it contains more than just the imports
                     if (classCmds.split('\n').length > 4) {
+                        console.debug(`PlayAll sending for ${name}:\n${classCmds}`);
                         const ok = await ble.write(encodeCommand(classCmds));
                         if (!ok) {
                             showToast(`Failed to send commands for ${name}`, 'error');
@@ -235,6 +237,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                         if (stopCmd) stopCmds += stopCmd;
                     }
                     if (stopCmds.split('\n').length > 4) {
+                        console.debug('PlayAll stop commands:\n', stopCmds);
                         const okStop = await ble.write(encodeCommand(stopCmds));
                         if (!okStop) {
                             showToast('Failed to send stop commands', 'error');
