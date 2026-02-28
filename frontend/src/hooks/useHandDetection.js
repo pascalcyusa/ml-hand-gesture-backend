@@ -74,7 +74,27 @@ export function useHandDetection() {
             setError(null);
         } catch (err) {
             console.error('Failed to start webcam:', err);
-            setError(err);
+            
+            // Enhanced error handling with specific error types
+            let errorMessage = 'Failed to start webcam';
+            if (err.name === 'NotFoundError') {
+                errorMessage = 'No camera device found. Please connect a webcam.';
+            } else if (err.name === 'NotAllowedError') {
+                errorMessage = 'Camera permission denied. Please allow camera access.';
+            } else if (err.name === 'NotReadableError') {
+                errorMessage = 'Camera is already in use by another application.';
+            } else if (err.name === 'OverconstrainedError') {
+                errorMessage = 'Camera constraints not supported. Try different settings.';
+            } else if (err.name === 'SecurityError') {
+                errorMessage = 'Camera access blocked for security reasons.';
+            }
+            
+            // Create a custom error with the enhanced message
+            const enhancedError = new Error(errorMessage);
+            enhancedError.name = err.name;
+            enhancedError.originalError = err;
+            
+            setError(enhancedError);
         }
     }, [loadModel]);
 

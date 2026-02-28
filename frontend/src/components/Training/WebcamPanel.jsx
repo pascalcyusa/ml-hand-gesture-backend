@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react';
 import { VideoCameraIcon } from '@heroicons/react/24/outline';
 import './WebcamPanel.css';
 
-export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera, showVideo, onToggleVideo }) {
+export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onStartCamera, showVideo, onToggleVideo, error }) {
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
 
@@ -57,6 +57,16 @@ export default function WebcamPanel({ onVideoReady, isDetecting, isStarted, onSt
                     <div className="webcam-placeholder">
                         <VideoCameraIcon className="w-16 h-16 text-[var(--gold)] opacity-50 mb-2 animate-pulse" />
                         <p>Loading hand detection...</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className="webcam-error">
+                        <VideoCameraIcon className="w-16 h-16 text-[var(--red)] opacity-80 mb-2" />
+                        <p className="error-message">{error.message}</p>
+                        <button className="retry-btn" onClick={onStartCamera}>
+                            Try Again
+                        </button>
                     </div>
                 )}
             </div>

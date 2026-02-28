@@ -87,6 +87,47 @@
     font-family: var(--font-mono);
 }
 
+.webcam-error {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-md);
+    color: var(--fg);
+    background: var(--bg-hard);
+    padding: var(--space-lg);
+    text-align: center;
+}
+
+.webcam-error .error-message {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--red);
+    max-width: 80%;
+    line-height: 1.4;
+}
+
+.retry-btn {
+    padding: 10px 20px;
+    background: var(--red);
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 8px;
+    font-size: 0.9rem;
+}
+
+.retry-btn:hover {
+    background: var(--red-dim);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px -2px var(--red-dim);
+}
+
 .webcam-footer {
     display: flex;
     justify-content: flex-end;

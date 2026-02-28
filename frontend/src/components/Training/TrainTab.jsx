@@ -45,10 +45,9 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     // ── Handle webcam errors ──
     useEffect(() => {
         if (hand.error) {
-            const msg = hand.error.name === 'NotAllowedError'
-                ? 'Camera permissions denied'
-                : `Camera error: ${hand.error.message}`;
-            showToast(msg, 'error');
+            // Use the enhanced error message if available, otherwise fall back to the original
+            const errorMessage = hand.error.message || `Camera error: ${hand.error.name}`;
+            showToast(errorMessage, 'error');
             setIsCameraStarted(false);
         }
     }, [hand.error, showToast]);
@@ -192,6 +191,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
                         onStartCamera={handleStartCamera}
                         showVideo={hand.showVideo}
                         onToggleVideo={hand.setShowVideo}
+                        error={hand.error}
                     />
                     <TrainingControls
                         onAddClass={cm.addClass}
