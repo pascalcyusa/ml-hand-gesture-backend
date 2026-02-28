@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { useState, useCallback, Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import './components/Layout/Header.css';
@@ -54,6 +54,21 @@ export default function App() {
 
   // ── BLE ──
   const ble = useSpikeDevice(); // keep variable name 'ble' to avoid touching too many components right now
+
+  // Subscribe to device REPL notifications to help debug hub output
+  useEffect(() => {
+    if (!ble || !ble.onNotify) return;
+    const handler = (data) => {
+      try {
+        const text = new TextDecoder().decode(data);
+        console.debug('[Hub REPL]', text);
+      } catch (err) {
+        console.debug('[Hub REPL] (binary)', data);
+      }
+    };
+    ble.onNotify(handler);
+    return () => ble.onNotify(null);
+  }, [ble]);
 
   // ── Shared hooks ──
   const hand = useHandDetection();

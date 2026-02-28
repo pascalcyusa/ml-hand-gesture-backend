@@ -304,7 +304,11 @@ export function useSpikeDevice() {
 
     // --- SHARED WRITE ---
     const write = useCallback(async (data) => {
-        if (!activeType.current) return false;
+        const DEBUG = true; // toggle for quick debug output
+        if (!activeType.current) {
+            if (DEBUG) console.debug('Device write aborted: no activeType');
+            return false;
+        }
 
         try {
             const ctrlE = new Uint8Array([0x05]); // Paste Mode Enter
@@ -315,13 +319,22 @@ export function useSpikeDevice() {
             combined.set(new Uint8Array(data), 1);
             combined[combined.length - 1] = ctrlD[0];
 
+            if (DEBUG) {
+                const previewLen = Math.min(64, combined.length);
+                const preview = Array.from(combined.slice(0, previewLen))
+                    .map(b => b.toString(16).padStart(2, '0')).join(' ');
+                console.debug(`Device write (type=${activeType.current}) length=${combined.length} preview=${preview}`);
+            }
+
             if (activeType.current === 'usb' && writerRef.current) {
                 await writerRef.current.write(combined);
+                if (DEBUG) console.debug('USB write succeeded');
                 return true;
             } 
             
             if (activeType.current === 'ble' && bleWriteCharRef.current) {
                 const CHUNK_SIZE = 20;
+                let chunkCount = 0;
                 for (let i = 0; i < combined.length; i += CHUNK_SIZE) {
                     const chunk = combined.slice(i, i + CHUNK_SIZE);
                     if (bleWriteCharRef.current.properties.writeWithoutResponse) {
@@ -329,11 +342,14 @@ export function useSpikeDevice() {
                     } else {
                         await bleWriteCharRef.current.writeValue(chunk);
                     }
+                    chunkCount++;
                     await new Promise(r => setTimeout(r, 15));
                 }
+                if (DEBUG) console.debug(`BLE write succeeded, chunks=${chunkCount}`);
                 return true;
             }
 
+            if (DEBUG) console.debug('Device write failed: no writer/char for activeType', activeType.current);
             return false;
         } catch (err) {
             console.error('Device write error:', err);

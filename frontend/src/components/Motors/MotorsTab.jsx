@@ -131,7 +131,11 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             
             if (combinedCmd) {
                 const bytes = encodeCommand(combinedCmd);
-                await ble.write(bytes);
+                const ok = await ble.write(bytes);
+                if (!ok) {
+                    showToast(`Failed to send commands for ${className}`, 'error');
+                    return;
+                }
             }
         } catch (err) {
             console.error(`Error playing sequence for ${className}:`, err);
@@ -175,7 +179,10 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                 ['A', 'B', 'C', 'D', 'E', 'F']
                     .map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`)
                     .join('');
-            await ble.write(encodeCommand(stopCmds));
+            const ok = await ble.write(encodeCommand(stopCmds));
+            if (!ok) {
+                showToast('Failed to send stop commands', 'error');
+            }
         } catch (err) {
             console.error("Stop All Error:", err);
         }
@@ -211,7 +218,10 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     
                     // Only send if it contains more than just the imports
                     if (classCmds.split('\n').length > 4) {
-                        await ble.write(encodeCommand(classCmds));
+                        const ok = await ble.write(encodeCommand(classCmds));
+                        if (!ok) {
+                            showToast(`Failed to send commands for ${name}`, 'error');
+                        }
                     }
 
                     // Fixed delay between classes 
@@ -225,7 +235,10 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                         if (stopCmd) stopCmds += stopCmd;
                     }
                     if (stopCmds.split('\n').length > 4) {
-                        await ble.write(encodeCommand(stopCmds));
+                        const okStop = await ble.write(encodeCommand(stopCmds));
+                        if (!okStop) {
+                            showToast('Failed to send stop commands', 'error');
+                        }
                     }
                 }
             }
