@@ -28,12 +28,18 @@ export const PORTS = {
  * Structure (Simplified):
  * [Len, 0x00, Command, Port, ...]
  */
-export function generateMotorCommand(portLabel, action, speed, degrees) {
+/**
+ * Generate a MicroPython motor command string.
+ * direction: 'clockwise' (positive speed) | 'counterclockwise' (negative speed)
+ */
+export function generateMotorCommand(portLabel, action, speed, degrees, direction = 'clockwise') {
     const port = PORTS[portLabel];
     if (port === undefined) return null;
 
-    // Constrain speed -100 to 100
-    const spd = Math.max(-100, Math.min(100, speed || 0));
+    // Apply direction before clamping: CCW = negative speed
+    const rawSpd = direction === 'counterclockwise' ? -Math.abs(speed || 0) : Math.abs(speed || 0);
+    // Constrain to valid hub range (-100 to 100)
+    const spd = Math.max(-100, Math.min(100, rawSpd));
     const pyPort = `port.${portLabel}`;
 
     if (action === 'stop') {
@@ -45,10 +51,30 @@ export function generateMotorCommand(portLabel, action, speed, degrees) {
     }
 
     if (action === 'run_degrees') {
-        return `try:\n    motor.run_for_degrees(${pyPort}, ${degrees}, ${spd})\nexcept:\n    try:\n        from pybricks.pupdevices import Motor\n        from pybricks.parameters import Port\n        _m = Motor(getattr(Port, '${portLabel}'))\n        try:\n            _m.run_angle(${spd}, ${degrees})\n        except:\n            try:\n                _m.run_angle(${degrees}, ${spd})\n            except:\n                pass\n    except:\n        pass\n`;
+        // degrees is always positive; direction is encoded in speed sign
+        const absDeg = Math.abs(degrees || 0);
+        return `try:\n    motor.run_for_degrees(${pyPort}, ${absDeg}, ${spd})\nexcept:\n    try:\n        from pybricks.pupdevices import Motor\n        from pybricks.parameters import Port\n        _m = Motor(getattr(Port, '${portLabel}'))\n        try:\n            _m.run_angle(${spd}, ${absDeg})\n        except:\n            try:\n                _m.run_angle(${absDeg}, ${spd})\n            except:\n                pass\n    except:\n        pass\n`;
     }
 
     return null;
+}
+
+/**
+ * Build a short human-readable summary of a motor config array.
+ * e.g. "Port A: 90° @ 50% CW, Port B: run @ 30% CCW"
+ */
+export function describeMotorConfig(config) {
+    if (!config || config.length === 0) return 'no motors configured';
+    const parts = config
+        .filter(m => m.action !== 'stop')
+        .map(m => {
+            const dir = m.direction === 'counterclockwise' ? 'CCW' : 'CW';
+            if (m.action === 'run_forever') return `Port ${m.port}: run @ ${m.speed}% ${dir}`;
+            if (m.action === 'run_degrees') return `Port ${m.port}: ${m.degrees}° @ ${m.speed}% ${dir}`;
+            return null;
+        })
+        .filter(Boolean);
+    return parts.length > 0 ? parts.join(', ') : 'all stop';
 }
 
 /**

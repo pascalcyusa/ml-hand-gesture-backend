@@ -23,7 +23,7 @@ import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
-import { generateMotorCommand, encodeCommand } from '../../utils/spikeProtocol.js';
+import { generateMotorCommand, encodeCommand, describeMotorConfig } from '../../utils/spikeProtocol.js';
 import './MotorsTab.css';
 
 export default function MotorsTab({ classNames, showToast, hand, prediction, ble, trainer }) {
@@ -111,7 +111,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         });
     };
 
-    const playSequence = useCallback(async (className) => {
+    const playSequence = useCallback(async (className, fromPrediction = false) => {
         const config = configData[className];
         if (!config || !Array.isArray(config) || config.length === 0) return;
 
@@ -120,16 +120,19 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             let combinedCmd = 'import hub\nimport motor\nfrom hub import port\n';
             for (const motor of config) {
                 if (motor.action === 'stop') {
-                    const cmdString = generateMotorCommand(motor.port, 'stop', 0, 0);
+                    const cmdString = generateMotorCommand(motor.port, 'stop', 0, 0, 'clockwise');
                     if (cmdString) combinedCmd += cmdString;
                     continue;
                 }
-
-                const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees);
+                const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
                 if (cmdString) combinedCmd += cmdString;
             }
             
             if (combinedCmd) {
+                const summary = describeMotorConfig(config);
+                if (fromPrediction) {
+                    showToast(`🤖 ${className} → ${summary}`, 'info', 2500);
+                }
                 console.debug(`PlaySequence command for ${className}:\n${combinedCmd}`);
                 const bytes = encodeCommand(combinedCmd);
                 const ok = await ble.write(bytes);
@@ -143,7 +146,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         } finally {
             setIsPlaying(false);
         }
-    }, [configData, ble]);
+    }, [configData, ble, showToast]);
 
     // React to ML predictions
     useEffect(() => {
@@ -167,7 +170,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         lastPredRef.current = topPrediction.className;
         lastTimeRef.current = now;
 
-        playSequence(topPrediction.className);
+        playSequence(topPrediction.className, true); // true = triggered by prediction
     }, [prediction.topPrediction, isPlaying, playSequence, ble.device?.connected]);
 
     const handleStopAll = useCallback(async () => {
@@ -212,8 +215,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                     let classCmds = 'import hub\nimport motor\nfrom hub import port\n';
                     for (const motor of config) {
                         if (motor.action === 'stop') continue;
-
-                        const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees);
+                        const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
                         if (cmdString) classCmds += cmdString;
                     }
                     

@@ -155,7 +155,9 @@ export default function MotorSequencer({
                                                 onChange={(e) => updateMotor(motor.port, 'speed', Number(e.target.value))}
                                                 className="motor-slider"
                                             />
-                                            <span className="motor-value">{motor.speed}%</span>
+                                            <span className="motor-value">
+                                                {motor.direction === 'counterclockwise' ? '-' : '+'}{motor.speed}%
+                                            </span>
                                         </div>
 
                                         {motor.action === 'run_degrees' && (
