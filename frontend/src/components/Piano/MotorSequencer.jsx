@@ -137,7 +137,7 @@ export default function MotorSequencer({
                                             >
                                                 {DIRECTIONS.map((d) => (
                                                     <option key={d} value={d}>
-                                                        {d === 'clockwise' ? 'CW' : 'CCW'}
+                                                        {d === 'clockwise' ? '↻' : '↺'}
                                                     </option>
                                                 ))}
                                             </select>

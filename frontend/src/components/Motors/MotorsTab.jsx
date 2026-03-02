@@ -23,7 +23,7 @@ import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
-import { generateMotorCommand, encodeCommand, describeMotorConfig } from '../../utils/spikeProtocol.js';
+import { generateMotorCommand, encodeCommand, describeMotorConfig, generateLWP3MotorCommand } from '../../utils/spikeProtocol.js';
 import './MotorsTab.css';
 
 export default function MotorsTab({ classNames, showToast, hand, prediction, ble, trainer }) {
@@ -111,42 +111,64 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         });
     };
 
+    // Helper: send motor commands, handles both LWP3 (binary) and REPL (Python) protocols
+    const sendMotorCommands = useCallback(async (config) => {
+        if (ble.device?.protocol === 'lwp3') {
+            // LWP3: one binary command per motor
+            for (const motor of config) {
+                const cmd = generateLWP3MotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
+                if (cmd) {
+                    const ok = await ble.write(cmd);
+                    if (!ok) return false;
+                }
+            }
+            return true;
+        }
+        // REPL (USB or BLE NUS/Pybricks): bundle into one Python script
+        let script = 'import hub\nimport motor\nfrom hub import port\n';
+        for (const motor of config) {
+            const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
+            if (cmdString) script += cmdString;
+        }
+        return ble.write(encodeCommand(script));
+    }, [ble]);
+
+    // Helper: stop all motors, handles both protocols
+    const sendStopAll = useCallback(async () => {
+        const allPorts = ['A', 'B', 'C', 'D', 'E', 'F'];
+        if (ble.device?.protocol === 'lwp3') {
+            for (const port of allPorts) {
+                const cmd = generateLWP3MotorCommand(port, 'stop', 0, 0, 'clockwise');
+                if (cmd) await ble.write(cmd);
+            }
+            return true;
+        }
+        const stopScript = 'import hub\nimport motor\nfrom hub import port\n' +
+            allPorts.map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`).join('');
+        return ble.write(encodeCommand(stopScript));
+    }, [ble]);
+
     const playSequence = useCallback(async (className, fromPrediction = false) => {
         const config = configData[className];
         if (!config || !Array.isArray(config) || config.length === 0) return;
 
         setIsPlaying(true);
         try {
-            let combinedCmd = 'import hub\nimport motor\nfrom hub import port\n';
-            for (const motor of config) {
-                if (motor.action === 'stop') {
-                    const cmdString = generateMotorCommand(motor.port, 'stop', 0, 0, 'clockwise');
-                    if (cmdString) combinedCmd += cmdString;
-                    continue;
-                }
-                const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
-                if (cmdString) combinedCmd += cmdString;
+            const summary = describeMotorConfig(config);
+            if (fromPrediction) {
+                showToast(`🤖 ${className} → ${summary}`, 'info', 2500);
             }
-            
-            if (combinedCmd) {
-                const summary = describeMotorConfig(config);
-                if (fromPrediction) {
-                    showToast(`🤖 ${className} → ${summary}`, 'info', 2500);
-                }
-                console.debug(`PlaySequence command for ${className}:\n${combinedCmd}`);
-                const bytes = encodeCommand(combinedCmd);
-                const ok = await ble.write(bytes);
-                if (!ok) {
-                    showToast(`Failed to send commands for ${className}`, 'error');
-                    return;
-                }
+            console.debug(`PlaySequence [${ble.device?.protocol ?? 'no-protocol'}] for ${className}: ${summary}`);
+            const ok = await sendMotorCommands(config);
+            if (!ok) {
+                showToast(`Failed to send commands for ${className}`, 'error');
             }
         } catch (err) {
             console.error(`Error playing sequence for ${className}:`, err);
         } finally {
             setIsPlaying(false);
         }
-    }, [configData, ble, showToast]);
+    }, [configData, ble, showToast, sendMotorCommands]);
 
     // React to ML predictions
     useEffect(() => {
@@ -179,18 +201,12 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         lastPredRef.current = null;
         if (!ble.device?.connected) return;
         try {
-            const stopCmds = 'import hub\nimport motor\nfrom hub import port\n' +
-                ['A', 'B', 'C', 'D', 'E', 'F']
-                    .map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`)
-                    .join('');
-            const ok = await ble.write(encodeCommand(stopCmds));
-            if (!ok) {
-                showToast('Failed to send stop commands', 'error');
-            }
+            const ok = await sendStopAll();
+            if (!ok) showToast('Failed to send stop commands', 'error');
         } catch (err) {
             console.error("Stop All Error:", err);
         }
-    }, [ble]);
+    }, [ble, sendStopAll, showToast]);
 
     // Play All Logic
     const handlePlayAll = useCallback(async () => {
@@ -205,46 +221,25 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         try {
             for (const name of classNames) {
                 if (playCancelledRef.current) break;
-                // Get config for this class. 
                 const config = configData[name];
 
                 if (config && Array.isArray(config)) {
                     await showToast(`Executing ${name}...`, 'info', 1000);
                     if (playCancelledRef.current) break;
 
-                    let classCmds = 'import hub\nimport motor\nfrom hub import port\n';
-                    for (const motor of config) {
-                        if (motor.action === 'stop') continue;
-                        const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
-                        if (cmdString) classCmds += cmdString;
-                    }
-                    
-                    // Only send if it contains more than just the imports
-                    if (classCmds.split('\n').length > 4) {
-                        console.debug(`PlayAll sending for ${name}:\n${classCmds}`);
-                        const ok = await ble.write(encodeCommand(classCmds));
-                        if (!ok) {
-                            showToast(`Failed to send commands for ${name}`, 'error');
-                        }
+                    const activeMotors = config.filter(m => m.action !== 'stop');
+                    if (activeMotors.length > 0) {
+                        console.debug(`PlayAll [${ble.device?.protocol}] for ${name}: ${describeMotorConfig(config)}`);
+                        const ok = await sendMotorCommands(config);
+                        if (!ok) showToast(`Failed to send commands for ${name}`, 'error');
                     }
 
-                    // Fixed delay between classes 
+                    // Fixed delay between classes
                     await new Promise(r => setTimeout(r, 2000));
                     if (playCancelledRef.current) break;
 
                     // Stop motors before next class (safety)
-                    let stopCmds = 'import hub\nimport motor\nfrom hub import port\n';
-                    for (const port of ['A', 'B', 'C', 'D', 'E', 'F']) {
-                        const stopCmd = generateMotorCommand(port, 'stop', 0, 0);
-                        if (stopCmd) stopCmds += stopCmd;
-                    }
-                    if (stopCmds.split('\n').length > 4) {
-                        console.debug('PlayAll stop commands:\n', stopCmds);
-                        const okStop = await ble.write(encodeCommand(stopCmds));
-                        if (!okStop) {
-                            showToast('Failed to send stop commands', 'error');
-                        }
-                    }
+                    await sendStopAll();
                 }
             }
             if (!playCancelledRef.current) {
@@ -259,7 +254,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             setIsPlaying(false);
             playCancelledRef.current = false;
         }
-    }, [classNames, ble, isPlaying, configData, showToast]);
+    }, [classNames, ble, isPlaying, configData, showToast, sendMotorCommands, sendStopAll]);
 
     if (!classNames || classNames.length === 0 || !trainer?.isTrained) {
         return (

@@ -15,21 +15,63 @@ export const PORTS = {
     'F': 5,
 };
 
+// LWP3 BLE UUIDs (standard LEGO hub firmware — SPIKE 2/3, Technic Hub, etc.)
+export const LWP3_SERVICE = '00001623-1212-efde-1623-785feabcd123';
+export const LWP3_CHARACTERISTIC = '00001624-1212-efde-1623-785feabcd123';
+
 /**
- * Generate a motor command to run for a duration or degrees.
- * 
- * Note: This is a simplified implementation. Secure/Checksums might be needed depending on mode.
- * Using "Direct Command" format without checksum for simplicity if supported, 
- * or adhering to LWP3.
- * 
- * For this implementation, we will use a Python script string if we were using PyScript,
- * but since we are using raw BLE, we need binary.
- * 
- * Structure (Simplified):
- * [Len, 0x00, Command, Port, ...]
+ * Generate a native LWP3 binary motor command (Uint8Array).
+ * Works with standard LEGO hub firmware over BLE — no Python REPL needed.
+ * direction: 'clockwise' | 'counterclockwise'
  */
+export function generateLWP3MotorCommand(portLabel, action, speed, degrees, direction = 'clockwise') {
+    const portId = PORTS[portLabel];
+    if (portId === undefined) return null;
+
+    const rawSpd = direction === 'counterclockwise' ? -Math.abs(speed || 0) : Math.abs(speed || 0);
+    const spd = Math.max(-100, Math.min(100, rawSpd));
+    // Convert signed speed to an unsigned byte (two's complement for negatives)
+    const spdByte = spd < 0 ? (256 + spd) : spd;
+    const maxPower = 100;  // 0x64
+    const endState = 0x7F; // brake
+    const profile = 0x03;
+
+    if (action === 'stop') {
+        // StartSpeed with speed=0 → brake
+        return new Uint8Array([0x0A, 0x00, 0x81, portId, 0x11, 0x01, 0x00, maxPower, endState, profile]);
+    }
+
+    if (action === 'run_forever') {
+        // StartSpeed
+        return new Uint8Array([0x0A, 0x00, 0x81, portId, 0x11, 0x01, spdByte, maxPower, endState, profile]);
+    }
+
+    if (action === 'run_degrees') {
+        // StartSpeedForDegrees — degrees as little-endian int32
+        const absDeg = Math.max(1, Math.abs(degrees || 0));
+        const cmd = new Uint8Array(14);
+        cmd[0] = 0x0E; // message length
+        cmd[1] = 0x00; // hub id
+        cmd[2] = 0x81; // Port Output Command
+        cmd[3] = portId;
+        cmd[4] = 0x11; // Execute immediately, no action on completion
+        cmd[5] = 0x0B; // SubCommand: StartSpeedForDegrees
+        cmd[6] = (absDeg) & 0xFF;
+        cmd[7] = (absDeg >> 8) & 0xFF;
+        cmd[8] = (absDeg >> 16) & 0xFF;
+        cmd[9] = (absDeg >> 24) & 0xFF;
+        cmd[10] = spdByte;
+        cmd[11] = maxPower;
+        cmd[12] = endState;
+        cmd[13] = profile;
+        return cmd;
+    }
+
+    return null;
+}
+
 /**
- * Generate a MicroPython motor command string.
+ * Generate a MicroPython motor command string (for REPL / USB connections).
  * direction: 'clockwise' (positive speed) | 'counterclockwise' (negative speed)
  */
 export function generateMotorCommand(portLabel, action, speed, degrees, direction = 'clockwise') {
@@ -68,7 +110,7 @@ export function describeMotorConfig(config) {
     const parts = config
         .filter(m => m.action !== 'stop')
         .map(m => {
-            const dir = m.direction === 'counterclockwise' ? 'CCW' : 'CW';
+            const dir = m.direction === 'counterclockwise' ? '↺' : '↻';
             if (m.action === 'run_forever') return `Port ${m.port}: run @ ${m.speed}% ${dir}`;
             if (m.action === 'run_degrees') return `Port ${m.port}: ${m.degrees}° @ ${m.speed}% ${dir}`;
             return null;
@@ -78,7 +120,7 @@ export function describeMotorConfig(config) {
 }
 
 /**
- * Helper to encode string string to Uint8Array/ArrayBuffer for BLE write
+ * Helper to encode a string to Uint8Array for REPL write
  */
 export function encodeCommand(cmdString) {
     const encoder = new TextEncoder();
