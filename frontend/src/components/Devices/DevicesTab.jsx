@@ -228,9 +228,10 @@ export default function DevicesTab({ showToast, ble }) {
                 </div>
 
                 {ble.device?.error && (
-                    <p className="text-[var(--gold)] text-sm mt-4 bg-[var(--gold-dim)]/10 px-3 py-1 rounded-full border border-[var(--gold)]/20">
-                        {ble.device.error}
-                    </p>
+                    <div className="flex items-start gap-3 mt-4 w-full max-w-sm bg-[var(--red)]/10 border border-[var(--red)]/30 rounded-lg px-4 py-3">
+                        <ExclamationTriangleIcon className="h-5 w-5 text-[var(--red)] shrink-0 mt-0.5" />
+                        <p className="text-sm text-[var(--fg-dim)] leading-snug">{ble.device.error}</p>
+                    </div>
                 )}
             </Card>
         </div>

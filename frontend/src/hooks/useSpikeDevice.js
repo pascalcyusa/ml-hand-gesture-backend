@@ -178,7 +178,7 @@ export function useSpikeDevice() {
     // Shared internals used by both connectBLE and connectBLEAdvanced
     const _doConnectBLE = useCallback(async (requestOptions) => {
         const knownProfiles = [
-            { // Nordic UART — SPIKE Prime / Robot Inventor running MicroPython REPL
+            { // Nordic UART — SPIKE Prime / Robot Inventor running MicroPython REPL (SPIKE 3 firmware)
                 service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
                 write: '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
                 notify: '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
@@ -190,11 +190,15 @@ export function useSpikeDevice() {
             }
         ];
 
+        // LWP3 = LEGO Wireless Protocol 3 used by SPIKE 2 / EV3 / older hubs.
+        // We cannot send Python via this, but we can detect it to give a clear error.
+        const LWP3_SERVICE = '00001623-1212-efde-1623-785feabcd123';
+
         let server = null;
         try {
             const btDevice = await navigator.bluetooth.requestDevice({
                 ...requestOptions,
-                optionalServices: knownProfiles.map(p => p.service),
+                optionalServices: [...knownProfiles.map(p => p.service), LWP3_SERVICE],
             });
 
             setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: btDevice.name || 'LEGO Hub (BLE)' }));
@@ -218,8 +222,23 @@ export function useSpikeDevice() {
             }
 
             if (!service) {
+                // Detect if hub is using the older LWP3 protocol (SPIKE 2 firmware)
+                let hasLWP3 = false;
+                try {
+                    await server.getPrimaryService(LWP3_SERVICE);
+                    hasLWP3 = true;
+                } catch { /* not LWP3 either */ }
+
                 // Close GATT before throwing so we don't leave a dangling connection
                 try { server.disconnect(); } catch { /* ignore */ }
+
+                if (hasLWP3) {
+                    throw new Error(
+                        'Hub is using SPIKE 2 / LWP3 firmware which does not support a Python REPL over BLE. ' +
+                        'Please update your hub to SPIKE 3 firmware via the SPIKE app, then try again. ' +
+                        'Alternatively, use USB to connect.'
+                    );
+                }
                 throw new Error(
                     'Hub connected but no MicroPython REPL service found. ' +
                     'Make sure the hub is running SPIKE 3 / Pybricks firmware and is NOT connected to the SPIKE app.'
@@ -266,7 +285,7 @@ export function useSpikeDevice() {
             console.error('BLE connect error:', err);
             let errorMessage = err.message;
             if (err.name === 'NotFoundError') errorMessage = 'Pairing cancelled.';
-            else if (err.name === 'NetworkError') errorMessage = 'Failed to establish GATT connection. Is the hub already connected to another device?';
+            else if (err.name === 'NetworkError') errorMessage = 'Failed to establish GATT connection. Is the hub already connected to another device or the SPIKE app?';
 
             const isCancellation = err.name === 'NotFoundError' || err.message?.includes('User cancelled');
 
