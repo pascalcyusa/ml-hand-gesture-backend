@@ -175,12 +175,8 @@ export function useSpikeDevice() {
     }, [isSerialSupported, setupUSBConnection]);
 
     // --- BLE LOGIC ---
-    const connectBLE = useCallback(async () => {
-        if (!isBLESupported) {
-            return { success: false, error: 'Web Bluetooth not supported' };
-        }
-        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
-
+    // Shared internals used by both connectBLE and connectBLEAdvanced
+    const _doConnectBLE = useCallback(async (requestOptions) => {
         const knownProfiles = [
             { // Nordic UART — SPIKE Prime / Robot Inventor running MicroPython REPL
                 service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
@@ -194,31 +190,17 @@ export function useSpikeDevice() {
             }
         ];
 
-        // Filter the browser BLE picker to only show LEGO hubs.
-        // Name prefixes cover all known hub variants; service filters cover
-        // hubs that advertise their service UUID directly.
-        const bleFilters = [
-            { namePrefix: 'LEGO Hub' },
-            { namePrefix: 'SPIKE' },
-            { namePrefix: 'Technic Hub' },
-            { namePrefix: 'Robot Inventor' },
-            { namePrefix: 'City Hub' },
-            { namePrefix: 'MINDSTORMS' },
-            { services: ['6e400001-b5a3-f393-e0a9-e50e24dcca9e'] }, // NUS
-            { services: ['c5f50001-8280-46da-89f4-6d8051e4aeef'] }, // Pybricks
-        ];
-
         let server = null;
         try {
             const btDevice = await navigator.bluetooth.requestDevice({
-                filters: bleFilters,
+                ...requestOptions,
                 optionalServices: knownProfiles.map(p => p.service),
             });
 
             setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: btDevice.name || 'LEGO Hub (BLE)' }));
             server = await btDevice.gatt.connect();
             bleDeviceRef.current = btDevice;
-            
+
             setDevice(prev => ({ ...prev, status: 'discovering_services' }));
             let service = null;
             let writeChar = null;
@@ -249,7 +231,7 @@ export function useSpikeDevice() {
             activeType.current = 'ble';
 
             setDevice(prev => ({ ...prev, status: 'initializing_repl' }));
-            
+
             await notifyChar.startNotifications();
             notifyChar.addEventListener('characteristicvaluechanged', (event) => {
                 const data = new Uint8Array(event.target.value.buffer);
@@ -285,7 +267,7 @@ export function useSpikeDevice() {
             let errorMessage = err.message;
             if (err.name === 'NotFoundError') errorMessage = 'Pairing cancelled.';
             else if (err.name === 'NetworkError') errorMessage = 'Failed to establish GATT connection. Is the hub already connected to another device?';
-            
+
             const isCancellation = err.name === 'NotFoundError' || err.message?.includes('User cancelled');
 
             setDevice(prev => ({
@@ -297,7 +279,37 @@ export function useSpikeDevice() {
             }));
             return { success: false, error: isCancellation ? null : errorMessage, isCancellation };
         }
-    }, [isBLESupported, disconnect]);
+    }, [disconnect]);
+
+    // Standard connect — filters picker to known LEGO hub name prefixes only.
+    // (Service-based filters are intentionally omitted: LEGO hubs do NOT advertise
+    //  their service UUIDs in their BLE advertisement packet, so those filters
+    //  would cause no devices to appear.)
+    const connectBLE = useCallback(async () => {
+        if (!isBLESupported) {
+            return { success: false, error: 'Web Bluetooth not supported' };
+        }
+        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
+        return _doConnectBLE({
+            filters: [
+                { namePrefix: 'LEGO Hub' },
+                { namePrefix: 'SPIKE' },
+                { namePrefix: 'Technic Hub' },
+                { namePrefix: 'Robot Inventor' },
+                { namePrefix: 'City Hub' },
+                { namePrefix: 'MINDSTORMS' },
+            ],
+        });
+    }, [isBLESupported, _doConnectBLE]);
+
+    // Advanced connect — shows ALL nearby devices (for renamed / custom-name hubs).
+    const connectBLEAdvanced = useCallback(async () => {
+        if (!isBLESupported) {
+            return { success: false, error: 'Web Bluetooth not supported' };
+        }
+        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
+        return _doConnectBLE({ acceptAllDevices: true });
+    }, [isBLESupported, _doConnectBLE]);
 
     // --- AUTO-RECONNECT (USB ONLY) ---
     useEffect(() => {
@@ -387,8 +399,9 @@ export function useSpikeDevice() {
         isBLESupported,
         connectUSB,
         connectBLE,
+        connectBLEAdvanced,
         write,
         disconnect,
         onNotify,
-    }), [device, isSerialSupported, isBLESupported, connectUSB, connectBLE, write, disconnect, onNotify]);
+    }), [device, isSerialSupported, isBLESupported, connectUSB, connectBLE, connectBLEAdvanced, write, disconnect, onNotify]);
 }
