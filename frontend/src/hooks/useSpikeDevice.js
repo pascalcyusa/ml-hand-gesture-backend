@@ -300,35 +300,18 @@ export function useSpikeDevice() {
         }
     }, [disconnect]);
 
-    // Standard connect — filters picker to known LEGO hub name prefixes only.
-    // (Service-based filters are intentionally omitted: LEGO hubs do NOT advertise
-    //  their service UUIDs in their BLE advertisement packet, so those filters
-    //  would cause no devices to appear.)
+    // Standard connect — shows all devices (acceptAllDevices) so any hub name works,
+    // exactly matching the original working behaviour from commit 061083a.
     const connectBLE = useCallback(async () => {
-        if (!isBLESupported) {
-            return { success: false, error: 'Web Bluetooth not supported' };
-        }
-        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
-        return _doConnectBLE({
-            filters: [
-                { namePrefix: 'LEGO Hub' },
-                { namePrefix: 'SPIKE' },
-                { namePrefix: 'Technic Hub' },
-                { namePrefix: 'Robot Inventor' },
-                { namePrefix: 'City Hub' },
-                { namePrefix: 'MINDSTORMS' },
-            ],
-        });
-    }, [isBLESupported, _doConnectBLE]);
-
-    // Advanced connect — shows ALL nearby devices (for renamed / custom-name hubs).
-    const connectBLEAdvanced = useCallback(async () => {
         if (!isBLESupported) {
             return { success: false, error: 'Web Bluetooth not supported' };
         }
         setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
         return _doConnectBLE({ acceptAllDevices: true });
     }, [isBLESupported, _doConnectBLE]);
+
+    // Alias kept for any callers that reference connectBLEAdvanced directly
+    const connectBLEAdvanced = connectBLE;
 
     // --- AUTO-RECONNECT (USB ONLY) ---
     useEffect(() => {

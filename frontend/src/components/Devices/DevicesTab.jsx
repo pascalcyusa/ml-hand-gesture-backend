@@ -181,39 +181,27 @@ export default function DevicesTab({ showToast, ble }) {
                         Disconnect
                     </Button>
                 ) : (
-                    <div className="flex flex-col items-center gap-3 mt-2 w-full">
-                        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                className="connect-btn-lg flex-1"
-                                onClick={handleConnectUSB}
-                                disabled={!ble.isSerialSupported || ble.device?.connecting}
-                            >
-                                <ComputerDesktopIcon className="h-5 w-5" />
-                                Connect via USB
-                            </Button>
-                            <Button
-                                variant="primary"
-                                size="lg"
-                                className="connect-btn-lg flex-1"
-                                onClick={handleConnectBLE}
-                                disabled={!ble.isBLESupported || ble.device?.connecting}
-                            >
-                                <SignalIcon className="h-5 w-5" />
-                                Connect via BLE
-                            </Button>
-                        </div>
-                        {/* Fallback for hubs with custom/renamed names not matched by the filter */}
-                        {ble.isBLESupported && (
-                            <button
-                                className="text-xs text-[var(--fg-muted)] underline underline-offset-2 hover:text-[var(--fg)] transition-colors"
-                                onClick={handleConnectBLEAdvanced}
-                                disabled={ble.device?.connecting}
-                            >
-                                Hub not showing up? Show all Bluetooth devices
-                            </button>
-                        )}
+                    <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="connect-btn-lg flex-1"
+                            onClick={handleConnectUSB}
+                            disabled={!ble.isSerialSupported || ble.device?.connecting}
+                        >
+                            <ComputerDesktopIcon className="h-5 w-5" />
+                            Connect via USB
+                        </Button>
+                        <Button
+                            variant="primary"
+                            size="lg"
+                            className="connect-btn-lg flex-1"
+                            onClick={handleConnectBLE}
+                            disabled={!ble.isBLESupported || ble.device?.connecting}
+                        >
+                            <SignalIcon className="h-5 w-5" />
+                            Connect via BLE
+                        </Button>
                     </div>
                 )}
 
