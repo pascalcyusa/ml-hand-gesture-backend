@@ -154,6 +154,9 @@ export default function DevicesTab({ showToast, ble }) {
                     ) : (
                         <>
                             <span className="text-sm text-[var(--fg-muted)]">Make sure your Hub is turned on</span>
+                            <span className="text-xs text-[var(--fg-muted)] mt-1 text-center max-w-xs">
+                                BLE requires SPIKE 3 or Pybricks firmware. Close the SPIKE app before connecting here.
+                            </span>
                         </>
                     )}
                 </div>
