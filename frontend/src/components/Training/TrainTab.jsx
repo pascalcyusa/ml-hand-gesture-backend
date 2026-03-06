@@ -13,7 +13,7 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState('');
     const [savedModels, setSavedModels] = useState([]);
-    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.wasStarted || hand.isRunning);
     const videoReadyRef = useRef(false);
 
     // ── Fetch saved models on mount ──
@@ -35,11 +35,17 @@ export default function TrainTab({ showToast, hand, cm, trainer, prediction, sto
     const handleVideoReady = useCallback(async (videoEl, canvasEl) => {
         if (videoReadyRef.current) return;
         videoReadyRef.current = true;
-        setShowLoadingOverlay(true);
-        setLoadingMessage('Loading hand detection model...');
+        // Only show loading overlay on first start (model not yet loaded)
+        const needsModelLoad = !hand.isRunning;
+        if (needsModelLoad) {
+            setShowLoadingOverlay(true);
+            setLoadingMessage('Loading hand detection model...');
+        }
         await hand.start(videoEl, canvasEl);
-        setShowLoadingOverlay(false);
-        showToast('Hand detection ready!', 'success');
+        if (needsModelLoad) {
+            setShowLoadingOverlay(false);
+            showToast('Hand detection ready!', 'success');
+        }
     }, [hand, showToast]);
 
     // ── Handle webcam errors ──

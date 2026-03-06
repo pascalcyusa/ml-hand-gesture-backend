@@ -171,94 +171,119 @@ export function useSpikeDevice() {
     }, [isSerialSupported, setupUSBConnection]);
 
     // --- BLE LOGIC ---
-    const _doConnectBLE = useCallback(async (requestOptions) => {
-        const replProfiles = [
-            { // Nordic UART — SPIKE Prime / Robot Inventor with MicroPython REPL (SPIKE 3 / Pybricks)
-                service: '6e400001-b5a3-f393-e0a9-e50e24dcca9e',
-                write:   '6e400002-b5a3-f393-e0a9-e50e24dcca9e',
-                notify:  '6e400003-b5a3-f393-e0a9-e50e24dcca9e'
-            },
-            { // Pybricks
-                service: 'c5f50001-8280-46da-89f4-6d8051e4aeef',
-                write:   'c5f50002-8280-46da-89f4-6d8051e4aeef',
-                notify:  'c5f50003-8280-46da-89f4-6d8051e4aeef'
-            }
-        ];
+    // LEGO SPIKE 3 firmware uses the 0xFD02 service (LEGO's Bluetooth SIG
+    // assigned UUID). Older firmware used NUS (Pybricks) or LWP3.
+    // We try all known profiles to support any firmware version.
+    const connectBLE = useCallback(async () => {
+        if (!isBLESupported) {
+            return { success: false, error: 'Web Bluetooth not supported' };
+        }
+        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
 
-        let server = null;
+        const NUS_SERVICE   = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+        const NUS_WRITE     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+        const NUS_NOTIFY    = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+        const PBX_SERVICE   = 'c5f50001-8280-46da-89f4-6d8051e4aeef';
+        const PBX_WRITE     = 'c5f50002-8280-46da-89f4-6d8051e4aeef';
+        const PBX_NOTIFY    = 'c5f50003-8280-46da-89f4-6d8051e4aeef';
+        const SPIKE3_SERVICE = '0000fd02-0000-1000-8000-00805f9b34fb';
+
         try {
             const btDevice = await navigator.bluetooth.requestDevice({
-                ...requestOptions,
-                optionalServices: [...replProfiles.map(p => p.service), LWP3_SERVICE],
+                filters: [{ services: [SPIKE3_SERVICE] }],
+                optionalServices: [NUS_SERVICE, PBX_SERVICE, LWP3_SERVICE],
             });
 
-            setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: btDevice.name || 'LEGO Hub (BLE)' }));
-            server = await btDevice.gatt.connect();
+            const hubName = btDevice.name;
+            console.log(`BLE: selected "${hubName}" (${btDevice.id})`);
+            setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: hubName || 'LEGO Hub (BLE)' }));
+
+            const server = await btDevice.gatt.connect();
             bleDeviceRef.current = btDevice;
+            console.log('BLE: GATT connected');
 
             setDevice(prev => ({ ...prev, status: 'discovering_services' }));
 
-            // --- Try REPL profiles first (NUS / Pybricks) ---
-            let replService = null, writeChar = null, notifyChar = null;
-            for (const profile of replProfiles) {
-                try {
-                    replService = await server.getPrimaryService(profile.service);
-                    writeChar   = await replService.getCharacteristic(profile.write);
-                    notifyChar  = await replService.getCharacteristic(profile.notify);
-                    break;
-                } catch { replService = null; }
-            }
+            // --- Try SPIKE 3 (0xFD02) first ---
+            let matched = null;
+            try {
+                const svc = await server.getPrimaryService(SPIKE3_SERVICE);
+                console.log('BLE: ✓ found SPIKE 3 service (0xFD02)');
 
-            if (replService) {
-                // ── REPL (NUS / Pybricks) connection ──
-                bleWriteCharRef.current = writeChar;
-                bleNotifyCharRef.current = notifyChar;
-                activeType.current = 'ble';
-                bleProtocolRef.current = 'repl';
+                // Discover all characteristics on this service
+                const chars = await svc.getCharacteristics();
+                console.log('BLE: characteristics:', chars.map(c =>
+                    `${c.uuid} [${Object.entries(c.properties).filter(([,v]) => v).map(([k]) => k).join(',')}]`
+                ));
 
-                setDevice(prev => ({ ...prev, status: 'initializing_repl' }));
-                await notifyChar.startNotifications();
-                notifyChar.addEventListener('characteristicvaluechanged', (event) => {
-                    const data = new Uint8Array(event.target.value.buffer);
-                    if (notificationCallbackRef.current) notificationCallbackRef.current(data);
-                });
-
-                try {
-                    const ctrlC = new Uint8Array([0x03, 0x0D, 0x0A]);
-                    if (writeChar.properties.writeWithoutResponse) await writeChar.writeValueWithoutResponse(ctrlC);
-                    else await writeChar.writeValue(ctrlC);
-                } catch (err) { console.warn('Could not send init Ctrl-C over BLE', err); }
-
-            } else {
-                // --- Try LWP3 (standard LEGO hub firmware) ---
-                let lwp3Service = null, lwp3Char = null;
-                try {
-                    lwp3Service = await server.getPrimaryService(LWP3_SERVICE);
-                    lwp3Char    = await lwp3Service.getCharacteristic(LWP3_CHARACTERISTIC);
-                } catch { lwp3Service = null; }
-
-                if (!lwp3Service) {
-                    try { server.disconnect(); } catch { /* ignore */ }
-                    throw new Error(
-                        'No compatible hub service found. ' +
-                        'Make sure the hub is turned on and NOT connected to the SPIKE app.'
-                    );
+                // Find write and notify characteristics
+                let wc = null, nc = null;
+                for (const c of chars) {
+                    const props = c.properties;
+                    if (!nc && props.notify) nc = c;
+                    if (!wc && (props.write || props.writeWithoutResponse)) wc = c;
                 }
 
-                // ── LWP3 connection ──
-                lwp3CharRef.current = lwp3Char;
-                activeType.current = 'ble';
-                bleProtocolRef.current = 'lwp3';
-
-                setDevice(prev => ({ ...prev, status: 'initializing_repl' }));
-                try {
-                    await lwp3Char.startNotifications();
-                    lwp3Char.addEventListener('characteristicvaluechanged', (event) => {
-                        const data = new Uint8Array(event.target.value.buffer);
-                        if (notificationCallbackRef.current) notificationCallbackRef.current(data);
-                    });
-                } catch (err) { console.warn('Could not start LWP3 notifications', err); }
+                if (wc && nc) {
+                    console.log(`BLE: write char = ${wc.uuid}, notify char = ${nc.uuid}`);
+                    matched = { proto: 'lwp3', name: 'SPIKE3', wc, nc };
+                } else if (wc) {
+                    // Some firmware uses a single characteristic for both
+                    console.log(`BLE: write char = ${wc.uuid} (no separate notify)`);
+                    matched = { proto: 'lwp3', name: 'SPIKE3', wc, nc: wc };
+                } else {
+                    console.warn('BLE: SPIKE3 service found but no usable characteristics');
+                }
+            } catch (e) {
+                console.log(`BLE: ✗ SPIKE3 — ${e.message}`);
             }
+
+            // --- Fallback: try NUS / Pybricks / LWP3 ---
+            if (!matched) {
+                const fallbackProfiles = [
+                    { service: NUS_SERVICE, write: NUS_WRITE, notify: NUS_NOTIFY, proto: 'repl', name: 'NUS' },
+                    { service: PBX_SERVICE, write: PBX_WRITE, notify: PBX_NOTIFY, proto: 'repl', name: 'Pybricks' },
+                    { service: LWP3_SERVICE, write: LWP3_CHARACTERISTIC, notify: LWP3_CHARACTERISTIC, proto: 'lwp3', name: 'LWP3' },
+                ];
+                for (const p of fallbackProfiles) {
+                    try {
+                        const svc = await server.getPrimaryService(p.service);
+                        const wc  = await svc.getCharacteristic(p.write);
+                        const nc  = (p.write === p.notify) ? wc : await svc.getCharacteristic(p.notify);
+                        console.log(`BLE: ✓ matched ${p.name}`);
+                        matched = { ...p, wc, nc };
+                        break;
+                    } catch {
+                        console.log(`BLE: ✗ ${p.name} not found`);
+                    }
+                }
+            }
+
+            if (!matched) {
+                try { server.disconnect(); } catch { /* ignore */ }
+                throw new Error('Hub connected but no usable characteristics found.');
+            }
+
+            // Wire up notifications
+            await matched.nc.startNotifications();
+            matched.nc.addEventListener('characteristicvaluechanged', (event) => {
+                const data = new Uint8Array(event.target.value.buffer);
+                if (notificationCallbackRef.current) notificationCallbackRef.current(data);
+            });
+
+            if (matched.proto === 'lwp3') {
+                lwp3CharRef.current = matched.wc;
+            } else {
+                bleWriteCharRef.current = matched.wc;
+                bleNotifyCharRef.current = matched.nc;
+                try {
+                    const ctrlC = new Uint8Array([0x03, 0x0D, 0x0A]);
+                    await matched.wc.writeValue(ctrlC);
+                } catch (err) { console.warn('Could not send init Ctrl-C', err); }
+            }
+
+            activeType.current = 'ble';
+            bleProtocolRef.current = matched.proto;
 
             btDevice.addEventListener('gattserverdisconnected', () => {
                 if (activeType.current === 'ble') disconnect();
@@ -272,19 +297,18 @@ export function useSpikeDevice() {
                 error: null,
                 status: 'connected',
                 type: 'ble',
-                protocol: bleProtocolRef.current,
+                protocol: matched.proto,
             });
 
-            console.debug(`BLE connected via ${bleProtocolRef.current} protocol`);
+            console.log(`BLE: connected via ${matched.name} (${matched.proto})`);
             return { success: true };
 
         } catch (err) {
             console.error('BLE connect error:', err);
+            const isCancellation = err.name === 'NotFoundError' || err.message?.includes('User cancelled');
             let errorMessage = err.message;
             if (err.name === 'NotFoundError') errorMessage = 'Pairing cancelled.';
-            else if (err.name === 'NetworkError') errorMessage = 'Failed to connect. Is the hub already connected to another device or the SPIKE app?';
-
-            const isCancellation = err.name === 'NotFoundError' || err.message?.includes('User cancelled');
+            else if (err.name === 'NetworkError') errorMessage = 'Connection failed. Is the hub already connected elsewhere?';
 
             setDevice(prev => ({
                 ...prev,
@@ -296,19 +320,8 @@ export function useSpikeDevice() {
             }));
             return { success: false, error: isCancellation ? null : errorMessage, isCancellation };
         }
-    }, [disconnect]);
+    }, [isBLESupported, disconnect]);
 
-    // Standard connect — shows all devices (acceptAllDevices) so any hub name works,
-    // exactly matching the original working behaviour from commit 061083a.
-    const connectBLE = useCallback(async () => {
-        if (!isBLESupported) {
-            return { success: false, error: 'Web Bluetooth not supported' };
-        }
-        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
-        return _doConnectBLE({ acceptAllDevices: true });
-    }, [isBLESupported, _doConnectBLE]);
-
-    // Alias kept for any callers that reference connectBLEAdvanced directly
     const connectBLEAdvanced = connectBLE;
 
     // --- AUTO-RECONNECT (USB ONLY) ---

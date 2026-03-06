@@ -18,6 +18,10 @@ export function useHandDetection() {
     const [showVideo, setShowVideo] = useState(false); // Shared video visibility (defaults off)
     const [error, setError] = useState(null);
 
+    // True once the user has started the camera at least once this session.
+    // Tabs use this to auto-show the camera on mount instead of showing "Start Camera".
+    const [wasStarted, setWasStarted] = useState(false);
+
     // Store landmarks in a ref to avoid re-rendering on every frame (~60fps).
     const currentLandmarksRef = useRef(null);
 
@@ -55,7 +59,7 @@ export function useHandDetection() {
 
         try {
             let stream = streamRef.current;
-            if (!stream) {
+            if (!stream || stream.getTracks().every(t => t.readyState === 'ended')) {
                 stream = await navigator.mediaDevices.getUserMedia({
                     video: { width: 640, height: 480, facingMode: 'user' },
                 });
@@ -69,6 +73,7 @@ export function useHandDetection() {
             await videoElement.play();
 
             setIsRunning(true);
+            setWasStarted(true);
             lastTimestampRef.current = -1;
             detectLoop();
             setError(null);
@@ -190,6 +195,7 @@ export function useHandDetection() {
         isModelLoaded,
         isLoading,
         isRunning,
+        wasStarted,
         showVideo,
         setShowVideo,
         isHandDetected,
@@ -199,5 +205,5 @@ export function useHandDetection() {
         getFeatures,
         loadModel,
         error,
-    }), [isModelLoaded, isLoading, isRunning, showVideo, isHandDetected, start, stop, getFeatures, loadModel, error]);
+    }), [isModelLoaded, isLoading, isRunning, wasStarted, showVideo, isHandDetected, start, stop, getFeatures, loadModel, error]);
 }

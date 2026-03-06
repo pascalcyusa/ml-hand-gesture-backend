@@ -34,7 +34,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     const [showLoadDialog, setShowLoadDialog] = useState(false);
     const [saveName, setSaveName] = useState('');
     const [savedSequences, setSavedSequences] = useState([]);
-    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.wasStarted || hand.isRunning);
 
     const videoReadyRef = useRef(false);
 

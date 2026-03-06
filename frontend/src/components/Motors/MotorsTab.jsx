@@ -36,7 +36,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [savedConfigs, setSavedConfigs] = useState([]);
     const [configData, setConfigData] = useSessionStorage('motors_draft', {}); // { className: config[] }
     const [isPlaying, setIsPlaying] = useState(false);
-    const [isCameraStarted, setIsCameraStarted] = useState(hand.isRunning);
+    const [isCameraStarted, setIsCameraStarted] = useState(hand.wasStarted || hand.isRunning);
     const videoReadyRef = useRef(false);
     const lastPredRef = useRef(null);
     const lastTimeRef = useRef(0);

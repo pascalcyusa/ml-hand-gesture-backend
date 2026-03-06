@@ -41,15 +41,6 @@ export default function DevicesTab({ showToast, ble }) {
         }
     }, [ble, showToast]);
 
-    const handleConnectBLEAdvanced = useCallback(async () => {
-        const result = await ble.connectBLEAdvanced();
-        if (result.success) {
-            showToast('LEGO Spike Prime connected via Bluetooth!', 'success');
-        } else if (!result.isCancellation && result.error) {
-            showToast(`Bluetooth Connection failed: ${result.error}`, 'error');
-        }
-    }, [ble, showToast]);
-
     const handleDisconnect = useCallback(() => {
         ble.disconnect();
         showToast('Device disconnected', 'info');
@@ -163,9 +154,6 @@ export default function DevicesTab({ showToast, ble }) {
                     ) : (
                         <>
                             <span className="text-sm text-[var(--fg-muted)]">Make sure your Hub is turned on</span>
-                            <span className="text-xs text-[var(--fg-muted)] mt-1 text-center max-w-xs">
-                                BLE requires SPIKE 3 or Pybricks firmware. Close the SPIKE app before connecting here.
-                            </span>
                         </>
                     )}
                 </div>
@@ -181,28 +169,30 @@ export default function DevicesTab({ showToast, ble }) {
                         Disconnect
                     </Button>
                 ) : (
-                    <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="connect-btn-lg flex-1"
-                            onClick={handleConnectUSB}
-                            disabled={!ble.isSerialSupported || ble.device?.connecting}
-                        >
-                            <ComputerDesktopIcon className="h-5 w-5" />
-                            Connect via USB
-                        </Button>
-                        <Button
-                            variant="primary"
-                            size="lg"
-                            className="connect-btn-lg flex-1"
-                            onClick={handleConnectBLE}
-                            disabled={!ble.isBLESupported || ble.device?.connecting}
-                        >
-                            <SignalIcon className="h-5 w-5" />
-                            Connect via BLE
-                        </Button>
-                    </div>
+                    <>
+                        <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                className="connect-btn-lg flex-1"
+                                onClick={handleConnectUSB}
+                                disabled={!ble.isSerialSupported || ble.device?.connecting}
+                            >
+                                <ComputerDesktopIcon className="h-5 w-5" />
+                                Connect via USB
+                            </Button>
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                className="connect-btn-lg flex-1"
+                                onClick={handleConnectBLE}
+                                disabled={!ble.isBLESupported || ble.device?.connecting}
+                            >
+                                <SignalIcon className="h-5 w-5" />
+                                Connect via BLE
+                            </Button>
+                        </div>
+                    </>
                 )}
 
                 {/* Debug buttons for testing REPL and motor manually */}
