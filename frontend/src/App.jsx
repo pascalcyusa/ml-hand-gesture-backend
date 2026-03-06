@@ -1,4 +1,4 @@
-import { useState, useCallback, Suspense, lazy, useEffect } from 'react';
+import { useState, useCallback, Suspense, lazy, useEffect, useRef } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 
 import './components/Layout/Header.css';
@@ -81,6 +81,16 @@ export default function App() {
     predict: trainer.predict,
     classNames: cm.classNames,
   });
+
+  // Auto-start predictions when model is restored from session and camera is running
+  const hasAutoStartedRef = useRef(false);
+  useEffect(() => {
+    if (trainer.isTrained && hand.isRunning && !prediction.isPredicting && !hasAutoStartedRef.current) {
+      hasAutoStartedRef.current = true;
+      prediction.startPredicting();
+      console.log('Auto-started predictions (model restored from session)');
+    }
+  }, [trainer.isTrained, hand.isRunning, prediction.isPredicting, prediction.startPredicting]);
 
   // Import community model into local training
   const handleImportCommunityModel = useCallback(async (cloudModel) => {

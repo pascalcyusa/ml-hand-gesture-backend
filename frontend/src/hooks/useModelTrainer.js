@@ -15,6 +15,8 @@ export function useModelTrainer() {
     const [trainingProgress, setTrainingProgress] = useState(null);
     const modelRef = useRef(null);
     const numClassesRef = useRef(0);
+    // Tracks whether isTrained was ever explicitly set true (by training or restore)
+    const wasEverTrainedRef = useRef(false);
 
     // Build the model
     const buildModel = useCallback((numClasses) => {
@@ -92,6 +94,7 @@ export function useModelTrainer() {
                 ys.dispose();
 
                 setIsTrained(true);
+                wasEverTrainedRef.current = true;
                 return true;
             } catch (err) {
                 console.error('Training error:', err);
@@ -150,6 +153,7 @@ export function useModelTrainer() {
         }
         modelRef.current = model;
         numClassesRef.current = numClasses;
+        if (isTrainedFlag) wasEverTrainedRef.current = true;
         setIsTrained(isTrainedFlag);
     }, []);
 
@@ -157,7 +161,7 @@ export function useModelTrainer() {
     const [isRestoring, setIsRestoring] = useState(true);
 
     useEffect(() => {
-        // Hydrate from session storage
+        let cancelled = false;
         const restoreFromSession = async () => {
             try {
                 const storedIsTrained = window.sessionStorage.getItem('model_isTrained');
@@ -166,48 +170,44 @@ export function useModelTrainer() {
                 if (storedIsTrained === 'true' && storedNumClasses) {
                     try {
                         const loadedModel = await tf.loadLayersModel('localstorage://session_current_model');
+                        if (cancelled) return;
                         modelRef.current = loadedModel;
                         numClassesRef.current = parseInt(storedNumClasses, 10);
+                        wasEverTrainedRef.current = true;
                         setIsTrained(true);
+                        console.log('Model restored from session storage');
                     } catch (e) {
-                        console.warn("Could not load model from local storage:", e);
+                        console.warn('Could not load model from localStorage:', e);
+                        // Clear stale flags — model data is gone
+                        window.sessionStorage.removeItem('model_isTrained');
+                        window.sessionStorage.removeItem('model_numClasses');
                     }
                 }
             } catch (e) {
-                console.error("Session restore error:", e);
+                console.error('Session restore error:', e);
             } finally {
-                setIsRestoring(false);
+                if (!cancelled) setIsRestoring(false);
             }
         };
 
         restoreFromSession();
+        return () => { cancelled = true; };
     }, []);
 
     useEffect(() => {
-        // Save to local storage whenever state changes
         if (isRestoring) return;
 
-        window.sessionStorage.setItem('model_isTrained', isTrained);
-        window.sessionStorage.setItem('model_numClasses', numClassesRef.current);
+        // Only persist when model was actually trained (avoid overwriting on failed restore)
+        if (isTrained && modelRef.current) {
+            window.sessionStorage.setItem('model_isTrained', 'true');
+            window.sessionStorage.setItem('model_numClasses', numClassesRef.current);
 
-        const saveToSession = async () => {
-            if (modelRef.current && isTrained) {
-                try {
-                    await modelRef.current.save('localstorage://session_current_model');
-                } catch (e) {
-                    console.error("Could not save model to session storage:", e);
-                }
-            } else if (!isTrained) {
-                try {
-                    await tf.io.removeModel('localstorage://session_current_model');
-                } catch (e) {
-                    // Ignore errors if model doesn't exist
-                }
-            }
-        };
-
-        // Fire and forget
-        saveToSession();
+            modelRef.current.save('localstorage://session_current_model')
+                .then(() => console.log('Model saved to localStorage'))
+                .catch(e => console.error('Could not save model:', e));
+        }
+        // Only clear storage on explicit reset (wasEverTrainedRef goes true→false scenario)
+        // Don't clear on initial mount where isTrained was never true
     }, [isTrained, isRestoring]);
 
     return useMemo(() => ({

@@ -346,7 +346,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             <div className="motors-left flex flex-col gap-6">
                 <WebcamPanel
                     onVideoReady={handleVideoReady}
-                    isDetecting={hand.isHandDetected || prediction.isPredicting}
+                    isDetecting={hand.isRunning}
                     isStarted={isCameraStarted}
                     onStartCamera={handleStartCamera}
                     showVideo={hand.showVideo}

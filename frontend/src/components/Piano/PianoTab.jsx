@@ -280,7 +280,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
             <div className="piano-left flex flex-col gap-6">
                 <WebcamPanel
                     onVideoReady={handleVideoReady}
-                    isDetecting={hand.isHandDetected || prediction.isPredicting}
+                    isDetecting={hand.isRunning}
                     isStarted={isCameraStarted}
                     onStartCamera={handleStartCamera}
                     showVideo={hand.showVideo}
