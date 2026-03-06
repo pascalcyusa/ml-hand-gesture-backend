@@ -12,7 +12,8 @@ import {
     LinkIcon,
     SignalSlashIcon,
     BoltIcon,
-    ComputerDesktopIcon // using standard outline icons available
+    ComputerDesktopIcon,
+    ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
@@ -38,6 +39,15 @@ export default function DevicesTab({ showToast, ble }) {
             showToast('LEGO Spike Prime connected via Bluetooth!', 'success');
         } else if (!result.isCancellation && result.error) {
             showToast(`Bluetooth Connection failed: ${result.error}`, 'error');
+        }
+    }, [ble, showToast]);
+
+    const handleReconnectBLE = useCallback(async () => {
+        const result = await ble.reconnectBLE(ble.lastDeviceName);
+        if (result.success) {
+            showToast(`Reconnected to ${ble.lastDeviceName}!`, 'success');
+        } else if (!result.isCancellation && result.error) {
+            showToast(`Reconnect failed: ${result.error}`, 'error');
         }
     }, [ble, showToast]);
 
@@ -180,6 +190,18 @@ export default function DevicesTab({ showToast, ble }) {
                     </Button>
                 ) : (
                     <>
+                        {ble.lastDeviceName && (
+                            <Button
+                                variant="primary"
+                                size="lg"
+                                className="connect-btn-lg w-full"
+                                onClick={handleReconnectBLE}
+                                disabled={ble.device?.connecting}
+                            >
+                                <ArrowPathIcon className="h-5 w-5" />
+                                Reconnect to {ble.lastDeviceName}
+                            </Button>
+                        )}
                         <div className="flex flex-col sm:flex-row items-center gap-3 mt-2">
                             <Button
                                 variant="primary"

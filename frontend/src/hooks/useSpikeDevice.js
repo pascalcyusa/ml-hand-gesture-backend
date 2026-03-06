@@ -77,8 +77,11 @@ export function useSpikeDevice() {
             writerRef.current = null;
             readerRef.current = null;
         } else if (typeToDisconnect === 'ble') {
-            // Clear saved device ID so we don't auto-reconnect to a deliberately disconnected hub
-            try { window.sessionStorage.removeItem('ble_device_id'); } catch { /* ignore */ }
+            // Clear saved device info so we don't auto-reconnect to a deliberately disconnected hub
+            try {
+                window.sessionStorage.removeItem('ble_device_id');
+                window.sessionStorage.removeItem('ble_device_name');
+            } catch { /* ignore */ }
             if (bleDeviceRef.current?.gatt?.connected) {
                 try { bleDeviceRef.current.gatt.disconnect(); } catch { /* ignore */ }
             }
@@ -354,8 +357,11 @@ export function useSpikeDevice() {
                 if (activeType.current === 'ble') disconnect();
             });
 
-            // Save device ID for auto-reconnect on refresh
-            try { window.sessionStorage.setItem('ble_device_id', btDevice.id); } catch { /* ignore */ }
+            // Save device info for reconnect on refresh
+            try {
+                window.sessionStorage.setItem('ble_device_id', btDevice.id);
+                window.sessionStorage.setItem('ble_device_name', btDevice.name || '');
+            } catch { /* ignore */ }
 
             setDevice({
                 id: btDevice.id,
@@ -406,6 +412,37 @@ export function useSpikeDevice() {
     }, [isBLESupported, setupBLEConnection]);
 
     const connectBLEAdvanced = connectBLE;
+
+    // Reconnect to a previously connected BLE device by name.
+    // Pre-filters the picker so only the matching hub shows — one click to reconnect.
+    const reconnectBLE = useCallback(async (deviceName) => {
+        if (!isBLESupported || !deviceName) return connectBLE();
+        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
+        try {
+            const btDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ name: deviceName, services: [SPIKE3_SERVICE] }],
+                optionalServices: [NUS_SERVICE, PBX_SERVICE, LWP3_SERVICE],
+            });
+            return await setupBLEConnection(btDevice);
+        } catch (err) {
+            console.error('BLE reconnect error:', err);
+            const isCancellation = err.name === 'NotFoundError' || err.message?.includes('User cancelled');
+            setDevice(prev => ({
+                ...prev,
+                connecting: false,
+                error: isCancellation ? null : err.message,
+                status: isCancellation ? 'idle' : 'error',
+                type: null, protocol: null,
+            }));
+            return { success: false, error: isCancellation ? null : err.message, isCancellation };
+        }
+    }, [isBLESupported, connectBLE, setupBLEConnection]);
+
+    // Read saved device name for reconnect UI — re-read when connection state changes
+    const lastDeviceName = useMemo(() => {
+        try { return window.sessionStorage.getItem('ble_device_name') || null; } catch { return null; }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [device.connected]);
 
     // --- AUTO-RECONNECT (USB) ---
     useEffect(() => {
@@ -576,8 +613,10 @@ export function useSpikeDevice() {
         connectUSB,
         connectBLE,
         connectBLEAdvanced,
+        reconnectBLE,
+        lastDeviceName,
         write,
         disconnect,
         onNotify,
-    }), [device, isSerialSupported, isBLESupported, connectUSB, connectBLE, connectBLEAdvanced, write, disconnect, onNotify]);
+    }), [device, isSerialSupported, isBLESupported, connectUSB, connectBLE, connectBLEAdvanced, reconnectBLE, lastDeviceName, write, disconnect, onNotify]);
 }
