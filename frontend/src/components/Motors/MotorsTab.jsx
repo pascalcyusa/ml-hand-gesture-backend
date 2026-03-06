@@ -20,6 +20,7 @@ import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import ModalPortal from '../common/ModalPortal.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
+import ActivityLog from '../common/ActivityLog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -37,6 +38,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     const [configData, setConfigData] = useSessionStorage('motors_draft', {}); // { className: config[] }
     const [isPlaying, setIsPlaying] = useState(false);
     const [isCameraStarted, setIsCameraStarted] = useState(hand.wasStarted || hand.isRunning);
+    const [activityLog, setActivityLog] = useState([]);
     const videoReadyRef = useRef(false);
     const lastPredRef = useRef(null);
     const lastTimeRef = useRef(0);
@@ -162,7 +164,9 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         try {
             const summary = describeMotorConfig(config);
             if (fromPrediction) {
-                showToast(`🤖 ${className} → ${summary}`, 'info', 2500);
+                const now = new Date();
+                const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                setActivityLog(prev => [...prev.slice(-49), { icon: '🤖', gesture: className, action: summary, time }]);
             }
             console.debug(`PlaySequence [${ble.device?.protocol ?? 'no-protocol'}] for ${className}: ${summary}`);
             const ok = await sendMotorCommands(config);
@@ -350,6 +354,10 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
                 <PredictionBars
                     predictions={prediction.predictions}
                     classNames={classNames}
+                />
+                <ActivityLog
+                    entries={activityLog}
+                    title="Motor Commands"
                 />
             </div>
 

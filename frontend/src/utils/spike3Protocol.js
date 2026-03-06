@@ -221,7 +221,7 @@ export function parseResponse(data) {
 /**
  * Creates a SPIKE 3 protocol session over a BLE write/notify pair.
  */
-export function createSpike3Session(writeChar, notifyChar) {
+export function createSpike3Session(writeChar) {
   const pendingResponses = new Map();
   let hubInfo = null;
 
@@ -312,8 +312,15 @@ export function createSpike3Session(writeChar, notifyChar) {
   // Mutex: serialize all runProgram calls so they don't race each other
   let programLock = Promise.resolve();
   let programRunning = false;
+  let lastProgramCode = null;
 
   const _doRunProgram = async (pythonCode, slot) => {
+    // Skip re-upload if the same program is already running
+    if (programRunning && pythonCode === lastProgramCode) {
+      console.log('SPIKE3: same program already running, skipping');
+      return;
+    }
+
     const program = new TextEncoder().encode(pythonCode);
     const programCrc = crc32(program);
 
@@ -357,6 +364,7 @@ export function createSpike3Session(writeChar, notifyChar) {
     if (!startResp.success) throw new Error('SPIKE3: program start failed');
 
     programRunning = true;
+    lastProgramCode = pythonCode;
     console.log('SPIKE3: program started in slot', slot);
   };
 

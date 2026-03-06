@@ -15,6 +15,7 @@ import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Input } from '../ui/input.jsx';
 import ConfirmDialog from '../common/ConfirmDialog.jsx';
+import ActivityLog from '../common/ActivityLog.jsx';
 import NoteSequencer from './NoteSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
@@ -35,6 +36,7 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     const [saveName, setSaveName] = useState('');
     const [savedSequences, setSavedSequences] = useState([]);
     const [isCameraStarted, setIsCameraStarted] = useState(hand.wasStarted || hand.isRunning);
+    const [activityLog, setActivityLog] = useState([]);
 
     const videoReadyRef = useRef(false);
 
@@ -122,14 +124,12 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
     useEffect(() => {
         if (!pianoEnabled || !topPrediction || isPlaying) {
             if (!topPrediction) {
-                // Reset last prediction when hand is hidden/no gesture
                 lastPredRef.current = null;
             }
             return;
         }
 
         const now = Date.now();
-        // Prevent re-triggering the same class within 1 second of it starting
         if (topPrediction.className === lastPredRef.current && now - lastTimeRef.current < 1000) {
             return;
         }
@@ -137,9 +137,14 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
         lastPredRef.current = topPrediction.className;
         lastTimeRef.current = now;
 
-        // Get slots for this class's sequencer from sequencerData ref
         const slots = sequencerDataRef.current[topPrediction.className];
         if (slots) {
+            // Log to activity panel
+            const noteNames = slots.filter(s => !s.isDelay).map(s => s.note).join(', ');
+            const summary = noteNames || 'empty sequence';
+            const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            setActivityLog(prev => [...prev.slice(-49), { icon: '🎵', gesture: topPrediction.className, action: summary, time }]);
+
             handlePlaySequence(slots, null);
         }
     }, [topPrediction, pianoEnabled, isPlaying, handlePlaySequence]);
@@ -284,6 +289,10 @@ export default function PianoTab({ classNames, topPrediction, showToast, hand, p
                 <PredictionBars
                     predictions={prediction.predictions}
                     classNames={classNames}
+                />
+                <ActivityLog
+                    entries={activityLog}
+                    title="Piano Sequences"
                 />
             </div>
 

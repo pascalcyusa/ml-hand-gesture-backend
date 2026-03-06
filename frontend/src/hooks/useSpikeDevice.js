@@ -322,7 +322,7 @@ export function useSpikeDevice() {
             if (matched.name === 'SPIKE3') {
                 // SPIKE 3 uses COBS-encoded protocol, not raw LWP3 or REPL
                 detectedProto = 'spike3';
-                const session = createSpike3Session(matched.wc, matched.nc);
+                const session = createSpike3Session(matched.wc);
                 spike3SessionRef.current = session;
 
                 setDevice(prev => ({ ...prev, status: 'initializing_protocol' }));
