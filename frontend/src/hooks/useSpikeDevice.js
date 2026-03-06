@@ -2,6 +2,15 @@ import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { LWP3_SERVICE, LWP3_CHARACTERISTIC } from '../utils/spikeProtocol.js';
 import { createSpike3Session } from '../utils/spike3Protocol.js';
 
+// BLE service/characteristic UUIDs
+const NUS_SERVICE   = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_WRITE     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
+const NUS_NOTIFY    = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
+const PBX_SERVICE   = 'c5f50001-8280-46da-89f4-6d8051e4aeef';
+const PBX_WRITE     = 'c5f50002-8280-46da-89f4-6d8051e4aeef';
+const PBX_NOTIFY    = 'c5f50003-8280-46da-89f4-6d8051e4aeef';
+const SPIKE3_SERVICE = '0000fd02-0000-1000-8000-00805f9b34fb';
+
 export function useSpikeDevice() {
     const [device, setDevice] = useState({
         connected: false,
@@ -68,6 +77,8 @@ export function useSpikeDevice() {
             writerRef.current = null;
             readerRef.current = null;
         } else if (typeToDisconnect === 'ble') {
+            // Clear saved device ID so we don't auto-reconnect to a deliberately disconnected hub
+            try { window.sessionStorage.removeItem('ble_device_id'); } catch { /* ignore */ }
             if (bleDeviceRef.current?.gatt?.connected) {
                 try { bleDeviceRef.current.gatt.disconnect(); } catch { /* ignore */ }
             }
@@ -179,26 +190,9 @@ export function useSpikeDevice() {
     // LEGO SPIKE 3 firmware uses the 0xFD02 service (LEGO's Bluetooth SIG
     // assigned UUID). Older firmware used NUS (Pybricks) or LWP3.
     // We try all known profiles to support any firmware version.
-    const connectBLE = useCallback(async () => {
-        if (!isBLESupported) {
-            return { success: false, error: 'Web Bluetooth not supported' };
-        }
-        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
 
-        const NUS_SERVICE   = '6e400001-b5a3-f393-e0a9-e50e24dcca9e';
-        const NUS_WRITE     = '6e400002-b5a3-f393-e0a9-e50e24dcca9e';
-        const NUS_NOTIFY    = '6e400003-b5a3-f393-e0a9-e50e24dcca9e';
-        const PBX_SERVICE   = 'c5f50001-8280-46da-89f4-6d8051e4aeef';
-        const PBX_WRITE     = 'c5f50002-8280-46da-89f4-6d8051e4aeef';
-        const PBX_NOTIFY    = 'c5f50003-8280-46da-89f4-6d8051e4aeef';
-        const SPIKE3_SERVICE = '0000fd02-0000-1000-8000-00805f9b34fb';
-
-        try {
-            const btDevice = await navigator.bluetooth.requestDevice({
-                filters: [{ services: [SPIKE3_SERVICE] }],
-                optionalServices: [NUS_SERVICE, PBX_SERVICE, LWP3_SERVICE],
-            });
-
+    // Shared BLE setup — used by both connectBLE (user-initiated) and auto-reconnect
+    const setupBLEConnection = useCallback(async (btDevice) => {
             const hubName = btDevice.name;
             console.log(`BLE: selected "${hubName}" (${btDevice.id})`);
             setDevice(prev => ({ ...prev, status: 'connecting_gatt', name: hubName || 'LEGO Hub (BLE)' }));
@@ -360,6 +354,9 @@ export function useSpikeDevice() {
                 if (activeType.current === 'ble') disconnect();
             });
 
+            // Save device ID for auto-reconnect on refresh
+            try { window.sessionStorage.setItem('ble_device_id', btDevice.id); } catch { /* ignore */ }
+
             setDevice({
                 id: btDevice.id,
                 name: btDevice.name || 'LEGO Hub (BLE)',
@@ -373,6 +370,21 @@ export function useSpikeDevice() {
 
             console.log(`BLE: connected via ${matched.name} (${detectedProto})`);
             return { success: true };
+    }, [disconnect]);
+
+    const connectBLE = useCallback(async () => {
+        if (!isBLESupported) {
+            return { success: false, error: 'Web Bluetooth not supported' };
+        }
+        setDevice(prev => ({ ...prev, connecting: true, error: null, status: 'requesting', type: 'ble' }));
+
+        try {
+            const btDevice = await navigator.bluetooth.requestDevice({
+                filters: [{ services: [SPIKE3_SERVICE] }],
+                optionalServices: [NUS_SERVICE, PBX_SERVICE, LWP3_SERVICE],
+            });
+
+            return await setupBLEConnection(btDevice);
 
         } catch (err) {
             console.error('BLE connect error:', err);
@@ -391,11 +403,11 @@ export function useSpikeDevice() {
             }));
             return { success: false, error: isCancellation ? null : errorMessage, isCancellation };
         }
-    }, [isBLESupported, disconnect]);
+    }, [isBLESupported, setupBLEConnection]);
 
     const connectBLEAdvanced = connectBLE;
 
-    // --- AUTO-RECONNECT (USB ONLY) ---
+    // --- AUTO-RECONNECT (USB) ---
     useEffect(() => {
         if (!isSerialSupported) return;
         const autoConnect = async () => {
@@ -417,6 +429,36 @@ export function useSpikeDevice() {
         navigator.serial.addEventListener('disconnect', handleDisconnect);
         return () => navigator.serial.removeEventListener('disconnect', handleDisconnect);
     }, [isSerialSupported, setupUSBConnection, disconnect]);
+
+    // --- AUTO-RECONNECT (BLE) ---
+    // Uses navigator.bluetooth.getDevices() to reconnect to a previously
+    // paired hub without showing the device picker again.
+    useEffect(() => {
+        if (!isBLESupported || !navigator.bluetooth.getDevices) return;
+        const savedId = window.sessionStorage.getItem('ble_device_id');
+        if (!savedId) return;
+
+        const autoReconnectBLE = async () => {
+            try {
+                const devices = await navigator.bluetooth.getDevices();
+                const prev = devices.find(d => d.id === savedId);
+                if (!prev) {
+                    console.log('BLE auto-reconnect: saved device not in granted list');
+                    return;
+                }
+
+                console.log(`BLE auto-reconnect: found "${prev.name}" (${prev.id}), connecting…`);
+                setDevice(p => ({ ...p, connecting: true, status: 'reconnecting', type: 'ble', name: prev.name || 'LEGO Hub' }));
+                await setupBLEConnection(prev);
+            } catch (err) {
+                console.warn('BLE auto-reconnect failed:', err.message);
+                // Silently fail — user can reconnect manually
+                setDevice(p => (p.connecting ? { ...p, connecting: false, status: 'idle', type: null } : p));
+            }
+        };
+
+        autoReconnectBLE();
+    }, [isBLESupported, setupBLEConnection]);
 
     // --- SHARED WRITE ---
     const write = useCallback(async (data) => {
