@@ -51,7 +51,8 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS — allow frontend dev server and production domains
-origins = os.getenv("ALLOWED_ORIGINS").split(",")
+# CORS and Frontend settings from environment
+origins = os.getenv("ALLOWED_ORIGINS", "").split(",")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 app.add_middleware(

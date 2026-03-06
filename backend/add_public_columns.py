@@ -1,6 +1,9 @@
 
 from sqlalchemy import create_engine, text
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Database URL
 # Helper to try connecting
@@ -15,12 +18,7 @@ def try_connect(url):
 
 # List of potential URLs to try
 param_url = os.getenv("DATABASE_URL")
-candidates = [
-    param_url,
-    "postgresql://postgres:postgres@localhost:5432/ml_hand_gesture_db",
-    "postgresql://localhost:5432/ml_hand_gesture_db",  # Try default user (OS user)
-    f"postgresql://{os.environ.get('USER', 'pascal')}@localhost:5432/ml_hand_gesture_db"
-]
+candidates = [param_url]
 
 engine = None
 for url in candidates:
