@@ -111,7 +111,7 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
         });
     };
 
-    // Helper: send motor commands, handles both LWP3 (binary) and REPL (Python) protocols
+    // Helper: send motor commands, handles LWP3, REPL, and SPIKE3 protocols
     const sendMotorCommands = useCallback(async (config) => {
         if (ble.device?.protocol === 'lwp3') {
             // LWP3: one binary command per motor
@@ -124,16 +124,19 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             }
             return true;
         }
-        // REPL (USB or BLE NUS/Pybricks): bundle into one Python script
-        let script = 'import hub\nimport motor\nfrom hub import port\n';
+        // REPL and SPIKE3 both use Python scripts (SPIKE3 uploads + executes via COBS)
+        let script = 'import motor\nfrom hub import port\n';
         for (const motor of config) {
             const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
             if (cmdString) script += cmdString;
         }
+        if (ble.device?.protocol === 'spike3') {
+            return ble.write(script);
+        }
         return ble.write(encodeCommand(script));
     }, [ble]);
 
-    // Helper: stop all motors, handles both protocols
+    // Helper: stop all motors, handles all protocols
     const sendStopAll = useCallback(async () => {
         const allPorts = ['A', 'B', 'C', 'D', 'E', 'F'];
         if (ble.device?.protocol === 'lwp3') {
@@ -143,8 +146,11 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             }
             return true;
         }
-        const stopScript = 'import hub\nimport motor\nfrom hub import port\n' +
+        const stopScript = 'import motor\nfrom hub import port\n' +
             allPorts.map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`).join('');
+        if (ble.device?.protocol === 'spike3') {
+            return ble.write(stopScript);
+        }
         return ble.write(encodeCommand(stopScript));
     }, [ble]);
 

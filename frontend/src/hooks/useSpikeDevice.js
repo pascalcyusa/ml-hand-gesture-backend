@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { LWP3_SERVICE, LWP3_CHARACTERISTIC } from '../utils/spikeProtocol.js';
+import { createSpike3Session } from '../utils/spike3Protocol.js';
 
 export function useSpikeDevice() {
     const [device, setDevice] = useState({
@@ -9,11 +10,11 @@ export function useSpikeDevice() {
         status: 'idle',
         error: null,
         type: null,     // 'usb' | 'ble' | null
-        protocol: null, // 'repl' | 'lwp3' | null
+        protocol: null, // 'repl' | 'lwp3' | 'spike3' | null
     });
 
     const activeType = useRef(null);
-    const bleProtocolRef = useRef(null); // 'repl' | 'lwp3'
+    const bleProtocolRef = useRef(null); // 'repl' | 'lwp3' | 'spike3'
     const notificationCallbackRef = useRef(null);
 
     // --- USB (Serial) Refs ---
@@ -29,6 +30,9 @@ export function useSpikeDevice() {
 
     // --- BLE LWP3 Ref (standard LEGO firmware) ---
     const lwp3CharRef = useRef(null);
+
+    // --- SPIKE 3 protocol session ---
+    const spike3SessionRef = useRef(null);
 
     const isSerialSupported = typeof navigator !== 'undefined' && !!navigator.serial;
     const isBLESupported = typeof navigator !== 'undefined' && !!navigator.bluetooth;
@@ -71,6 +75,7 @@ export function useSpikeDevice() {
             bleWriteCharRef.current = null;
             bleNotifyCharRef.current = null;
             lwp3CharRef.current = null;
+            spike3SessionRef.current = null;
         }
     }, []);
 
@@ -204,6 +209,29 @@ export function useSpikeDevice() {
 
             setDevice(prev => ({ ...prev, status: 'discovering_services' }));
 
+            // Enumerate ALL services for debugging
+            try {
+                const allSvcs = await server.getPrimaryServices();
+                console.log('BLE: all services:', allSvcs.map(s => s.uuid));
+                for (const svc of allSvcs) {
+                    try {
+                        const chars = await svc.getCharacteristics();
+                        for (const c of chars) {
+                            const p = c.properties;
+                            const flags = [];
+                            if (p.read) flags.push('R');
+                            if (p.write) flags.push('W');
+                            if (p.writeWithoutResponse) flags.push('Wn');
+                            if (p.notify) flags.push('N');
+                            if (p.indicate) flags.push('I');
+                            console.log(`  ${svc.uuid} → ${c.uuid} [${flags.join(',')}]`);
+                        }
+                    } catch { /* ignore */ }
+                }
+            } catch (e) {
+                console.warn('BLE: could not enumerate all services:', e.message);
+            }
+
             // --- Try SPIKE 3 (0xFD02) first ---
             let matched = null;
             try {
@@ -212,25 +240,36 @@ export function useSpikeDevice() {
 
                 // Discover all characteristics on this service
                 const chars = await svc.getCharacteristics();
+                const describeProps = (c) => {
+                    const p = c.properties;
+                    const flags = [];
+                    if (p.read) flags.push('read');
+                    if (p.write) flags.push('write');
+                    if (p.writeWithoutResponse) flags.push('writeWithoutResponse');
+                    if (p.notify) flags.push('notify');
+                    if (p.indicate) flags.push('indicate');
+                    return flags.join(',') || 'none';
+                };
                 console.log('BLE: characteristics:', chars.map(c =>
-                    `${c.uuid} [${Object.entries(c.properties).filter(([,v]) => v).map(([k]) => k).join(',')}]`
+                    `${c.uuid} [${describeProps(c)}]`
                 ));
 
                 // Find write and notify characteristics
                 let wc = null, nc = null;
                 for (const c of chars) {
                     const props = c.properties;
-                    if (!nc && props.notify) nc = c;
+                    if (!nc && (props.notify || props.indicate)) nc = c;
                     if (!wc && (props.write || props.writeWithoutResponse)) wc = c;
                 }
 
+                // The 0xFD02 service is a UART-like interface (write+notify),
+                // similar to NUS. Use REPL protocol (MicroPython commands).
                 if (wc && nc) {
                     console.log(`BLE: write char = ${wc.uuid}, notify char = ${nc.uuid}`);
-                    matched = { proto: 'lwp3', name: 'SPIKE3', wc, nc };
+                    matched = { proto: 'repl', name: 'SPIKE3', wc, nc };
                 } else if (wc) {
-                    // Some firmware uses a single characteristic for both
                     console.log(`BLE: write char = ${wc.uuid} (no separate notify)`);
-                    matched = { proto: 'lwp3', name: 'SPIKE3', wc, nc: wc };
+                    matched = { proto: 'repl', name: 'SPIKE3', wc, nc: wc };
                 } else {
                     console.warn('BLE: SPIKE3 service found but no usable characteristics');
                 }
@@ -264,26 +303,58 @@ export function useSpikeDevice() {
                 throw new Error('Hub connected but no usable characteristics found.');
             }
 
-            // Wire up notifications
-            await matched.nc.startNotifications();
-            matched.nc.addEventListener('characteristicvaluechanged', (event) => {
+            // Wire up notifications — add listener BEFORE startNotifications()
+            const notifyHandler = (event) => {
                 const data = new Uint8Array(event.target.value.buffer);
+                // Route to SPIKE3 session if active
+                if (spike3SessionRef.current) {
+                    spike3SessionRef.current.onNotification(data);
+                }
                 if (notificationCallbackRef.current) notificationCallbackRef.current(data);
-            });
+            };
+            matched.nc.addEventListener('characteristicvaluechanged', notifyHandler);
+            console.log('BLE: listener attached, calling startNotifications()…');
+            await matched.nc.startNotifications();
+            console.log('BLE: startNotifications() resolved OK');
 
-            if (matched.proto === 'lwp3') {
+            let detectedProto = matched.proto;
+
+            if (matched.name === 'SPIKE3') {
+                // SPIKE 3 uses COBS-encoded protocol, not raw LWP3 or REPL
+                detectedProto = 'spike3';
+                const session = createSpike3Session(matched.wc, matched.nc);
+                spike3SessionRef.current = session;
+
+                setDevice(prev => ({ ...prev, status: 'initializing_protocol' }));
+                try {
+                    await session.init();
+                    console.log('SPIKE3: protocol initialized successfully');
+                } catch (err) {
+                    console.error('SPIKE3: init failed:', err);
+                    // Fall back to trying as REPL
+                    spike3SessionRef.current = null;
+                    detectedProto = 'repl';
+                }
+            }
+
+            if (detectedProto === 'lwp3') {
                 lwp3CharRef.current = matched.wc;
-            } else {
+            } else if (detectedProto === 'repl') {
                 bleWriteCharRef.current = matched.wc;
                 bleNotifyCharRef.current = matched.nc;
                 try {
-                    const ctrlC = new Uint8Array([0x03, 0x0D, 0x0A]);
-                    await matched.wc.writeValue(ctrlC);
+                    const ctrlC = new Uint8Array([0x03]);
+                    if (matched.wc.properties.writeWithoutResponse) {
+                        await matched.wc.writeValueWithoutResponse(ctrlC);
+                    } else {
+                        await matched.wc.writeValue(ctrlC);
+                    }
                 } catch (err) { console.warn('Could not send init Ctrl-C', err); }
             }
+            // spike3 protocol is handled by the session object
 
             activeType.current = 'ble';
-            bleProtocolRef.current = matched.proto;
+            bleProtocolRef.current = detectedProto;
 
             btDevice.addEventListener('gattserverdisconnected', () => {
                 if (activeType.current === 'ble') disconnect();
@@ -297,10 +368,10 @@ export function useSpikeDevice() {
                 error: null,
                 status: 'connected',
                 type: 'ble',
-                protocol: matched.proto,
+                protocol: detectedProto,
             });
 
-            console.log(`BLE: connected via ${matched.name} (${matched.proto})`);
+            console.log(`BLE: connected via ${matched.name} (${detectedProto})`);
             return { success: true };
 
         } catch (err) {
@@ -353,6 +424,24 @@ export function useSpikeDevice() {
         if (!activeType.current) {
             if (DEBUG) console.debug('Device write aborted: no activeType');
             return false;
+        }
+
+        // ── SPIKE3 BLE: upload & run Python program via COBS protocol ──
+        if (activeType.current === 'ble' && bleProtocolRef.current === 'spike3') {
+            if (!spike3SessionRef.current) return false;
+            try {
+                // data is a Uint8Array of the Python script (encoded text)
+                const pythonCode = typeof data === 'string'
+                    ? data
+                    : new TextDecoder().decode(data instanceof Uint8Array ? data : new Uint8Array(data));
+                if (DEBUG) console.debug(`SPIKE3 write: uploading ${pythonCode.length} char program`);
+                await spike3SessionRef.current.runProgram(pythonCode);
+                if (DEBUG) console.debug('SPIKE3 write succeeded');
+                return true;
+            } catch (err) {
+                console.error('SPIKE3 write error:', err);
+                return false;
+            }
         }
 
         // ── LWP3 BLE: raw bytes, no paste-mode wrapper ──

@@ -62,10 +62,12 @@ export default function DevicesTab({ showToast, ble }) {
     const handleTestMotorA = useCallback(async () => {
         if (!ble.device?.connected) { showToast('Connect LEGO Hub first!', 'warning'); return; }
         try {
-            let cmd = 'import hub\nimport motor\nfrom hub import port\n';
+            let cmd = 'import motor\nfrom hub import port\n';
             cmd += generateMotorCommand('A', 'run_degrees', 50, 90);
             console.debug('Sending motor test command:', cmd);
-            const ok = await ble.write(encodeCommand(cmd));
+            const ok = ble.device?.protocol === 'spike3'
+                ? await ble.write(cmd)
+                : await ble.write(encodeCommand(cmd));
             if (ok) showToast('Motor test sent (A 90°)', 'success');
             else showToast('Failed to send motor test', 'error');
         } catch (err) {
@@ -83,6 +85,7 @@ export default function DevicesTab({ showToast, ble }) {
             case 'connecting_gatt': return 'Connecting to GATT Server...';
             case 'discovering_services': return 'Discovering LEGO services...';
             case 'initializing_repl': return 'Initializing Python REPL...';
+            case 'initializing_protocol': return 'Initializing SPIKE 3 protocol...';
             default: return 'Connecting...';
         }
     };
