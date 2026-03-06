@@ -20,7 +20,11 @@ export function useHandDetection() {
 
     // True once the user has started the camera at least once this session.
     // Tabs use this to auto-show the camera on mount instead of showing "Start Camera".
-    const [wasStarted, setWasStarted] = useState(false);
+    const [wasStarted, setWasStarted] = useState(() => {
+        try {
+            return window.sessionStorage.getItem('camera_wasStarted') === 'true';
+        } catch { return false; }
+    });
 
     // Store landmarks in a ref to avoid re-rendering on every frame (~60fps).
     const currentLandmarksRef = useRef(null);
@@ -74,6 +78,7 @@ export function useHandDetection() {
 
             setIsRunning(true);
             setWasStarted(true);
+            try { window.sessionStorage.setItem('camera_wasStarted', 'true'); } catch { /* ignore */ }
             lastTimestampRef.current = -1;
             detectLoop();
             setError(null);
