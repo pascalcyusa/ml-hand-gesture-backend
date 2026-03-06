@@ -434,16 +434,27 @@ export function useSpikeDevice() {
     // Uses navigator.bluetooth.getDevices() to reconnect to a previously
     // paired hub without showing the device picker again.
     useEffect(() => {
-        if (!isBLESupported || !navigator.bluetooth.getDevices) return;
+        if (!isBLESupported) {
+            console.log('BLE auto-reconnect: Web Bluetooth not supported');
+            return;
+        }
+        if (!navigator.bluetooth.getDevices) {
+            console.log('BLE auto-reconnect: getDevices() not available — enable chrome://flags/#enable-web-bluetooth-new-permissions-backend');
+            return;
+        }
         const savedId = window.sessionStorage.getItem('ble_device_id');
-        if (!savedId) return;
+        if (!savedId) {
+            console.log('BLE auto-reconnect: no saved device ID (connect once first)');
+            return;
+        }
 
         const autoReconnectBLE = async () => {
             try {
                 const devices = await navigator.bluetooth.getDevices();
+                console.log(`BLE auto-reconnect: getDevices() returned ${devices.length} device(s)`, devices.map(d => `${d.name} (${d.id})`));
                 const prev = devices.find(d => d.id === savedId);
                 if (!prev) {
-                    console.log('BLE auto-reconnect: saved device not in granted list');
+                    console.log(`BLE auto-reconnect: saved ID "${savedId}" not in granted list`);
                     return;
                 }
 
@@ -452,7 +463,6 @@ export function useSpikeDevice() {
                 await setupBLEConnection(prev);
             } catch (err) {
                 console.warn('BLE auto-reconnect failed:', err.message);
-                // Silently fail — user can reconnect manually
                 setDevice(p => (p.connecting ? { ...p, connecting: false, status: 'idle', type: null } : p));
             }
         };
