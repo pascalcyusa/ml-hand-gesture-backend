@@ -102,6 +102,80 @@ export function generateMotorCommand(portLabel, action, speed, degrees, directio
 }
 
 /**
+ * Generate a SPIKE 3 async Python program for motor commands.
+ * SPIKE 3 firmware requires runloop + await for motor.run_for_degrees/run_for_time.
+ * Without await, the program exits immediately and motors don't complete.
+ *
+ * @param {Array} configs - Array of { port, action, speed, degrees, direction }
+ * @returns {string} Complete Python program ready for SPIKE 3 upload
+ */
+export function generateSpike3MotorScript(configs) {
+    if (!configs || configs.length === 0) return null;
+
+    const lines = [];
+    let needsAwait = false;
+    let needsSleep = false;
+
+    for (const m of configs) {
+        const port = PORTS[m.port];
+        if (port === undefined) continue;
+
+        const rawSpd = m.direction === 'counterclockwise' ? -Math.abs(m.speed || 0) : Math.abs(m.speed || 0);
+        const spd = Math.max(-100, Math.min(100, rawSpd));
+        const pyPort = `port.${m.port}`;
+
+        if (m.action === 'stop') {
+            lines.push(`    motor.stop(${pyPort})`);
+        } else if (m.action === 'run_forever') {
+            lines.push(`    motor.run(${pyPort}, ${spd})`);
+            needsSleep = true;
+        } else if (m.action === 'run_degrees') {
+            const absDeg = Math.abs(m.degrees || 0);
+            lines.push(`    await motor.run_for_degrees(${pyPort}, ${absDeg}, ${spd})`);
+            needsAwait = true;
+        }
+    }
+
+    if (lines.length === 0) return null;
+
+    // run_forever needs the program to stay alive
+    if (needsSleep) {
+        lines.push(`    await runloop.sleep_ms(10000)`);
+        needsAwait = true;
+    }
+
+    if (needsAwait) {
+        return [
+            'import runloop',
+            'import motor',
+            'from hub import port',
+            '',
+            'async def main():',
+            ...lines,
+            '',
+            'runloop.run(main())',
+        ].join('\n') + '\n';
+    }
+
+    // No awaitable calls (e.g., all stops) — simple synchronous script
+    return [
+        'import motor',
+        'from hub import port',
+        '',
+        ...lines.map(l => l.trimStart()),
+    ].join('\n') + '\n';
+}
+
+/**
+ * Generate a SPIKE 3 stop-all script.
+ */
+export function generateSpike3StopScript() {
+    const ports = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const stopLines = ports.map(p => `motor.stop(port.${p})`).join('\n    ');
+    return `import motor\nfrom hub import port\ntry:\n    ${stopLines}\nexcept:\n    pass\n`;
+}
+
+/**
  * Build a short human-readable summary of a motor config array.
  * e.g. "Port A: 90° @ 50% CW, Port B: run @ 30% CCW"
  */

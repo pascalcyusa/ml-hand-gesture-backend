@@ -17,7 +17,7 @@ import {
 import { Button } from '../ui/button.jsx';
 import { Card } from '../ui/card.jsx';
 import { Badge } from '../ui/badge.jsx';
-import { generateMotorCommand, encodeCommand } from '../../utils/spikeProtocol.js';
+import { generateMotorCommand, encodeCommand, generateSpike3MotorScript } from '../../utils/spikeProtocol.js';
 import './DevicesTab.css';
 
 export default function DevicesTab({ showToast, ble }) {
@@ -62,12 +62,19 @@ export default function DevicesTab({ showToast, ble }) {
     const handleTestMotorA = useCallback(async () => {
         if (!ble.device?.connected) { showToast('Connect LEGO Hub first!', 'warning'); return; }
         try {
-            let cmd = 'import motor\nfrom hub import port\n';
-            cmd += generateMotorCommand('A', 'run_degrees', 50, 90);
-            console.debug('Sending motor test command:', cmd);
-            const ok = ble.device?.protocol === 'spike3'
-                ? await ble.write(cmd)
-                : await ble.write(encodeCommand(cmd));
+            let ok;
+            if (ble.device?.protocol === 'spike3') {
+                const script = generateSpike3MotorScript([
+                    { port: 'A', action: 'run_degrees', speed: 50, degrees: 90, direction: 'clockwise' }
+                ]);
+                console.debug('Sending SPIKE3 motor test:', script);
+                ok = await ble.write(script);
+            } else {
+                let cmd = 'import motor\nfrom hub import port\n';
+                cmd += generateMotorCommand('A', 'run_degrees', 50, 90);
+                console.debug('Sending motor test command:', cmd);
+                ok = await ble.write(encodeCommand(cmd));
+            }
             if (ok) showToast('Motor test sent (A 90°)', 'success');
             else showToast('Failed to send motor test', 'error');
         } catch (err) {

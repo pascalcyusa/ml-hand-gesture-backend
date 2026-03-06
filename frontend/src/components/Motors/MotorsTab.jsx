@@ -24,7 +24,7 @@ import ActivityLog from '../common/ActivityLog.jsx';
 import MotorSequencer from '../Piano/MotorSequencer.jsx';
 import WebcamPanel from '../Training/WebcamPanel.jsx';
 import PredictionBars from '../Training/PredictionBars.jsx';
-import { generateMotorCommand, encodeCommand, describeMotorConfig, generateLWP3MotorCommand } from '../../utils/spikeProtocol.js';
+import { generateMotorCommand, encodeCommand, describeMotorConfig, generateLWP3MotorCommand, generateSpike3MotorScript, generateSpike3StopScript } from '../../utils/spikeProtocol.js';
 import './MotorsTab.css';
 
 export default function MotorsTab({ classNames, showToast, hand, prediction, ble, trainer }) {
@@ -116,7 +116,6 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
     // Helper: send motor commands, handles LWP3, REPL, and SPIKE3 protocols
     const sendMotorCommands = useCallback(async (config) => {
         if (ble.device?.protocol === 'lwp3') {
-            // LWP3: one binary command per motor
             for (const motor of config) {
                 const cmd = generateLWP3MotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
                 if (cmd) {
@@ -126,14 +125,16 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             }
             return true;
         }
-        // REPL and SPIKE3 both use Python scripts (SPIKE3 uploads + executes via COBS)
+        if (ble.device?.protocol === 'spike3') {
+            const script = generateSpike3MotorScript(config);
+            if (!script) return false;
+            return ble.write(script);
+        }
+        // REPL (USB or BLE NUS/Pybricks)
         let script = 'import motor\nfrom hub import port\n';
         for (const motor of config) {
             const cmdString = generateMotorCommand(motor.port, motor.action, motor.speed, motor.degrees, motor.direction);
             if (cmdString) script += cmdString;
-        }
-        if (ble.device?.protocol === 'spike3') {
-            return ble.write(script);
         }
         return ble.write(encodeCommand(script));
     }, [ble]);
@@ -148,11 +149,11 @@ export default function MotorsTab({ classNames, showToast, hand, prediction, ble
             }
             return true;
         }
+        if (ble.device?.protocol === 'spike3') {
+            return ble.write(generateSpike3StopScript());
+        }
         const stopScript = 'import motor\nfrom hub import port\n' +
             allPorts.map(p => `try:\n    motor.stop(port.${p})\nexcept:\n    pass\n`).join('');
-        if (ble.device?.protocol === 'spike3') {
-            return ble.write(stopScript);
-        }
         return ble.write(encodeCommand(stopScript));
     }, [ble]);
 

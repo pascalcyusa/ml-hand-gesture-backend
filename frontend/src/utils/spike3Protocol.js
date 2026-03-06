@@ -258,14 +258,15 @@ export function createSpike3Session(writeChar) {
 
   // Handle incoming notification data
   let rxBuffer = new Uint8Array(0);
+  // Listeners for program flow notifications (0x20)
+  let programFlowListeners = [];
+
   const onNotification = (data) => {
-    // Accumulate data until we see the delimiter (0x02)
     const combined = new Uint8Array(rxBuffer.length + data.length);
     combined.set(rxBuffer);
     combined.set(data, rxBuffer.length);
     rxBuffer = combined;
 
-    // Process complete frames
     while (true) {
       const delimIdx = rxBuffer.indexOf(DELIMITER);
       if (delimIdx === -1) break;
@@ -278,8 +279,20 @@ export function createSpike3Session(writeChar) {
         const msg = parseResponse(decoded);
         if (!msg) continue;
 
-        console.log(`SPIKE3 RX [0x${msg.id.toString(16)}]:`, msg);
+        // Suppress noisy device notifications (0x3c) from console
+        if (msg.id !== MSG.DEVICE_NOTIF) {
+          console.log(`SPIKE3 RX [0x${msg.id.toString(16)}]:`, msg);
+        }
 
+        // Track program lifecycle
+        if (msg.id === MSG.PROGRAM_FLOW_NOTIF) {
+          if (msg.stopped) programRunning = false;
+          else programRunning = true;
+          // Notify any waiters
+          programFlowListeners = programFlowListeners.filter(fn => fn(msg));
+        }
+
+        // Resolve pending request/response pairs
         if (pendingResponses.has(msg.id)) {
           const pending = pendingResponses.get(msg.id);
           clearTimeout(pending.timer);
@@ -290,6 +303,25 @@ export function createSpike3Session(writeChar) {
         console.warn('SPIKE3: frame decode error:', e.message);
       }
     }
+  };
+
+  // Wait for a specific ProgramFlowNotification
+  const waitForProgramFlow = (stopped, timeoutMs = 4000) => {
+    return new Promise((resolve) => {
+      const timer = setTimeout(() => {
+        programFlowListeners = programFlowListeners.filter(fn => fn !== listener);
+        resolve(null);
+      }, timeoutMs);
+      const listener = (msg) => {
+        if (msg.stopped === stopped) {
+          clearTimeout(timer);
+          resolve(msg);
+          return false; // remove listener
+        }
+        return true; // keep listener
+      };
+      programFlowListeners.push(listener);
+    });
   };
 
   // Initialize the connection
@@ -315,7 +347,7 @@ export function createSpike3Session(writeChar) {
   let lastProgramCode = null;
 
   const _doRunProgram = async (pythonCode, slot) => {
-    // Skip re-upload if the same program is already running
+    // Skip re-upload if the same program is already actively running
     if (programRunning && pythonCode === lastProgramCode) {
       console.log('SPIKE3: same program already running, skipping');
       return;
@@ -324,13 +356,14 @@ export function createSpike3Session(writeChar) {
     const program = new TextEncoder().encode(pythonCode);
     const programCrc = crc32(program);
 
-    // Stop currently running program first
-    if (programRunning) {
-      try {
-        await sendRequest(programFlowRequest(true, slot), MSG.PROGRAM_FLOW_RESP, 2000);
-      } catch { /* timeout OK — program may have already stopped */ }
-      programRunning = false;
-    }
+    // Always stop any running program before uploading
+    // Use fire-and-forget — don't rely on 0x1f response (hub sends unsolicited ones)
+    try {
+      await sendMessage(programFlowRequest(true, slot));
+      await new Promise(r => setTimeout(r, 200));
+    } catch { /* ignore */ }
+    programRunning = false;
+    lastProgramCode = null;
 
     // Clear slot
     const clearResp = await sendRequest(clearSlotRequest(slot), MSG.CLEAR_SLOT_RESP);
@@ -356,16 +389,20 @@ export function createSpike3Session(writeChar) {
       if (!chunkResp.success) throw new Error(`SPIKE3: chunk transfer failed at offset ${i}`);
     }
 
-    // Start program
-    const startResp = await sendRequest(
-      programFlowRequest(false, slot),
-      MSG.PROGRAM_FLOW_RESP
-    );
-    if (!startResp.success) throw new Error('SPIKE3: program start failed');
+    // Start program — fire-and-forget, then wait for 0x20 notification as confirmation
+    const flowPromise = waitForProgramFlow(false, 4000);
+    await sendMessage(programFlowRequest(false, slot));
+    const started = await flowPromise;
 
-    programRunning = true;
-    lastProgramCode = pythonCode;
-    console.log('SPIKE3: program started in slot', slot);
+    if (started) {
+      programRunning = true;
+      lastProgramCode = pythonCode;
+      console.log('SPIKE3: program started in slot', slot);
+    } else {
+      console.warn('SPIKE3: no start notification received, program may still be running');
+      programRunning = true;
+      lastProgramCode = pythonCode;
+    }
   };
 
   // Upload and run a Python program (serialized — queued calls wait for previous to finish)
@@ -380,15 +417,15 @@ export function createSpike3Session(writeChar) {
 
   const stopProgram = async (slot = 0) => {
     try {
-      const resp = await sendRequest(
-        programFlowRequest(true, slot),
-        MSG.PROGRAM_FLOW_RESP,
-        3000
-      );
+      const flowPromise = waitForProgramFlow(true, 3000);
+      await sendMessage(programFlowRequest(true, slot));
+      const stopped = await flowPromise;
       programRunning = false;
-      return resp.success;
+      lastProgramCode = null;
+      return !!stopped;
     } catch {
       programRunning = false;
+      lastProgramCode = null;
       return false;
     }
   };
